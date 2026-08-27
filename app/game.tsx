@@ -27,8 +27,8 @@ const DRAGON_ATTACK_DAMAGE = 10;
 const DRAGON_RENDER_SIZE = 138;
 const DRAGON_SIGHT_RANGE = 720;
 const DRAGON_ATTACK_RANGE = 135;
-const DRAGON_CHASE_MIN = 1390;
-const DRAGON_CHASE_MAX = 2525;
+const DRAGON_CHASE_MIN = 1100;
+const DRAGON_CHASE_MAX = 2700;
 const DRAGON_PATROL_MIN = 1475;
 const DRAGON_PATROL_MAX = 1990;
 const DRAGON_CELL = 256;
@@ -409,12 +409,18 @@ export default function AshfallGame() {
       if(mode==="fly")dragon.y=Math.min(dragon.y,dragon.groundY-42);
       if(mode==="attack")dragon.y=Math.min(dragon.y,dragon.groundY-54);
       if(mode==="idle"||mode==="walk"||mode==="run"||mode==="sleep")dragon.y=dragon.groundY;
-      if(mode==="idle"||mode==="sleep"||mode==="attack")dragon.vx*=.3;
+      if(mode==="idle"||mode==="sleep")dragon.vx*=.58;
+      if(mode==="attack")dragon.vx*=.28;
     };
     const beginDragonTravel=(mode:"walk"|"run"|"fly",now:number,duration:number,targetX:number)=>{
       dragon.targetX=clamp(targetX,DRAGON_PATROL_MIN,DRAGON_PATROL_MAX);
       beginDragonMode(mode,now,duration);
       dragon.facing=dragon.targetX>=dragon.x?1:-1;
+    };
+    const dragonSurfaceAt=(x:number,currentY:number)=>{
+      const surfaces=map1Platforms.filter(p=>p.h>80&&x>=p.x&&x<=p.x+p.w);
+      if(!surfaces.length)return null;
+      return surfaces.reduce((best,p)=>Math.abs(p.y-currentY)<Math.abs(best.y-currentY)?p:best).y;
     };
     const chooseDragonMode=(now:number)=>{
       const pl=player.current,distance=Math.abs(pl.x-dragon.x),approaching=(pl.x-dragon.x)*pl.vx<0;
@@ -451,6 +457,15 @@ export default function AshfallGame() {
     const updateDragon=(dt:number,now:number)=>{
       if(!startedRef.current||mapRef.current!==1)return;
       const pl=player.current;
+      if(dragon.health<=0){
+        dragon.angry=false;
+        dragon.vx+=(0-dragon.vx)*(1-Math.exp(-7*dt));
+        dragon.x+=dragon.vx*dt;
+        const deadGround=dragonSurfaceAt(dragon.x,dragon.groundY);
+        if(deadGround!==null)dragon.groundY+=(deadGround-dragon.groundY)*(1-Math.exp(-10*dt));
+        dragon.y+=(dragon.groundY-dragon.y)*(1-Math.exp(-8*dt));
+        return;
+      }
       const playerDistance=Math.abs(pl.x-dragon.x),playerApproaching=(pl.x-dragon.x)*pl.vx<0;
       const sightDistance=Math.hypot(pl.x-dragon.x,(pl.y+PH*.45)-(dragon.y-48));
       const startled=playerDistance<135&&playerApproaching&&Math.abs(pl.vx)>145;
@@ -474,24 +489,33 @@ export default function AshfallGame() {
         const distance=Math.hypot(dragon.x-pl.x,dragonCenterY-(pl.y+38));
         if(distance<178&&Math.abs(angleDifference)<.86){
           dragon.lastPlayerAttack=actionStartedAt.current;
-          dragon.health=Math.max(1,dragon.health-activeAttackDamage.current);
+          dragon.health=Math.max(0,dragon.health-activeAttackDamage.current);
           dragon.hurtStarted=now;
-          dragon.hurtUntil=now+460;
+          dragon.hurtUntil=now+520;
           dragon.hitDirection=dragon.x>=pl.x?1:-1;
           dragon.lastDamage=activeAttackDamage.current;
+          if(dragon.health===0){
+            dragon.angry=false;
+            dragon.awarenessUntil=0;
+            dragon.attackLanded=true;
+            dragon.vx*=.3;
+            beginDragonMode("sleep",now,999999999);
+            tone(72,.28,.042);window.setTimeout(()=>tone(48,.38,.03),120);
+            return;
+          }
           dragon.angry=true;
           dragon.awarenessUntil=now+8000;
           if(dragon.mode!=="attack")counterAttack(now);
-          else dragon.facing=pl.x>=dragon.x?1:-1;
+          else if(playerDistance>20)dragon.facing=pl.x>=dragon.x?1:-1;
           tone(96,.09,.035);
         }
       }
 
       if(dragon.mode==="attack"){
-        dragon.facing=pl.x>=dragon.x?1:-1;
-        dragon.vx+=(0-dragon.vx)*Math.min(1,dt*9);
+        if(playerDistance>20)dragon.facing=pl.x>=dragon.x?1:-1;
+        dragon.vx+=(0-dragon.vx)*(1-Math.exp(-9*dt));
         const attackY=dragon.groundY-54+Math.sin((now-dragon.modeStarted)*.012)*3;
-        dragon.y+=(attackY-dragon.y)*Math.min(1,dt*9);
+        dragon.y+=(attackY-dragon.y)*(1-Math.exp(-9*dt));
         if(!dragon.attackLanded&&now-dragon.modeStarted>560){
           const forward=(pl.x-dragon.x)*dragon.facing;
           const vertical=Math.abs((pl.y+42)-dragon.y);
@@ -523,10 +547,10 @@ export default function AshfallGame() {
 
       if(dragon.angry){
         const verticalDistance=Math.abs((pl.y+42)-(dragon.y-48));
-        dragon.facing=pl.x>=dragon.x?1:-1;
+        if(playerDistance>20)dragon.facing=pl.x>=dragon.x?1:-1;
         if(playerDistance<=DRAGON_ATTACK_RANGE&&verticalDistance<125){counterAttack(now);return;}
         dragon.targetX=clamp(pl.x,DRAGON_CHASE_MIN,DRAGON_CHASE_MAX);
-        if(dragon.mode!=="run")beginDragonMode("run",now,900);
+        if(dragon.mode!=="run"&&dragon.mode!=="fly")beginDragonMode("run",now,900);
         else dragon.modeUntil=now+900;
       }else if(dragon.mode==="fly"&&now>=dragon.modeUntil){
         if(!dragon.landing){dragon.landing=true;dragon.modeUntil=now+760;}
@@ -534,36 +558,41 @@ export default function AshfallGame() {
       }else if(now>=dragon.modeUntil)chooseDragonMode(now);
       if(dragon.mode==="walk"||dragon.mode==="run"||dragon.mode==="fly"){
         const distanceToTarget=dragon.targetX-dragon.x;
-        if(Math.abs(distanceToTarget)>4)dragon.facing=distanceToTarget>=0?1:-1;
+        if(Math.abs(distanceToTarget)>18)dragon.facing=distanceToTarget>=0?1:-1;
         if(dragon.mode!=="fly"&&Math.abs(distanceToTarget)<13){
-          if(dragon.angry){dragon.vx+=(0-dragon.vx)*Math.min(1,dt*9);dragon.facing=pl.x>=dragon.x?1:-1;}
+          if(dragon.angry){dragon.vx+=(0-dragon.vx)*(1-Math.exp(-7*dt));if(playerDistance>20)dragon.facing=pl.x>=dragon.x?1:-1;}
           else{
             beginDragonMode("idle",now,1200+Math.random()*1200);
             if(playerDistance<300)dragon.facing=pl.x>=dragon.x?1:-1;
           }
         }else{
           if(dragon.mode==="fly"&&Math.abs(distanceToTarget)<20&&!dragon.landing){dragon.landing=true;dragon.modeUntil=Math.min(dragon.modeUntil,now+760);}
-        const speed=dragon.mode==="walk"?34:dragon.mode==="run"?(dragon.angry?112:88):58;
-        const targetSpeed=dragon.facing*(dragon.mode==="fly"&&dragon.landing?speed*.45:speed);
-        dragon.vx+=(targetSpeed-dragon.vx)*Math.min(1,dt*(dragon.mode==="run"?8:4.5));dragon.x+=dragon.vx*dt;
           const movementMin=dragon.angry?DRAGON_CHASE_MIN:DRAGON_PATROL_MIN;
           const movementMax=dragon.angry?DRAGON_CHASE_MAX:DRAGON_PATROL_MAX;
-          if(dragon.x<=movementMin){dragon.x=movementMin;if(dragon.angry)dragon.vx=Math.max(0,dragon.vx);else{dragon.targetX=DRAGON_PATROL_MAX;dragon.facing=1;}}
-          if(dragon.x>=movementMax){dragon.x=movementMax;if(dragon.angry)dragon.vx=Math.min(0,dragon.vx);else{dragon.targetX=DRAGON_PATROL_MIN;dragon.facing=-1;}}
-          if(dragon.angry&&dragon.mode!=="fly"){
-            const surfaces=map1Platforms.filter(p=>p.h>80&&dragon.x>=p.x&&dragon.x<=p.x+p.w);
-            if(surfaces.length){
-              const surface=surfaces.reduce((best,p)=>Math.abs(p.y-dragon.groundY)<Math.abs(best.y-dragon.groundY)?p:best);
-              dragon.groundY+=(surface.y-dragon.groundY)*Math.min(1,dt*10);
+          if(dragon.mode!=="fly"&&Math.abs(distanceToTarget)>45){
+            const probeX=dragon.x+dragon.facing*58;
+            const aheadGround=dragonSurfaceAt(probeX,dragon.groundY);
+            if(aheadGround===null||Math.abs(aheadGround-dragon.groundY)>26){
+              dragon.targetX=clamp(dragon.x+dragon.facing*220,movementMin,movementMax);
+              beginDragonMode("fly",now,1150);
+              dragon.vx*=.82;
+              return;
             }
           }
-        const targetY=dragon.mode==="fly"?(dragon.landing?dragon.groundY-45:dragon.groundY-118+Math.sin(now*.0045)*11):dragon.groundY;
-          if(dragon.mode==="fly")dragon.y+=(targetY-dragon.y)*Math.min(1,dt*4.6);
-          else dragon.y=dragon.groundY;
+          const speed=dragon.mode==="walk"?34:dragon.mode==="run"?(dragon.angry?112:88):58;
+          const targetSpeed=dragon.facing*(dragon.mode==="fly"&&dragon.landing?speed*.45:speed);
+          const moveRate=dragon.mode==="run"?(dragon.angry?5.6:5):3.8;
+          dragon.vx+=(targetSpeed-dragon.vx)*(1-Math.exp(-moveRate*dt));dragon.x+=dragon.vx*dt;
+          if(dragon.x<=movementMin){dragon.x=movementMin;if(dragon.angry)dragon.vx=Math.max(0,dragon.vx);else{dragon.targetX=DRAGON_PATROL_MAX;dragon.facing=1;}}
+          if(dragon.x>=movementMax){dragon.x=movementMax;if(dragon.angry)dragon.vx=Math.min(0,dragon.vx);else{dragon.targetX=DRAGON_PATROL_MIN;dragon.facing=-1;}}
+          const surfaceY=dragonSurfaceAt(dragon.x,dragon.groundY);
+          if(surfaceY!==null)dragon.groundY+=(surfaceY-dragon.groundY)*(1-Math.exp(-(dragon.mode==="fly"?7:11)*dt));
+          const targetY=dragon.mode==="fly"?(dragon.landing?dragon.groundY-45:dragon.groundY-118+Math.sin(now*.0045)*11):dragon.groundY;
+          dragon.y+=(targetY-dragon.y)*(1-Math.exp(-(dragon.mode==="fly"?4.6:13)*dt));
         }
       }else{
-        dragon.vx+=(0-dragon.vx)*Math.min(1,dt*8);
-        dragon.y=dragon.groundY;
+        dragon.vx+=(0-dragon.vx)*(1-Math.exp(-8*dt));
+        dragon.y+=(dragon.groundY-dragon.y)*(1-Math.exp(-12*dt));
       }
 
       if(playerRespawnAt&&now>=playerRespawnAt){
@@ -581,30 +610,33 @@ export default function AshfallGame() {
       else if(dragon.mode==="run")index=Math.floor(elapsed/105)%frames.length;
       else if(dragon.mode==="fly")index=Math.floor(elapsed/130)%frames.length;
       else if(dragon.mode==="sleep"){
-        const remaining=dragon.modeUntil-now;
-        if(elapsed<420)index=0;
-        else if(elapsed<820)index=1;
-        else if(elapsed<1220)index=2;
-        else if(remaining>1050)index=3;
-        else if(remaining>680)index=2;
-        else if(remaining>330)index=1;
-        else index=0;
+        if(dragon.health<=0){index=3;}
+        else{
+          const remaining=dragon.modeUntil-now;
+          if(elapsed<420)index=0;
+          else if(elapsed<820)index=1;
+          else if(elapsed<1220)index=2;
+          else if(remaining>1050)index=3;
+          else if(remaining>680)index=2;
+          else if(remaining>330)index=1;
+          else index=0;
+        }
       }
       else index=Math.min(frames.length-1,Math.floor(elapsed/235));
       const frame=frames[index],size=DRAGON_RENDER_SIZE;
       const spriteScale=size/DRAGON_CELL;
       const airHeight=clamp((dragon.groundY-dragon.y)/125,0,1),shadowScale=1-airHeight*.46;
       const hurtActive=dragon.hurtUntil>now;
-      const hurtProgress=hurtActive?clamp((now-dragon.hurtStarted)/460,0,1):1;
+      const hurtProgress=hurtActive?clamp((now-dragon.hurtStarted)/520,0,1):1;
       const hurtPulse=hurtActive?Math.sin(hurtProgress*Math.PI):0;
       const recoilX=hurtPulse*12*dragon.hitDirection;
       const hitSquash=hurtPulse*.08;
       ctx.save();ctx.fillStyle="rgba(1,4,5,"+(.58-airHeight*.22)+")";ctx.beginPath();ctx.ellipse(dragon.x,dragon.groundY+3,35*shadowScale,7*shadowScale,0,0,Math.PI*2);ctx.fill();ctx.restore();
       ctx.save();ctx.translate(dragon.x+recoilX,dragon.y);
       if(dragon.mode==="fly")ctx.rotate(Math.sin(elapsed*.004)*.018*dragon.facing);
-      const breatheScale=dragon.mode==="sleep"&&index===3?1+Math.sin(now*.0032)*.012:dragon.mode==="idle"?1+Math.sin(now*.0024)*.006:1;
+      const breatheScale=dragon.health<=0?1:dragon.mode==="sleep"&&index===3?1+Math.sin(now*.0032)*.012:dragon.mode==="idle"?1+Math.sin(now*.0024)*.006:1;
       ctx.scale(dragon.facing*(1+hitSquash),breatheScale-hitSquash);ctx.imageSmoothingEnabled=true;
-      ctx.globalAlpha=hurtActive&&Math.floor(now/48)%2===0?.52:1;
+      ctx.globalAlpha=hurtActive&&Math.floor(now/48)%2===0?.52:dragon.health<=0?.78:1;
       ctx.shadowColor=hurtActive?"rgba(255,245,151,.95)":dragon.mode==="attack"?"rgba(126,255,46,.52)":dragon.angry?"rgba(255,92,58,.58)":"rgba(81,188,41,.24)";ctx.shadowBlur=hurtActive?24:dragon.mode==="attack"?16:dragon.angry?13:7;
       ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);
       ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();
@@ -612,11 +644,11 @@ export default function AshfallGame() {
       const spriteTop=dragon.y-frame.anchorY*spriteScale;
       const barW=86,barH=9,barX=dragon.x+recoilX-barW/2,barY=spriteTop-25;
       const healthRatio=clamp(dragon.health/dragon.maxHealth,0,1);
-      const healthLabel=(dragon.angry?"ANGRY  ":"")+"BABY DRAGON  "+dragon.health+" / "+dragon.maxHealth;
+      const healthLabel=dragon.health<=0?"BABY DRAGON DEFEATED":(dragon.angry?"ANGRY  ":"")+"BABY DRAGON  "+dragon.health+" / "+dragon.maxHealth;
       ctx.save();
       ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="700 9px ui-monospace, SFMono-Regular, Menlo, monospace";
       ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.9)";ctx.strokeText(healthLabel,dragon.x+recoilX,barY-3);
-      ctx.fillStyle=dragon.angry?"#ffb19d":"#efffd6";ctx.fillText(healthLabel,dragon.x+recoilX,barY-3);
+      ctx.fillStyle=dragon.health<=0?"#d7d7d7":dragon.angry?"#ffb19d":"#efffd6";ctx.fillText(healthLabel,dragon.x+recoilX,barY-3);
       ctx.fillStyle="rgba(2,6,8,.9)";ctx.fillRect(barX-2,barY-2,barW+4,barH+4);
       ctx.fillStyle="#401924";ctx.fillRect(barX,barY,barW,barH);
       const healthGradient=ctx.createLinearGradient(barX,barY,barX+barW,barY);
