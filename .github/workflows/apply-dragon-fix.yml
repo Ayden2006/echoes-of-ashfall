@@ -1,0 +1,236 @@
+name: Apply baby dragon gameplay fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/apply-dragon-fix.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch baby dragon behavior
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("app/game.tsx")
+          text = path.read_text()
+
+          def replace_once(old: str, new: str):
+              global text
+              if old not in text:
+                  raise SystemExit("Expected game.tsx block was not found; refusing to make a partial patch.")
+              text = text.replace(old, new, 1)
+
+          replace_once(
+              'type Dragon = { x:number; y:number; groundY:number; vx:number; facing:1|-1; mode:DragonMode; modeStarted:number; modeUntil:number; health:number; maxHealth:number; attackDamage:number; lastPlayerAttack:number; attackLanded:boolean; hurtStarted:number; hurtUntil:number; hitDirection:1|-1; lastDamage:number; angry:boolean; landing:boolean; targetX:number; awarenessUntil:number };',
+              'type Dragon = { x:number; y:number; groundY:number; vx:number; facing:1|-1; mode:DragonMode; modeStarted:number; modeUntil:number; health:number; maxHealth:number; attackDamage:number; lastPlayerAttack:number; attackLanded:boolean; hurtStarted:number; hurtUntil:number; hitDirection:1|-1; lastDamage:number; angry:boolean; landing:boolean; targetX:number; awarenessUntil:number; deadAt:number };'
+          )
+
+          replace_once(
+              'const dragon:Dragon={x:1710,y:570,groundY:570,vx:0,facing:1,mode:"idle",modeStarted:last,modeUntil:last+2800,health:DRAGON_MAX_HEALTH,maxHealth:DRAGON_MAX_HEALTH,attackDamage:DRAGON_ATTACK_DAMAGE,lastPlayerAttack:-1,attackLanded:false,hurtStarted:0,hurtUntil:0,hitDirection:1,lastDamage:0,angry:false,landing:false,targetX:1840,awarenessUntil:0};',
+              'const dragon:Dragon={x:1710,y:570,groundY:570,vx:0,facing:1,mode:"idle",modeStarted:last,modeUntil:last+2800,health:DRAGON_MAX_HEALTH,maxHealth:DRAGON_MAX_HEALTH,attackDamage:DRAGON_ATTACK_DAMAGE,lastPlayerAttack:-1,attackLanded:false,hurtStarted:0,hurtUntil:0,hitDirection:1,lastDamage:0,angry:false,landing:false,targetX:1840,awarenessUntil:0,deadAt:0};'
+          )
+
+          replace_once(
+              '''      if(mode==="idle"||mode==="sleep"||mode==="attack")dragon.vx*=.3;
+    };
+    const beginDragonTravel=(mode:"walk"|"run"|"fly",now:number,duration:number,targetX:number)=>{
+      dragon.targetX=clamp(targetX,DRAGON_PATROL_MIN,DRAGON_PATROL_MAX);
+      beginDragonMode(mode,now,duration);
+      dragon.facing=dragon.targetX>=dragon.x?1:-1;
+    };''',
+              '''      if(mode==="idle"||mode==="sleep")dragon.vx*=.62;
+      if(mode==="attack")dragon.vx*=.24;
+    };
+    const beginDragonTravel=(mode:"walk"|"run"|"fly",now:number,duration:number,targetX:number)=>{
+      dragon.targetX=clamp(targetX,DRAGON_PATROL_MIN,DRAGON_PATROL_MAX);
+      beginDragonMode(mode,now,duration);
+      dragon.facing=dragon.targetX>=dragon.x?1:-1;
+    };
+    const dragonGroundAt=(x:number,currentY:number,facing:1|-1)=>{
+      const probeX=x+facing*28;
+      const surfaces=map1Platforms.filter(p=>p.h>80&&x>=p.x&&x<=p.x+p.w);
+      if(!surfaces.length)return null;
+      const forward=surfaces.filter(p=>probeX>=p.x&&probeX<=p.x+p.w);
+      const pool=forward.length?forward:surfaces;
+      return pool.reduce((best,p)=>Math.abs(p.y-currentY)<Math.abs(best.y-currentY)?p:best).y;
+    };'''
+          )
+
+          replace_once(
+              '''    const updateDragon=(dt:number,now:number)=>{
+      if(!startedRef.current||mapRef.current!==1)return;
+      const pl=player.current;''',
+              '''    const updateDragon=(dt:number,now:number)=>{
+      if(!startedRef.current||mapRef.current!==1)return;
+      const pl=player.current;
+      if(dragon.health<=0){
+        dragon.angry=false;
+        dragon.vx+=(0-dragon.vx)*(1-Math.exp(-7*dt));
+        dragon.x+=dragon.vx*dt;
+        const restingGround=dragonGroundAt(dragon.x,dragon.groundY,dragon.facing);
+        if(restingGround!==null)dragon.groundY+=(restingGround-dragon.groundY)*(1-Math.exp(-10*dt));
+        dragon.y+=(dragon.groundY-dragon.y)*(1-Math.exp(-8*dt));
+        return;
+      }'''
+          )
+
+          replace_once(
+              '''          dragon.health=Math.max(1,dragon.health-activeAttackDamage.current);
+          dragon.hurtStarted=now;
+          dragon.hurtUntil=now+460;
+          dragon.hitDirection=dragon.x>=pl.x?1:-1;
+          dragon.lastDamage=activeAttackDamage.current;
+          dragon.angry=true;
+          dragon.awarenessUntil=now+8000;
+          if(dragon.mode!=="attack")counterAttack(now);
+          else dragon.facing=pl.x>=dragon.x?1:-1;
+          tone(96,.09,.035);''',
+              '''          dragon.health=Math.max(0,dragon.health-activeAttackDamage.current);
+          dragon.hurtStarted=now;
+          dragon.hurtUntil=now+460;
+          dragon.hitDirection=dragon.x>=pl.x?1:-1;
+          dragon.lastDamage=activeAttackDamage.current;
+          if(dragon.health===0){
+            dragon.deadAt=now;
+            dragon.angry=false;
+            dragon.awarenessUntil=0;
+            dragon.attackLanded=true;
+            dragon.mode="idle";dragon.modeStarted=now;dragon.modeUntil=now+999999999;dragon.landing=false;
+            dragon.vx*=.35;
+            tone(72,.28,.042);window.setTimeout(()=>tone(48,.38,.03),120);
+          }else{
+            dragon.angry=true;
+            dragon.awarenessUntil=now+8000;
+            if(dragon.mode!=="attack")counterAttack(now);
+            else if(playerDistance>18)dragon.facing=pl.x>=dragon.x?1:-1;
+            tone(96,.09,.035);
+          }'''
+          )
+
+          replace_once(
+              '''      if(dragon.mode==="attack"){
+        dragon.facing=pl.x>=dragon.x?1:-1;''',
+              '''      if(dragon.mode==="attack"){
+        if(playerDistance>18)dragon.facing=pl.x>=dragon.x?1:-1;'''
+          )
+
+          replace_once(
+              '''      if(dragon.angry){
+        const verticalDistance=Math.abs((pl.y+42)-(dragon.y-48));
+        dragon.facing=pl.x>=dragon.x?1:-1;''',
+              '''      if(dragon.angry){
+        const verticalDistance=Math.abs((pl.y+42)-(dragon.y-48));
+        if(playerDistance>18)dragon.facing=pl.x>=dragon.x?1:-1;'''
+          )
+
+          replace_once(
+              '''        const speed=dragon.mode==="walk"?34:dragon.mode==="run"?(dragon.angry?112:88):58;
+        const targetSpeed=dragon.facing*(dragon.mode==="fly"&&dragon.landing?speed*.45:speed);
+        dragon.vx+=(targetSpeed-dragon.vx)*Math.min(1,dt*(dragon.mode==="run"?8:4.5));dragon.x+=dragon.vx*dt;
+          const movementMin=dragon.angry?DRAGON_CHASE_MIN:DRAGON_PATROL_MIN;
+          const movementMax=dragon.angry?DRAGON_CHASE_MAX:DRAGON_PATROL_MAX;
+          if(dragon.x<=movementMin){dragon.x=movementMin;if(dragon.angry)dragon.vx=Math.max(0,dragon.vx);else{dragon.targetX=DRAGON_PATROL_MAX;dragon.facing=1;}}
+          if(dragon.x>=movementMax){dragon.x=movementMax;if(dragon.angry)dragon.vx=Math.min(0,dragon.vx);else{dragon.targetX=DRAGON_PATROL_MIN;dragon.facing=-1;}}
+          if(dragon.angry&&dragon.mode!=="fly"){
+            const surfaces=map1Platforms.filter(p=>p.h>80&&dragon.x>=p.x&&dragon.x<=p.x+p.w);
+            if(surfaces.length){
+              const surface=surfaces.reduce((best,p)=>Math.abs(p.y-dragon.groundY)<Math.abs(best.y-dragon.groundY)?p:best);
+              dragon.groundY+=(surface.y-dragon.groundY)*Math.min(1,dt*10);
+            }
+          }
+        const targetY=dragon.mode==="fly"?(dragon.landing?dragon.groundY-45:dragon.groundY-118+Math.sin(now*.0045)*11):dragon.groundY;
+          if(dragon.mode==="fly")dragon.y+=(targetY-dragon.y)*Math.min(1,dt*4.6);
+          else dragon.y=dragon.groundY;''',
+              '''        const movementMin=dragon.angry?DRAGON_CHASE_MIN:DRAGON_PATROL_MIN;
+        const movementMax=dragon.angry?DRAGON_CHASE_MAX:DRAGON_PATROL_MAX;
+        const probeX=dragon.x+dragon.facing*48;
+        const raisedLedgeAhead=dragon.mode!=="fly"&&Math.abs(distanceToTarget)>42&&map1Platforms.some(p=>p.h<=24&&probeX>=p.x-18&&probeX<=p.x+p.w+18&&p.y<dragon.groundY-34);
+        if(raisedLedgeAhead){
+          dragon.targetX=clamp(dragon.x+dragon.facing*210,movementMin,movementMax);
+          beginDragonMode("fly",now,1050);
+          return;
+        }
+        const speed=dragon.mode==="walk"?34:dragon.mode==="run"?(dragon.angry?112:88):58;
+        const targetSpeed=dragon.facing*(dragon.mode==="fly"&&dragon.landing?speed*.45:speed);
+        const moveRate=dragon.mode==="run"?(dragon.angry?5.6:5):3.8;
+        dragon.vx+=(targetSpeed-dragon.vx)*(1-Math.exp(-moveRate*dt));dragon.x+=dragon.vx*dt;
+          if(dragon.x<=movementMin){dragon.x=movementMin;if(dragon.angry)dragon.vx=Math.max(0,dragon.vx);else{dragon.targetX=DRAGON_PATROL_MAX;dragon.facing=1;}}
+          if(dragon.x>=movementMax){dragon.x=movementMax;if(dragon.angry)dragon.vx=Math.min(0,dragon.vx);else{dragon.targetX=DRAGON_PATROL_MIN;dragon.facing=-1;}}
+          if(dragon.mode!=="fly"){
+            const surfaceY=dragonGroundAt(dragon.x,dragon.groundY,dragon.facing);
+            if(surfaceY!==null)dragon.groundY+=(surfaceY-dragon.groundY)*(1-Math.exp(-11*dt));
+          }
+        const targetY=dragon.mode==="fly"?(dragon.landing?dragon.groundY-45:dragon.groundY-118+Math.sin(now*.0045)*11):dragon.groundY;
+          dragon.y+=(targetY-dragon.y)*(1-Math.exp(-(dragon.mode==="fly"?4.6:13)*dt));'''
+          )
+
+          replace_once(
+              '''      const frame=frames[index],size=DRAGON_RENDER_SIZE;
+      const spriteScale=size/DRAGON_CELL;
+      const airHeight=clamp((dragon.groundY-dragon.y)/125,0,1),shadowScale=1-airHeight*.46;
+      const hurtActive=dragon.hurtUntil>now;''',
+              '''      const frame=frames[index],size=DRAGON_RENDER_SIZE;
+      const spriteScale=size/DRAGON_CELL;
+      const dead=dragon.health<=0,deadElapsed=dead?now-dragon.deadAt:0,deathProgress=dead?clamp(deadElapsed/560,0,1):0;
+      const airHeight=clamp((dragon.groundY-dragon.y)/125,0,1),shadowScale=1-airHeight*.46;
+      const hurtActive=!dead&&dragon.hurtUntil>now;'''
+          )
+
+          replace_once(
+              '''      ctx.save();ctx.translate(dragon.x+recoilX,dragon.y);
+      if(dragon.mode==="fly")ctx.rotate(Math.sin(elapsed*.004)*.018*dragon.facing);
+      const breatheScale=dragon.mode==="sleep"&&index===3?1+Math.sin(now*.0032)*.012:dragon.mode==="idle"?1+Math.sin(now*.0024)*.006:1;
+      ctx.scale(dragon.facing*(1+hitSquash),breatheScale-hitSquash);ctx.imageSmoothingEnabled=true;
+      ctx.globalAlpha=hurtActive&&Math.floor(now/48)%2===0?.52:1;
+      ctx.shadowColor=hurtActive?"rgba(255,245,151,.95)":dragon.mode==="attack"?"rgba(126,255,46,.52)":dragon.angry?"rgba(255,92,58,.58)":"rgba(81,188,41,.24)";ctx.shadowBlur=hurtActive?24:dragon.mode==="attack"?16:dragon.angry?13:7;''',
+              '''      ctx.save();ctx.translate(dragon.x+recoilX,dragon.y+(dead?deathProgress*17:0));
+      if(dead)ctx.rotate(dragon.facing*deathProgress*.78);
+      else if(dragon.mode==="fly")ctx.rotate(Math.sin(elapsed*.004)*.018*dragon.facing);
+      const breatheScale=dead?1:dragon.mode==="sleep"&&index===3?1+Math.sin(now*.0032)*.012:dragon.mode==="idle"?1+Math.sin(now*.0024)*.006:1;
+      ctx.scale(dragon.facing*(1+hitSquash),breatheScale-hitSquash);ctx.imageSmoothingEnabled=true;
+      ctx.globalAlpha=dead?.82:hurtActive&&Math.floor(now/48)%2===0?.52:1;
+      ctx.shadowColor=dead?"rgba(14,18,16,.28)":hurtActive?"rgba(255,245,151,.95)":dragon.mode==="attack"?"rgba(126,255,46,.52)":dragon.angry?"rgba(255,92,58,.58)":"rgba(81,188,41,.24)";ctx.shadowBlur=dead?4:hurtActive?24:dragon.mode==="attack"?16:dragon.angry?13:7;'''
+          )
+
+          replace_once(
+              '''      ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();
+
+      const spriteTop=dragon.y-frame.anchorY*spriteScale;''',
+              '''      ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();
+      if(dead){
+        if(deadElapsed<1800){
+          ctx.save();ctx.globalAlpha=clamp(1-deadElapsed/1800,0,1);ctx.textAlign="center";ctx.textBaseline="bottom";
+          ctx.font="900 11px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.9)";
+          ctx.strokeText("BABY DRAGON DEFEATED",dragon.x,dragon.groundY-92);ctx.fillStyle="#eef5df";ctx.fillText("BABY DRAGON DEFEATED",dragon.x,dragon.groundY-92);ctx.restore();
+        }
+        return;
+      }
+
+      const spriteTop=dragon.y-frame.anchorY*spriteScale;'''
+          )
+
+          path.write_text(text)
+          PY
+
+      - name: Commit fix
+        shell: bash
+        run: |
+          git config user.name "Echoes of Ashfall Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add app/game.tsx
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git commit -m "Fix baby dragon ledges, smoothing, and death"
+          git push
