@@ -99,3 +99,4 @@ replaceOnce(
 
 writeFileSync(path, text);
 console.log("Applied Moon Knight companion deploy/recall gesture animation.");
+// Triggered from chat to persist the animation into app/game.tsx on main.
