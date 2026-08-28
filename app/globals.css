@@ -47,9 +47,38 @@ button { font:inherit; }
 .controls { position:absolute; left:clamp(18px,4vw,52px); bottom:clamp(16px,3.5vh,36px); display:flex; gap:18px; color:rgba(231,238,233,.46); font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; pointer-events:none; }
 .controls b { color:rgba(231,238,233,.82); }
 .sound-button { position:absolute; right:clamp(18px,4vw,52px); bottom:clamp(16px,3.5vh,36px); display:grid; place-items:center; width:38px; height:38px; border:1px solid rgba(231,238,233,.2); border-radius:50%; background:rgba(5,10,12,.45); color:rgba(231,238,233,.8); cursor:pointer; backdrop-filter:blur(6px); }
+.inventory-screen { position:absolute; z-index:30; inset:0; display:grid; place-items:center; padding:clamp(14px,3vw,34px); background:rgba(2,5,7,.82); backdrop-filter:blur(9px); }
+.inventory-panel { width:min(900px,100%); max-height:calc(100dvh - 40px); overflow:auto; padding:clamp(18px,2.7vw,32px); border:1px solid rgba(154,255,76,.34); border-top:3px solid #76dc35; border-radius:5px; background:linear-gradient(145deg,rgba(11,17,16,.98),rgba(16,14,24,.98)); box-shadow:0 30px 100px rgba(0,0,0,.7),inset 0 0 50px rgba(97,220,53,.045); user-select:none; }
+.inventory-header { display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:24px; padding-bottom:18px; border-bottom:1px solid rgba(220,255,191,.13); }
+.inventory-kicker { margin:0 0 4px; color:#8be54e; font-size:9px; font-weight:900; letter-spacing:.26em; text-transform:uppercase; }
+.inventory-header h2 { margin:0; color:#f3f8ee; font-family:Georgia,serif; font-size:clamp(26px,4vw,42px); font-weight:400; }
+.inventory-counts { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.inventory-counts span { padding:7px 9px; border:1px solid rgba(220,255,191,.14); background:rgba(255,255,255,.025); color:rgba(235,245,229,.68); font-size:9px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+.inventory-close { display:flex; align-items:center; gap:8px; padding:7px 11px; border:1px solid rgba(220,255,191,.2); background:rgba(255,255,255,.04); color:#edf7e8; font-size:9px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; }
+.inventory-close span { display:grid; place-items:center; min-width:30px; height:25px; padding:0 5px; border:1px solid rgba(139,229,78,.55); color:#aaff6b; }
+.inventory-section-title { display:flex; justify-content:space-between; align-items:end; gap:12px; margin:21px 0 9px; }
+.inventory-section-title span { color:#eff8ea; font-size:10px; font-weight:900; letter-spacing:.19em; text-transform:uppercase; }
+.inventory-section-title small { color:rgba(231,238,233,.42); font-size:9px; letter-spacing:.08em; }
+.active-slots { display:grid; grid-template-columns:repeat(5,1fr); gap:9px; }
+.active-slot,.inventory-slot { position:relative; min-width:0; border:1px solid rgba(226,241,219,.11); border-radius:3px; background:rgba(255,255,255,.025); color:#edf5e8; cursor:default; }
+.active-slot { min-height:92px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:5px; }
+.active-slot.filled,.inventory-slot.filled { cursor:pointer; }
+.active-slot.filled { border-color:rgba(137,229,72,.38); background:linear-gradient(145deg,rgba(92,174,50,.12),rgba(255,255,255,.025)); }
+.slot-number { position:absolute; top:5px; left:7px; color:rgba(231,238,233,.3); font-size:8px; font-weight:900; }
+.empty-mark { color:rgba(231,238,233,.16); font-family:Georgia,serif; font-size:25px; }
+.active-slot strong,.inventory-slot strong { max-width:100%; overflow:hidden; color:#eff8e9; font-size:8px; letter-spacing:.07em; text-overflow:ellipsis; text-transform:uppercase; white-space:nowrap; }
+.inventory-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:7px; }
+.inventory-slot { min-height:78px; padding:10px 5px 6px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:3px; }
+.inventory-slot.equipped { border-color:#78d83c; box-shadow:inset 0 0 17px rgba(103,216,54,.11); }
+.inventory-slot small { color:#8fe34f; font-size:7px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
+.inventory-card-thumb { display:block; width:29px; height:41px; border:1px solid #73db35; border-radius:3px; background-color:#0a0e0d; background-repeat:no-repeat; background-size:400% 600%; background-position:0 0; }
+.active-slot .inventory-card-thumb { width:33px; height:47px; }
+.inventory-help { margin:18px 0 0; color:rgba(231,238,233,.52); font-size:9px; letter-spacing:.08em; text-align:center; }
+.inventory-help b { color:#9bed5d; }
 .touch-controls { display:none; }
 @media (hover:none),(max-width:720px) {
   .controls{display:none}.topbar{padding:14px}.hud-left{gap:9px}.health-hud{width:144px;padding:7px 8px 6px}.knight-name{margin-bottom:5px;font-size:8px}.health-readout strong{font-size:17px}.health-readout span{font-size:7px}.chapter-line{width:17px}.chapter-mark{gap:8px}.chapter-name{font-size:13px}.objective{max-width:44vw}.dialogue-box{min-height:116px;padding:18px 20px 16px}.dialogue-wrap{bottom:90px}.sound-button{top:78px;right:16px;bottom:auto;width:34px;height:34px}
+  .inventory-screen{padding:8px}.inventory-panel{max-height:calc(100dvh - 16px);padding:14px}.inventory-header{grid-template-columns:1fr auto;gap:10px}.inventory-counts{grid-column:1/-1;justify-content:flex-start}.inventory-section-title small{display:none}.active-slots{gap:5px}.active-slot{min-height:73px}.inventory-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}.inventory-slot{min-height:66px}.inventory-card-thumb{width:24px;height:34px}.active-slot .inventory-card-thumb{width:27px;height:38px}
   .touch-controls{position:absolute;z-index:7;inset:auto 0 14px;display:flex;justify-content:space-between;padding:0 8px;pointer-events:none}.touch-group{display:flex;gap:6px}.touch-btn{width:46px;height:46px;border:1px solid rgba(231,238,233,.22);border-radius:50%;background:rgba(5,10,12,.42);color:rgba(231,238,233,.78);font-size:16px;pointer-events:auto;touch-action:none;backdrop-filter:blur(5px)}.touch-btn.action{border-color:rgba(116,230,226,.45);color:var(--signal)}.touch-btn.attack{border-color:rgba(174,123,235,.56);color:#d7b6ff}
 }
 @media (max-height:520px){.game-title{font-size:58px}.start-button{margin-top:25px}.dialogue-wrap{bottom:12px}.dialogue-box{min-height:92px;padding:12px 20px}.controls{display:none}}
