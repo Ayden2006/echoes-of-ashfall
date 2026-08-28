@@ -103,6 +103,7 @@ const tower: Line[] = [
   {speaker:"Radio",text:"I think you already know."}
 ];
 const clamp = (n:number,a:number,b:number) => Math.max(a,Math.min(b,n));
+const rgbaFromHex = (hex:string,alpha:number) => {const value=parseInt(hex.replace("#",""),16);return `rgba(${value>>16},${value>>8&255},${value&255},${alpha})`;};
 const worldWidthFor = (map:MapId) => map===1?MAP1_W:MAP2_W;
 const platformsFor = (map:MapId) => map===1?map1Platforms:map2Platforms;
 
@@ -444,12 +445,13 @@ export default function AshfallGame() {
       const duration=cast.kind==="recall"?COMPANION_RECALL_DURATION:780,progress=clamp((now-cast.started)/duration,0,1);
       if(progress>=1){cast.kind=null;return;}
       const eased=progress*progress*(3-2*progress),fade=1-clamp((progress-.72)/.28,0,1);
-      const direction=cast.direction,color=cast.kind==="summon"?"#b8ff55":"#dbb2ff";
+      const ally=companionRef.current,palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??BABY_DRAGON_CARD.palette;
+      const direction=cast.direction,color=palette.glow;
       const handX=pl.x+direction*26,handY=pl.y+59-Math.sin(progress*Math.PI)*3;
       const pulse=.7+Math.sin(now*.018)*.3;
 
       ctx.save();ctx.globalCompositeOperation="screen";
-      const bodyGlow=ctx.createRadialGradient(pl.x,pl.y+48,2,pl.x,pl.y+48,66);bodyGlow.addColorStop(0,cast.kind==="summon"?`rgba(147,255,74,${.19*fade})`:`rgba(200,137,255,${.2*fade})`);bodyGlow.addColorStop(1,"rgba(80,40,150,0)");ctx.fillStyle=bodyGlow;ctx.fillRect(pl.x-72,pl.y-22,144,142);
+      const bodyGlow=ctx.createRadialGradient(pl.x,pl.y+48,2,pl.x,pl.y+48,66);bodyGlow.addColorStop(0,rgbaFromHex(palette.accent,.2*fade));bodyGlow.addColorStop(1,rgbaFromHex(palette.dark,0));ctx.fillStyle=bodyGlow;ctx.fillRect(pl.x-72,pl.y-22,144,142);
       ctx.restore();
 
       ctx.save();ctx.translate(pl.x,pl.y+PH+2);ctx.scale(1,.26);ctx.globalAlpha=fade*(.35+.35*pulse);ctx.strokeStyle=color;ctx.shadowColor=color;ctx.shadowBlur=16;ctx.lineWidth=2;
@@ -465,7 +467,7 @@ export default function AshfallGame() {
       }
       ctx.restore();
 
-      const ally=companionRef.current,isSummon=cast.kind==="summon";
+      const isSummon=cast.kind==="summon";
       const rawThrow=clamp((progress-.12)/.56,0,1),throwProgress=isSummon?rawThrow*rawThrow*(3-2*rawThrow):0;
       const cardArrive=clamp(progress/.18,0,1);
       const cardFade=isSummon?1-clamp((progress-.7)/.18,0,1):1-clamp((progress-.94)/.06,0,1);
@@ -476,7 +478,7 @@ export default function AshfallGame() {
       const cardX=isSummon?inverseThrow*inverseThrow*heldX+2*inverseThrow*throwProgress*controlX+throwProgress*throwProgress*targetX:heldX;
       const cardY=isSummon?inverseThrow*inverseThrow*heldY+2*inverseThrow*throwProgress*controlY+throwProgress*throwProgress*targetY:heldY;
       ctx.save();ctx.translate(cardX,cardY);ctx.rotate(isSummon?direction*(-.28+throwProgress*Math.PI*3.6):direction*(-.26+Math.sin(progress*Math.PI)*.045));ctx.scale(.55+cardArrive*.45,.55+cardArrive*.45);ctx.globalAlpha=cardArrive*cardFade;ctx.shadowColor=color;ctx.shadowBlur=18;
-      const cardGradient=ctx.createLinearGradient(-8,-13,8,13);cardGradient.addColorStop(0,color);cardGradient.addColorStop(.3,"#283428");cardGradient.addColorStop(1,"#090c0b");ctx.fillStyle=cardGradient;ctx.beginPath();ctx.roundRect(-8,-13,16,26,2.5);ctx.fill();ctx.strokeStyle="#efffd7";ctx.lineWidth=1.2;ctx.stroke();ctx.strokeStyle=color;ctx.beginPath();ctx.arc(0,-1,4,0,Math.PI*2);ctx.stroke();ctx.fillStyle="#efffd7";ctx.font="900 5px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("✦",0,7);
+      const cardGradient=ctx.createLinearGradient(-8,-13,8,13);cardGradient.addColorStop(0,palette.glow);cardGradient.addColorStop(.3,palette.mid);cardGradient.addColorStop(1,palette.dark);ctx.fillStyle=cardGradient;ctx.beginPath();ctx.roundRect(-8,-13,16,26,2.5);ctx.fill();ctx.strokeStyle="#efffd7";ctx.lineWidth=1.2;ctx.stroke();ctx.strokeStyle=color;ctx.beginPath();ctx.arc(0,-1,4,0,Math.PI*2);ctx.stroke();ctx.fillStyle="#efffd7";ctx.font="900 5px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("✦",0,7);
       const gripAlpha=isSummon?1-clamp(throwProgress/.2,0,1):1;
       if(gripAlpha>0){const gripX=-direction*7;ctx.globalAlpha=cardArrive*cardFade*gripAlpha;ctx.shadowBlur=0;ctx.fillStyle="#1b1025";ctx.fillRect(gripX-4,7,8,5);ctx.fillStyle="#4e2678";ctx.fillRect(gripX-3,5,7,5);ctx.fillStyle="#8a55bd";ctx.fillRect(gripX-2,5,5,2);ctx.fillStyle="#2c153f";ctx.fillRect(gripX-direction*2,3,3,7);}
       ctx.restore();
@@ -814,6 +816,7 @@ export default function AshfallGame() {
     const drawCompanion=(now:number)=>{
       const ally=companionRef.current;
       if(!ally.active||ally.map!==mapRef.current||!dragonImage.complete||!dragonImage.naturalWidth)return;
+      const palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??BABY_DRAGON_CARD.palette;
       const frames=DRAGON_FRAMES[ally.mode],elapsed=now-ally.modeStarted;
       let index=0;
       if(ally.mode==="idle")index=Math.floor(elapsed/520)%2;
@@ -842,11 +845,11 @@ export default function AshfallGame() {
 
       const ritualProgress=recall>0?recall:summon;
       const ritualActive=recall>0||summon<1;
-      const ritualColor=recall>0?"#dcb5ff":"#b8ff55";
+      const ritualColor=palette.glow;
       const ritualPeak=Math.sin(clamp(ritualProgress,0,1)*Math.PI);
       if(ritualActive){
         const beam=ctx.createLinearGradient(ally.x,ally.groundY-178,ally.x,ally.groundY+4);
-        beam.addColorStop(0,"rgba(185,255,84,0)");beam.addColorStop(.34,recall>0?`rgba(218,181,255,${ritualPeak*.18})`:`rgba(184,255,85,${ritualPeak*.2})`);beam.addColorStop(1,"rgba(111,255,54,0)");
+        beam.addColorStop(0,rgbaFromHex(palette.glow,0));beam.addColorStop(.34,rgbaFromHex(palette.glow,ritualPeak*.2));beam.addColorStop(1,rgbaFromHex(palette.accent,0));
         ctx.save();ctx.globalCompositeOperation="screen";ctx.fillStyle=beam;ctx.fillRect(ally.x-30-ritualPeak*12,ally.groundY-178,60+ritualPeak*24,184);ctx.restore();
 
         ctx.save();ctx.translate(ally.x,ally.groundY+1);ctx.strokeStyle=ritualColor;ctx.shadowColor=ritualColor;ctx.shadowBlur=16;ctx.lineWidth=2;
@@ -863,13 +866,13 @@ export default function AshfallGame() {
           const rise=recall>0?cycle:1-cycle;
           const mx=ally.x+lane*(38+ritualPeak*36)+Math.sin(now*.009+mote)*5;
           const my=ally.groundY-8-rise*(105+(mote%5)*13);
-          ctx.globalAlpha=(.25+.75*(1-cycle))*ritualPeak;ctx.fillStyle=mote%4===0?"#ffffff":mote%3===0?"#dbb5ff":"#aaff4f";ctx.beginPath();ctx.arc(mx,my,1+(mote%4)*.45,0,Math.PI*2);ctx.fill();
+          ctx.globalAlpha=(.25+.75*(1-cycle))*ritualPeak;ctx.fillStyle=mote%4===0?"#ffffff":mote%3===0?palette.glow:palette.accent;ctx.beginPath();ctx.arc(mx,my,1+(mote%4)*.45,0,Math.PI*2);ctx.fill();
         }
         ctx.restore();
 
         const flashPoint=recall>0?.62:.38;
         const flash=Math.max(0,1-Math.abs(ritualProgress-flashPoint)/.18);
-        if(flash>0){const burst=ctx.createRadialGradient(ally.x,ally.y-44,0,ally.x,ally.y-44,74);burst.addColorStop(0,`rgba(240,255,210,${flash*.62})`);burst.addColorStop(.28,recall>0?`rgba(204,147,255,${flash*.34})`:`rgba(139,255,63,${flash*.34})`);burst.addColorStop(1,"rgba(89,255,43,0)");ctx.fillStyle=burst;ctx.fillRect(ally.x-78,ally.y-122,156,156);}
+        if(flash>0){const burst=ctx.createRadialGradient(ally.x,ally.y-44,0,ally.x,ally.y-44,74);burst.addColorStop(0,rgbaFromHex(palette.glow,flash*.62));burst.addColorStop(.28,rgbaFromHex(palette.accent,flash*.34));burst.addColorStop(1,rgbaFromHex(palette.accent,0));ctx.fillStyle=burst;ctx.fillRect(ally.x-78,ally.y-122,156,156);}
       }
 
       const drawSpiritCard=(progress:number,recalling:boolean)=>{
@@ -880,23 +883,23 @@ export default function AshfallGame() {
         const cardRise=recalling?smooth(clamp((progress-.8)/.2,0,1))*78:(1-arrive)*28;
         const cardScale=.38+arrive*.62;
         const cardFrame=DRAGON_FRAMES.idle[0];
-        ctx.save();ctx.translate(ally.x,ally.groundY-66-cardRise);ctx.rotate((recalling?1:-1)*(1-arrive)*1.4+(recalling?progress:-progress)*.18);ctx.scale(cardScale,cardScale);ctx.globalAlpha=cardAlpha;ctx.shadowColor=recalling?"#d8a7ff":"#aaff4d";ctx.shadowBlur=24;
-        const cardGradient=ctx.createLinearGradient(-22,-34,22,34);cardGradient.addColorStop(0,"#9cff44");cardGradient.addColorStop(.22,"#263b25");cardGradient.addColorStop(.72,"#090d0c");cardGradient.addColorStop(1,recalling?"#cf9cff":"#b9ff58");ctx.fillStyle=cardGradient;ctx.beginPath();ctx.roundRect(-22,-34,44,68,6);ctx.fill();
-        ctx.shadowBlur=0;ctx.strokeStyle=recalling?"#e6c9ff":"#dcff9e";ctx.lineWidth=2;ctx.stroke();ctx.strokeStyle="#0d1710";ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(-18,-30,36,60,4);ctx.stroke();
+        ctx.save();ctx.translate(ally.x,ally.groundY-66-cardRise);ctx.rotate((recalling?1:-1)*(1-arrive)*1.4+(recalling?progress:-progress)*.18);ctx.scale(cardScale,cardScale);ctx.globalAlpha=cardAlpha;ctx.shadowColor=palette.glow;ctx.shadowBlur=24;
+        const cardGradient=ctx.createLinearGradient(-22,-34,22,34);cardGradient.addColorStop(0,palette.accent);cardGradient.addColorStop(.22,palette.mid);cardGradient.addColorStop(.72,palette.dark);cardGradient.addColorStop(1,palette.glow);ctx.fillStyle=cardGradient;ctx.beginPath();ctx.roundRect(-22,-34,44,68,6);ctx.fill();
+        ctx.shadowBlur=0;ctx.strokeStyle=palette.glow;ctx.lineWidth=2;ctx.stroke();ctx.strokeStyle=palette.dark;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(-18,-30,36,60,4);ctx.stroke();
         ctx.save();ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.clip();ctx.fillStyle="#101a13";ctx.fillRect(-14,-24,28,34);ctx.drawImage(dragonImage,cardFrame.x,cardFrame.y,cardFrame.w,cardFrame.h,-15,-25,30,36);ctx.restore();
-        ctx.strokeStyle="#b9ff58";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.stroke();ctx.fillStyle="#eaffcf";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="900 4.5px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("BABY DRAGON",0,17);ctx.fillStyle=recalling?"#dfbaff":"#b9ff58";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("✦",0,26);ctx.restore();
+        ctx.strokeStyle=palette.glow;ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.stroke();ctx.fillStyle="#eaffcf";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="900 4.5px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("BABY DRAGON",0,17);ctx.fillStyle=palette.glow;ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("✦",0,26);ctx.restore();
       };
       if(recall===0)drawSpiritCard(summon,false);
 
       if(summon<1||recall>0){
         const magicProgress=ritualProgress;
         const magicAlpha=recall>0?1-recall*.28:1-summon*.38;
-        const magicColor=recall>0?"#d9b8ff":"#b4ff58";
+        const magicColor=palette.glow;
         ctx.save();ctx.translate(ally.x,ally.groundY-50);ctx.globalAlpha=magicAlpha;ctx.strokeStyle=magicColor;ctx.shadowColor=magicColor;ctx.shadowBlur=18;
         ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,48,24+Math.sin(now*.01)*3,8,0,0,Math.PI*2);ctx.stroke();
         ctx.rotate((recall>0?-1:1)*now*.004);ctx.beginPath();for(let rune=0;rune<6;rune++){const a=rune*Math.PI/3;const radius=31+Math.sin(now*.006+rune)*4;const rx=Math.cos(a)*radius,ry=Math.sin(a)*radius*.58;if(rune===0)ctx.moveTo(rx,ry);else ctx.lineTo(rx,ry);}ctx.closePath();ctx.stroke();
         ctx.restore();
-        ctx.save();ctx.globalAlpha=magicAlpha*.85;for(let mote=0;mote<14;mote++){const a=mote*Math.PI*2/14+now*.003;const spread=recall>0?(1-magicProgress)*58:18+magicProgress*44;const mx=ally.x+Math.cos(a)*spread,my=ally.y-42+Math.sin(a)*spread*.72;ctx.fillStyle=mote%3===0?"#d9b8ff":mote%2?"#b7ff56":"#63e83e";ctx.beginPath();ctx.arc(mx,my,1+(mote%3)*.45,0,Math.PI*2);ctx.fill();}ctx.restore();
+        ctx.save();ctx.globalAlpha=magicAlpha*.85;for(let mote=0;mote<14;mote++){const a=mote*Math.PI*2/14+now*.003;const spread=recall>0?(1-magicProgress)*58:18+magicProgress*44;const mx=ally.x+Math.cos(a)*spread,my=ally.y-42+Math.sin(a)*spread*.72;ctx.fillStyle=mote%3===0?palette.glow:mote%2?palette.accent:palette.mid;ctx.beginPath();ctx.arc(mx,my,1+(mote%3)*.45,0,Math.PI*2);ctx.fill();}ctx.restore();
       }
 
       const summonLift=(1-summonCreature)*34,recallPull=(1-recallCreature)*30;
