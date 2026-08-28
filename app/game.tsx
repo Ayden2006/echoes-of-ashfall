@@ -12,6 +12,7 @@ type Dragon = { x:number; y:number; groundY:number; vx:number; facing:1|-1; mode
 type DragonFrame = { x:number; y:number; w:number; h:number; anchorX:number; anchorY:number };
 type CardPalette = { dark:string; mid:string; accent:string; glow:string };
 type InventoryItem = { id:string; name:string; type:"animal-card"|"item"; description:string; image:string; palette:CardPalette };
+type Companion = { active:boolean; itemId:string|null; map:MapId; x:number; y:number; groundY:number; vx:number; facing:1|-1; mode:DragonMode; modeStarted:number; summonedAt:number; attackUntil:number; attackLanded:boolean; targetX:number; lastPlayerAttack:number };
 
 const MAP1_W = 5200;
 const MAP2_W = 3600;
@@ -124,9 +125,12 @@ export default function AshfallGame() {
   const actionUntil = useRef(0);
   const actionStartedAt = useRef(0);
   const pickupQueued = useRef(false);
+  const deployQueued = useRef(false);
   const inventoryOpenRef = useRef(false);
   const inventoryRef = useRef<InventoryItem[]>([]);
   const equippedRef = useRef<(string|null)[]>(Array(ACTIVE_SLOT_COUNT).fill(null));
+  const selectedSlotRef = useRef(0);
+  const companionRef = useRef<Companion>({active:false,itemId:null,map:1,x:150,y:590,groundY:590,vx:0,facing:1,mode:"idle",modeStarted:0,summonedAt:0,attackUntil:0,attackLanded:false,targetX:0,lastPlayerAttack:-1});
   const audioRef = useRef<AudioContext|null>(null);
   const soundRef = useRef(true);
   const [started,setStarted] = useState(false);
@@ -140,6 +144,12 @@ export default function AshfallGame() {
   const [inventoryOpen,setInventoryOpen] = useState(false);
   const [inventory,setInventory] = useState<InventoryItem[]>([]);
   const [equipped,setEquipped] = useState<(string|null)[]>(Array(ACTIVE_SLOT_COUNT).fill(null));
+  const [selectedSlot,setSelectedSlot] = useState(0);
+  const [deployedItemId,setDeployedItemId] = useState<string|null>(null);
+
+  const selectUsableSlot = useCallback((slot:number)=>{
+    const next=clamp(slot,0,ACTIVE_SLOT_COUNT-1);selectedSlotRef.current=next;setSelectedSlot(next);
+  },[]);
 
   const toggleInventory = useCallback(()=>{
     if(!startedRef.current)return;
@@ -161,7 +171,10 @@ export default function AshfallGame() {
     const current=equippedRef.current;
     const equippedIndex=current.indexOf(itemId);
     let next=[...current];
-    if(equippedIndex>=0)next[equippedIndex]=null;
+    if(equippedIndex>=0){
+      next[equippedIndex]=null;
+      if(companionRef.current.itemId===itemId){companionRef.current.active=false;companionRef.current.itemId=null;setDeployedItemId(null);}
+    }
     else{
       const openIndex=next.indexOf(null);
       if(openIndex<0)return;
@@ -205,6 +218,8 @@ export default function AshfallGame() {
       setObjective("Explore Map 1 or return to the far-right portal");
     }
     pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
+    const ally=companionRef.current;
+    if(ally.active){ally.map=map;ally.x=pl.x-pl.facing*86;ally.y=pl.y+PH;ally.groundY=ally.y;ally.vx=0;ally.mode="idle";ally.modeStarted=performance.now();}
     slideUntil.current=0;actionUntil.current=0;cameraReset.current=true;
     portalFlashUntil.current=performance.now()+430;
     tone(610,.25,.028);window.setTimeout(()=>tone(360,.2,.02),100);
@@ -256,6 +271,8 @@ export default function AshfallGame() {
       if (["arrowleft","arrowright","arrowup","arrowdown"," ","tab"].includes(k)) e.preventDefault();
       if(k==="tab"&&!e.repeat){toggleInventory();return;}
       if(inventoryOpenRef.current){keys.current[k]=false;return;}
+      if(startedRef.current&&/^[1-5]$/.test(k)&&!e.repeat){selectUsableSlot(Number(k)-1);return;}
+      if(startedRef.current&&k==="q"&&!e.repeat){deployQueued.current=true;return;}
       if (!startedRef.current && (k==="enter"||k===" ")) startGame();
       else if (dialogueRef.current && (k==="enter"||k===" "||k==="e")&&!e.repeat) advanceDialogue();
       else {
@@ -269,7 +286,7 @@ export default function AshfallGame() {
     window.addEventListener("keydown",down,{passive:false}); window.addEventListener("keyup",up);
     window.addEventListener("pointermove",aim,{passive:true});
     return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up);window.removeEventListener("pointermove",aim);};
-  },[advanceDialogue,interact,startGame,toggleInventory,updateAim]);
+  },[advanceDialogue,interact,selectUsableSlot,startGame,toggleInventory,updateAim]);
 
   useEffect(()=>{
     const canvas=canvasRef.current, ctx=canvas?.getContext("2d");
@@ -500,6 +517,12 @@ export default function AshfallGame() {
       beginDragonMode("attack",now,1080);
       tone(360,.12,.022);window.setTimeout(()=>tone(190,.22,.026),170);
     };
+    const commandCompanionAttack=(targetX:number,now:number)=>{
+      const ally=companionRef.current;
+      if(!ally.active||ally.map!==mapRef.current)return;
+      ally.targetX=targetX;ally.attackUntil=now+900;ally.attackLanded=false;
+      if(Math.abs(targetX-ally.x)<145){ally.mode="attack";ally.modeStarted=now;ally.facing=targetX>=ally.x?1:-1;}
+    };
     const updateDragon=(dt:number,now:number)=>{
       if(!startedRef.current||mapRef.current!==1)return;
       const pl=player.current;
@@ -535,6 +558,8 @@ export default function AshfallGame() {
         const distance=Math.hypot(dragon.x-pl.x,dragonCenterY-(pl.y+38));
         if(distance<178&&Math.abs(angleDifference)<.86){
           dragon.lastPlayerAttack=actionStartedAt.current;
+          companionRef.current.lastPlayerAttack=actionStartedAt.current;
+          commandCompanionAttack(dragon.x,now);
           dragon.health=Math.max(0,dragon.health-activeAttackDamage.current);
           dragon.hurtStarted=now;
           dragon.hurtUntil=now+520;
@@ -568,6 +593,7 @@ export default function AshfallGame() {
           if(forward>-12&&forward<135&&vertical<112&&playerRespawnAt===0){
             pl.health=Math.max(0,pl.health-dragon.attackDamage);
             playerHurtUntil=now+360;
+            commandCompanionAttack(dragon.x,now);
             if(pl.health===0){dragon.angry=false;playerRespawnAt=now+950;}
             tone(68,.2,.036);
           }
@@ -646,6 +672,97 @@ export default function AshfallGame() {
         playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
       }
     };
+    const companionSurfaceAt=(x:number,currentY:number,map:MapId)=>{
+      const surfaces=platformsFor(map).filter(p=>p.h>80&&x>=p.x&&x<=p.x+p.w);
+      if(!surfaces.length)return null;
+      return surfaces.reduce((best,p)=>Math.abs(p.y-currentY)<Math.abs(best.y-currentY)?p:best).y;
+    };
+    const setCompanionMode=(mode:DragonMode,now:number)=>{
+      const ally=companionRef.current;
+      if(ally.mode===mode)return;
+      ally.mode=mode;ally.modeStarted=now;
+      if(mode==="attack")ally.attackLanded=false;
+    };
+    const updateCompanion=(dt:number,now:number)=>{
+      const ally=companionRef.current;
+      if(!ally.active)return;
+      const pl=player.current,map=mapRef.current;
+      if(ally.map!==map){ally.map=map;ally.x=pl.x-pl.facing*86;ally.groundY=pl.y+PH;ally.y=ally.groundY;ally.vx=0;ally.mode="idle";ally.modeStarted=now;}
+      if(actionStartedAt.current>0&&ally.lastPlayerAttack!==actionStartedAt.current){
+        ally.lastPlayerAttack=actionStartedAt.current;
+        commandCompanionAttack(pl.x+Math.cos(attackAngle.current)*145,now);
+      }
+
+      const hostileActive=map===1&&dragon.health>0&&now<ally.attackUntil;
+      const followX=clamp(pl.x-pl.facing*88,28,worldWidthFor(map)-28);
+      const targetX=now<ally.attackUntil?ally.targetX:followX;
+      const delta=targetX-ally.x,distance=Math.abs(delta);
+      if(distance>18)ally.facing=delta>=0?1:-1;
+
+      if(now<ally.attackUntil&&distance<138){
+        setCompanionMode("attack",now);
+        ally.vx+=(0-ally.vx)*(1-Math.exp(-10*dt));ally.x+=ally.vx*dt;
+        ally.y+=(ally.groundY-50-ally.y)*(1-Math.exp(-10*dt));
+        const attackElapsed=now-ally.modeStarted;
+        if(!ally.attackLanded&&attackElapsed>390){
+          ally.attackLanded=true;
+          if(hostileActive&&Math.abs(dragon.x-ally.x)<155){
+            dragon.health=Math.max(0,dragon.health-8);dragon.hurtStarted=now;dragon.hurtUntil=now+420;dragon.lastDamage=8;dragon.hitDirection=dragon.x>=ally.x?1:-1;
+            if(dragon.health===0){dragon.angry=false;dragon.awarenessUntil=0;dragon.vx*=.3;beginDragonMode("sleep",now,999999999);}
+            else{dragon.angry=true;dragon.awarenessUntil=now+8000;}
+            tone(112,.1,.022);
+          }
+        }
+        if(attackElapsed>720){
+          if(now<ally.attackUntil-100){ally.modeStarted=now;ally.attackLanded=false;}
+          else{ally.attackUntil=0;setCompanionMode("idle",now);}
+        }
+        return;
+      }
+
+      const currentSurface=companionSurfaceAt(ally.x,ally.groundY,map);
+      if(currentSurface!==null)ally.groundY+=(currentSurface-ally.groundY)*(1-Math.exp(-11*dt));
+      const playerGround=pl.y+PH;
+      const needsFlight=distance>270||Math.abs(playerGround-ally.groundY)>34||companionSurfaceAt(ally.x+ally.facing*48,ally.groundY,map)===null;
+      if(distance>34){
+        setCompanionMode(needsFlight?"fly":"run",now);
+        const speed=needsFlight?150:172;
+        ally.vx+=(ally.facing*speed-ally.vx)*(1-Math.exp(-(needsFlight?4.8:7)*dt));ally.x+=ally.vx*dt;
+        ally.x=clamp(ally.x,28,worldWidthFor(map)-28);
+        const nextSurface=companionSurfaceAt(ally.x,ally.groundY,map);
+        if(nextSurface!==null)ally.groundY+=(nextSurface-ally.groundY)*(1-Math.exp(-10*dt));
+        const targetY=needsFlight?Math.min(playerGround-72,ally.groundY-78):ally.groundY;
+        ally.y+=(targetY-ally.y)*(1-Math.exp(-(needsFlight?5:12)*dt));
+      }else{
+        setCompanionMode("idle",now);ally.vx+=(0-ally.vx)*(1-Math.exp(-9*dt));ally.x+=ally.vx*dt;ally.y+=(ally.groundY-ally.y)*(1-Math.exp(-12*dt));
+        ally.facing=pl.x>=ally.x?1:-1;
+      }
+      if(Math.abs(pl.x-ally.x)>620){ally.x=followX;ally.groundY=playerGround;ally.y=playerGround-64;ally.vx=0;setCompanionMode("fly",now);}
+    };
+    const drawCompanion=(now:number)=>{
+      const ally=companionRef.current;
+      if(!ally.active||ally.map!==mapRef.current||!dragonImage.complete||!dragonImage.naturalWidth)return;
+      const frames=DRAGON_FRAMES[ally.mode],elapsed=now-ally.modeStarted;
+      let index=0;
+      if(ally.mode==="idle")index=Math.floor(elapsed/520)%2;
+      else if(ally.mode==="run")index=Math.floor(elapsed/100)%frames.length;
+      else if(ally.mode==="fly")index=Math.floor(elapsed/125)%frames.length;
+      else if(ally.mode==="attack")index=Math.min(frames.length-1,Math.floor(elapsed/175));
+      const frame=frames[index],size=108,spriteScale=size/DRAGON_CELL;
+      const summon=clamp((now-ally.summonedAt)/520,0,1),summonEase=1-Math.pow(1-summon,3);
+      const airHeight=clamp((ally.groundY-ally.y)/110,0,1);
+      ctx.save();ctx.globalAlpha=.5* summonEase;ctx.fillStyle="rgba(70,255,46,.45)";ctx.beginPath();ctx.ellipse(ally.x,ally.groundY+3,27*(1-airHeight*.45),5.5*(1-airHeight*.4),0,0,Math.PI*2);ctx.fill();ctx.restore();
+      ctx.save();ctx.translate(ally.x,ally.y);ctx.scale(ally.facing*sumonScale(summonEase),sumonScale(summonEase));
+      ctx.globalAlpha=summonEase;ctx.shadowColor=ally.mode==="attack"?"rgba(179,255,71,.8)":"rgba(95,224,48,.42)";ctx.shadowBlur=ally.mode==="attack"?17:9;
+      ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);ctx.restore();
+      if(summon<1){
+        ctx.save();ctx.globalAlpha=1-summon;ctx.strokeStyle="#aaff55";ctx.lineWidth=2;
+        for(let i=0;i<10;i++){const angle=i*Math.PI*2/10+now*.004,radius=18+summon*42;ctx.beginPath();ctx.moveTo(ally.x+Math.cos(angle)*radius*.45,ally.y-40+Math.sin(angle)*radius*.3);ctx.lineTo(ally.x+Math.cos(angle)*radius,ally.y-40+Math.sin(angle)*radius*.7);ctx.stroke();}
+        ctx.restore();
+      }
+      ctx.save();ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.9)";ctx.strokeText("ALLY · BABY DRAGON",ally.x,ally.y-104);ctx.fillStyle="#baff71";ctx.fillText("ALLY · BABY DRAGON",ally.x,ally.y-104);ctx.restore();
+    };
+    const sumonScale=(progress:number)=>.18+progress*.82;
     const drawMagicalAnimalCard=(name:string,x:number,groundY:number,now:number,formedAt:number,image:HTMLImageElement,portrait:{x:number;y:number;w:number;h:number},palette:CardPalette)=>{
       const elapsed=now-formedAt;
       const reveal=clamp(elapsed/620,0,1);
@@ -888,7 +1005,7 @@ export default function AshfallGame() {
       }
       ctx.globalAlpha=1;
       if(portalFlashUntil.current>now){ctx.fillStyle="rgba(255,244,214,"+((portalFlashUntil.current-now)/430*.18)+")";ctx.fillRect(cameraX,0,viewW,WORLD_H);}
-      drawDragon(now);
+      drawDragon(now);drawCompanion(now);
       drawPlayer(player.current,now);ctx.restore();
     };
     const frame=(now:number)=>{
@@ -927,6 +1044,23 @@ export default function AshfallGame() {
         if(pl.y>WORLD_H+80){pl.x=map===1?Math.max(120,pl.x-180):340;pl.y=240;pl.vy=0;pl.grounded=false;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}pl.step+=Math.abs(pl.vx)*dt*.048;
       }else{pl.vx*=.82;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
       updateDragon(dt,now);
+      if(deployQueued.current){
+        const itemId=equippedRef.current[selectedSlotRef.current];
+        const item=itemId?inventoryRef.current.find(entry=>entry.id===itemId):null;
+        const ally=companionRef.current;
+        if(item?.type==="animal-card"){
+          if(ally.active&&ally.itemId===item.id){
+            ally.active=false;ally.itemId=null;setDeployedItemId(null);tone(250,.18,.024);window.setTimeout(()=>tone(145,.2,.018),80);
+          }else{
+            const summonX=clamp(pl.x-pl.facing*82,30,activeWorldW-30);
+            const summonGround=companionSurfaceAt(summonX,pl.y+PH,map)??pl.y+PH;
+            ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=summonX;ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;
+            setDeployedItemId(item.id);tone(410,.18,.024);window.setTimeout(()=>tone(760,.24,.022),100);
+          }
+        }
+        deployQueued.current=false;
+      }
+      updateCompanion(dt,now);
       const cardReady=map===1&&dragon.health<=0&&!dragonCardCollected&&now-dragon.modeStarted>900;
       const nearDragonCard=cardReady&&Math.abs(pl.x-dragon.x)<105&&Math.abs((pl.y+PH)-dragon.groundY)<85;
       if(pickupQueued.current){
@@ -981,6 +1115,15 @@ export default function AshfallGame() {
           <div className="health-readout"><Heart size={16} strokeWidth={2.4} aria-hidden="true"/><strong>{health}</strong><span>Health</span></div>
           <div className="health-track"><span style={{width:`${health}%`}}/></div>
         </div>
+        <div className="quick-slots" aria-label="Five usable item slots">
+          {equipped.map((itemId,index)=>{
+            const item=inventory.find(entry=>entry.id===itemId),selected=index===selectedSlot,deployed=Boolean(item&&deployedItemId===item.id);
+            return <button key={index} className={"quick-slot "+(item?"filled ":"")+(selected?"selected ":"")+(deployed?"deployed":"")} onClick={()=>selectUsableSlot(index)} aria-pressed={selected} aria-label={`Slot ${index+1}${item?`, ${item.name}${deployed?", deployed":""}`:", empty"}`}>
+              <span>{index+1}</span>{item?<i className="quick-card-thumb" style={{backgroundImage:`url(${item.image})`,borderColor:item.palette.accent}}/>:<i className="quick-empty"/>}
+            </button>;
+          })}
+          <small><b>1–5</b> Select · <b>Q</b> Deploy</small>
+        </div>
         <div className="chapter-mark"><span className="chapter-line"/><div><p className="eyebrow">Map {mapNumber}</p><p className="chapter-name">{mapNumber===1?"The Signal in the Rain":"Sunset Shore"}</p></div></div>
       </div>
       {started&&<div className="objective"><p className="objective-label">Current objective</p><p className="objective-copy">{objective}</p></div>}
@@ -999,7 +1142,7 @@ export default function AshfallGame() {
         <div className="active-slots">
           {equipped.map((itemId,index)=>{
             const item=inventory.find(entry=>entry.id===itemId);
-            return <button key={index} className={"active-slot "+(item?"filled":"")} onClick={()=>item&&toggleEquippedItem(item.id)} aria-label={item?`Unequip ${item.name}`:`Empty usable slot ${index+1}`}>
+            return <button key={index} className={"active-slot "+(item?"filled ":"")+(index===selectedSlot?"selected":"")} onClick={()=>selectUsableSlot(index)} aria-pressed={index===selectedSlot} aria-label={item?`Select slot ${index+1}, ${item.name}`:`Select empty usable slot ${index+1}`}>
               <span className="slot-number">{index+1}</span>
               {item?<><span className="inventory-card-thumb" style={{backgroundImage:`url(${item.image})`,borderColor:item.palette.accent,boxShadow:`0 0 16px ${item.palette.accent}55`}}/><strong>{item.name}</strong></>:<span className="empty-mark">+</span>}
             </button>;
@@ -1015,12 +1158,12 @@ export default function AshfallGame() {
             </button>;
           })}
         </div>
-        <p className="inventory-help">Defeated animals become cards. Stand near a card and press <b>E</b> to collect it.</p>
+        <p className="inventory-help">Press <b>1–5</b> to select a usable slot, then <b>Q</b> to deploy or recall it. Defeated animals become cards; press <b>E</b> nearby to collect them.</p>
       </div>
     </section>}
     {dialogue&&<div className="dialogue-wrap"><div className="dialogue-box" onClick={advanceDialogue}><p className="speaker">{dialogue[dialogueIndex]?.speaker}</p><p className="dialogue-text">{dialogue[dialogueIndex]?.text}</p><p className="continue-hint">Click or press E to continue</p></div></div>}
     {nearAction&&<div className="interaction"><span className="keycap">E</span>{nearAction}</div>}
-    <div className="controls"><span><b>A D</b> Move</span><span><b>W / Space ×2</b> Double jump</span><span><b>S</b> Crouch / slide</span><span><b>Shift</b> Run</span><span><b>Cursor</b> Aim</span><span><b>Mouse 1</b> Attack</span><span><b>E</b> Interact</span><span><b>Tab</b> Inventory</span></div>
+    <div className="controls"><span><b>A D</b> Move</span><span><b>W / Space ×2</b> Double jump</span><span><b>S</b> Crouch / slide</span><span><b>Shift</b> Run</span><span><b>Mouse 1</b> Attack</span><span><b>E</b> Interact</span><span><b>1–5 + Q</b> Select / deploy</span><span><b>Tab</b> Inventory</span></div>
     <button className="sound-button" onClick={toggleSound} aria-label={soundOn?"Mute sound":"Turn sound on"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}</button>
     <div className="touch-controls" aria-label="Touch controls">
       <div className="touch-group"><button className="touch-btn" aria-label="Move left" onPointerDown={(e)=>touch("a",true,e)} onPointerUp={(e)=>touch("a",false,e)} onPointerCancel={(e)=>touch("a",false,e)}>←</button><button className="touch-btn" aria-label="Move right" onPointerDown={(e)=>touch("d",true,e)} onPointerUp={(e)=>touch("d",false,e)} onPointerCancel={(e)=>touch("d",false,e)}>→</button></div>
