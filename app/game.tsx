@@ -12,7 +12,7 @@ type Dragon = { x:number; y:number; groundY:number; vx:number; facing:1|-1; mode
 type DragonFrame = { x:number; y:number; w:number; h:number; anchorX:number; anchorY:number };
 type CardPalette = { dark:string; mid:string; accent:string; glow:string };
 type InventoryItem = { id:string; name:string; type:"animal-card"|"item"; description:string; image:string; palette:CardPalette };
-type Companion = { active:boolean; itemId:string|null; map:MapId; x:number; y:number; groundY:number; vx:number; facing:1|-1; mode:DragonMode; modeStarted:number; summonedAt:number; attackUntil:number; attackLanded:boolean; targetX:number; lastPlayerAttack:number };
+type Companion = { active:boolean; itemId:string|null; map:MapId; x:number; y:number; groundY:number; vx:number; facing:1|-1; mode:DragonMode; modeStarted:number; summonedAt:number; recallStarted:number; teleportAt:number; attackUntil:number; attackLanded:boolean; targetX:number; lastPlayerAttack:number; health:number; maxHealth:number };
 
 const MAP1_W = 5200;
 const MAP2_W = 3600;
@@ -130,7 +130,7 @@ export default function AshfallGame() {
   const inventoryRef = useRef<InventoryItem[]>([]);
   const equippedRef = useRef<(string|null)[]>(Array(ACTIVE_SLOT_COUNT).fill(null));
   const selectedSlotRef = useRef(0);
-  const companionRef = useRef<Companion>({active:false,itemId:null,map:1,x:150,y:590,groundY:590,vx:0,facing:1,mode:"idle",modeStarted:0,summonedAt:0,attackUntil:0,attackLanded:false,targetX:0,lastPlayerAttack:-1});
+  const companionRef = useRef<Companion>({active:false,itemId:null,map:1,x:150,y:590,groundY:590,vx:0,facing:1,mode:"idle",modeStarted:0,summonedAt:0,recallStarted:0,teleportAt:0,attackUntil:0,attackLanded:false,targetX:0,lastPlayerAttack:-1,health:DRAGON_MAX_HEALTH,maxHealth:DRAGON_MAX_HEALTH});
   const audioRef = useRef<AudioContext|null>(null);
   const soundRef = useRef(true);
   const [started,setStarted] = useState(false);
@@ -173,7 +173,8 @@ export default function AshfallGame() {
     let next=[...current];
     if(equippedIndex>=0){
       next[equippedIndex]=null;
-      if(companionRef.current.itemId===itemId){companionRef.current.active=false;companionRef.current.itemId=null;setDeployedItemId(null);}
+      const ally=companionRef.current;
+      if(ally.active&&ally.itemId===itemId&&ally.recallStarted===0){ally.recallStarted=performance.now();ally.attackUntil=0;ally.vx=0;}
     }
     else{
       const openIndex=next.indexOf(null);
@@ -219,7 +220,7 @@ export default function AshfallGame() {
     }
     pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
     const ally=companionRef.current;
-    if(ally.active){ally.map=map;ally.x=pl.x-pl.facing*86;ally.y=pl.y+PH;ally.groundY=ally.y;ally.vx=0;ally.mode="idle";ally.modeStarted=performance.now();}
+    if(ally.active){const now=performance.now();ally.map=map;ally.x=pl.x-pl.facing*96;ally.y=pl.y+PH;ally.groundY=ally.y;ally.vx=0;ally.mode="idle";ally.modeStarted=now;ally.teleportAt=now;}
     slideUntil.current=0;actionUntil.current=0;cameraReset.current=true;
     portalFlashUntil.current=performance.now()+430;
     tone(610,.25,.028);window.setTimeout(()=>tone(360,.2,.02),100);
@@ -687,14 +688,20 @@ export default function AshfallGame() {
       const ally=companionRef.current;
       if(!ally.active)return;
       const pl=player.current,map=mapRef.current;
-      if(ally.map!==map){ally.map=map;ally.x=pl.x-pl.facing*86;ally.groundY=pl.y+PH;ally.y=ally.groundY;ally.vx=0;ally.mode="idle";ally.modeStarted=now;}
-      if(actionStartedAt.current>0&&ally.lastPlayerAttack!==actionStartedAt.current){
-        ally.lastPlayerAttack=actionStartedAt.current;
-        commandCompanionAttack(pl.x+Math.cos(attackAngle.current)*145,now);
+      if(ally.recallStarted>0){
+        ally.attackUntil=0;ally.vx+=(0-ally.vx)*(1-Math.exp(-12*dt));ally.x+=ally.vx*dt;
+        if(now-ally.recallStarted>=680){ally.active=false;ally.itemId=null;ally.recallStarted=0;setDeployedItemId(null);}
+        return;
       }
+      if(ally.map!==map){ally.map=map;ally.x=pl.x-pl.facing*96;ally.groundY=pl.y+PH;ally.y=ally.groundY-52;ally.vx=0;ally.mode="fly";ally.modeStarted=now;ally.teleportAt=now;}
 
       const hostileActive=map===1&&dragon.health>0&&now<ally.attackUntil;
-      const followX=clamp(pl.x-pl.facing*88,28,worldWidthFor(map)-28);
+      const followX=clamp(pl.x-pl.facing*104,28,worldWidthFor(map)-28);
+      const playerGround=pl.y+PH;
+      if(Math.abs(pl.x-ally.x)>390){
+        const arrivalGround=companionSurfaceAt(followX,playerGround,map)??playerGround;
+        ally.x=followX;ally.groundY=arrivalGround;ally.y=arrivalGround-58;ally.vx=0;ally.attackUntil=0;ally.teleportAt=now;ally.facing=pl.facing;setCompanionMode("fly",now);
+      }
       const targetX=now<ally.attackUntil?ally.targetX:followX;
       const delta=targetX-ally.x,distance=Math.abs(delta);
       if(distance>18)ally.facing=delta>=0?1:-1;
@@ -722,22 +729,23 @@ export default function AshfallGame() {
 
       const currentSurface=companionSurfaceAt(ally.x,ally.groundY,map);
       if(currentSurface!==null)ally.groundY+=(currentSurface-ally.groundY)*(1-Math.exp(-11*dt));
-      const playerGround=pl.y+PH;
-      const needsFlight=distance>270||Math.abs(playerGround-ally.groundY)>34||companionSurfaceAt(ally.x+ally.facing*48,ally.groundY,map)===null;
-      if(distance>34){
-        setCompanionMode(needsFlight?"fly":"run",now);
-        const speed=needsFlight?150:172;
-        ally.vx+=(ally.facing*speed-ally.vx)*(1-Math.exp(-(needsFlight?4.8:7)*dt));ally.x+=ally.vx*dt;
+      const noGroundAhead=companionSurfaceAt(ally.x+ally.facing*48,ally.groundY,map)===null;
+      const needsFlight=Math.abs(playerGround-ally.groundY)>34||noGroundAhead;
+      if(distance>46){
+        const followMode:DragonMode=needsFlight?"fly":distance>170?"run":"walk";
+        setCompanionMode(followMode,now);
+        const speed=followMode==="fly"?128:followMode==="run"?158:64;
+        const response=followMode==="walk"?4.2:followMode==="fly"?4.8:6.6;
+        ally.vx+=(ally.facing*speed-ally.vx)*(1-Math.exp(-response*dt));ally.x+=ally.vx*dt;
         ally.x=clamp(ally.x,28,worldWidthFor(map)-28);
         const nextSurface=companionSurfaceAt(ally.x,ally.groundY,map);
         if(nextSurface!==null)ally.groundY+=(nextSurface-ally.groundY)*(1-Math.exp(-10*dt));
-        const targetY=needsFlight?Math.min(playerGround-72,ally.groundY-78):ally.groundY;
-        ally.y+=(targetY-ally.y)*(1-Math.exp(-(needsFlight?5:12)*dt));
+        const targetY=followMode==="fly"?Math.min(playerGround-68,ally.groundY-76):ally.groundY;
+        ally.y+=(targetY-ally.y)*(1-Math.exp(-(followMode==="fly"?5:12)*dt));
       }else{
         setCompanionMode("idle",now);ally.vx+=(0-ally.vx)*(1-Math.exp(-9*dt));ally.x+=ally.vx*dt;ally.y+=(ally.groundY-ally.y)*(1-Math.exp(-12*dt));
         ally.facing=pl.x>=ally.x?1:-1;
       }
-      if(Math.abs(pl.x-ally.x)>620){ally.x=followX;ally.groundY=playerGround;ally.y=playerGround-64;ally.vx=0;setCompanionMode("fly",now);}
     };
     const drawCompanion=(now:number)=>{
       const ally=companionRef.current;
@@ -745,24 +753,49 @@ export default function AshfallGame() {
       const frames=DRAGON_FRAMES[ally.mode],elapsed=now-ally.modeStarted;
       let index=0;
       if(ally.mode==="idle")index=Math.floor(elapsed/520)%2;
+      else if(ally.mode==="walk")index=Math.floor(elapsed/180)%frames.length;
       else if(ally.mode==="run")index=Math.floor(elapsed/100)%frames.length;
       else if(ally.mode==="fly")index=Math.floor(elapsed/125)%frames.length;
       else if(ally.mode==="attack")index=Math.min(frames.length-1,Math.floor(elapsed/175));
       const frame=frames[index],size=108,spriteScale=size/DRAGON_CELL;
       const summon=clamp((now-ally.summonedAt)/520,0,1),summonEase=1-Math.pow(1-summon,3);
+      const recall=ally.recallStarted>0?clamp((now-ally.recallStarted)/680,0,1):0,recallEase=recall*recall*(3-2*recall);
+      const visibility=summonEase*(1-recallEase),spriteGrow=.18+summonEase*.82;
       const airHeight=clamp((ally.groundY-ally.y)/110,0,1);
-      ctx.save();ctx.globalAlpha=.5* summonEase;ctx.fillStyle="rgba(70,255,46,.45)";ctx.beginPath();ctx.ellipse(ally.x,ally.groundY+3,27*(1-airHeight*.45),5.5*(1-airHeight*.4),0,0,Math.PI*2);ctx.fill();ctx.restore();
-      ctx.save();ctx.translate(ally.x,ally.y);ctx.scale(ally.facing*sumonScale(summonEase),sumonScale(summonEase));
-      ctx.globalAlpha=summonEase;ctx.shadowColor=ally.mode==="attack"?"rgba(179,255,71,.8)":"rgba(95,224,48,.42)";ctx.shadowBlur=ally.mode==="attack"?17:9;
-      ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);ctx.restore();
-      if(summon<1){
-        ctx.save();ctx.globalAlpha=1-summon;ctx.strokeStyle="#aaff55";ctx.lineWidth=2;
-        for(let i=0;i<10;i++){const angle=i*Math.PI*2/10+now*.004,radius=18+summon*42;ctx.beginPath();ctx.moveTo(ally.x+Math.cos(angle)*radius*.45,ally.y-40+Math.sin(angle)*radius*.3);ctx.lineTo(ally.x+Math.cos(angle)*radius,ally.y-40+Math.sin(angle)*radius*.7);ctx.stroke();}
+      ctx.save();ctx.globalAlpha=.5*visibility;ctx.fillStyle="rgba(70,255,46,.45)";ctx.beginPath();ctx.ellipse(ally.x,ally.groundY+3,27*(1-airHeight*.45),5.5*(1-airHeight*.4),0,0,Math.PI*2);ctx.fill();ctx.restore();
+
+      const teleport=clamp((now-ally.teleportAt)/520,0,1);
+      if(ally.teleportAt>0&&teleport<1){
+        ctx.save();ctx.translate(ally.x,ally.groundY-42);ctx.globalAlpha=1-teleport;
+        ctx.strokeStyle="#b9ff63";ctx.lineWidth=2.5;ctx.shadowColor="#75ff34";ctx.shadowBlur=18;
+        for(let ring=0;ring<3;ring++){const r=12+teleport*46+ring*9;ctx.beginPath();ctx.ellipse(0,0,r,r*.42,now*.003+ring,0,Math.PI*2);ctx.stroke();}
         ctx.restore();
       }
-      ctx.save();ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.9)";ctx.strokeText("ALLY · BABY DRAGON",ally.x,ally.y-104);ctx.fillStyle="#baff71";ctx.fillText("ALLY · BABY DRAGON",ally.x,ally.y-104);ctx.restore();
+      if(summon<1||recall>0){
+        const magicProgress=recall>0?recall:summon;
+        const magicAlpha=recall>0?1-recall*.28:1-summon*.38;
+        const magicColor=recall>0?"#d9b8ff":"#b4ff58";
+        ctx.save();ctx.translate(ally.x,ally.groundY-50);ctx.globalAlpha=magicAlpha;ctx.strokeStyle=magicColor;ctx.shadowColor=magicColor;ctx.shadowBlur=18;
+        ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,48,24+Math.sin(now*.01)*3,8,0,0,Math.PI*2);ctx.stroke();
+        ctx.rotate((recall>0?-1:1)*now*.004);ctx.beginPath();for(let rune=0;rune<6;rune++){const a=rune*Math.PI/3;const radius=31+Math.sin(now*.006+rune)*4;const rx=Math.cos(a)*radius,ry=Math.sin(a)*radius*.58;if(rune===0)ctx.moveTo(rx,ry);else ctx.lineTo(rx,ry);}ctx.closePath();ctx.stroke();
+        ctx.restore();
+        ctx.save();ctx.globalAlpha=magicAlpha*.85;for(let mote=0;mote<14;mote++){const a=mote*Math.PI*2/14+now*.003;const spread=recall>0?(1-magicProgress)*58:18+magicProgress*44;const mx=ally.x+Math.cos(a)*spread,my=ally.y-42+Math.sin(a)*spread*.72;ctx.fillStyle=mote%3===0?"#d9b8ff":mote%2?"#b7ff56":"#63e83e";ctx.beginPath();ctx.arc(mx,my,1+(mote%3)*.45,0,Math.PI*2);ctx.fill();}ctx.restore();
+      }
+
+      ctx.save();ctx.translate(ally.x,ally.y-26*recallEase);ctx.rotate(ally.facing*recallEase*.62);ctx.scale(ally.facing*spriteGrow*(1-recallEase*.78),spriteGrow*(1-recallEase*.78));
+      ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?"rgba(179,255,71,.8)":"rgba(95,224,48,.42)";ctx.shadowBlur=ally.mode==="attack"?17:9;
+      ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);ctx.restore();
+
+      if(recall>0){
+        ctx.save();ctx.translate(ally.x,ally.y-46);ctx.rotate(recallEase*Math.PI*1.25);ctx.scale(.25+recallEase*.75,.25+recallEase*.75);ctx.globalAlpha=recallEase*(1-recall*.55);ctx.strokeStyle="#d7adff";ctx.lineWidth=2;ctx.shadowColor="#aaff55";ctx.shadowBlur=20;ctx.beginPath();ctx.roundRect(-19,-28,38,56,5);ctx.stroke();ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);ctx.stroke();ctx.restore();
+      }
+      if(recall<.58){
+        const healthRatio=clamp(ally.health/ally.maxHealth,0,1),barY=ally.y-112;
+        ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.92)";ctx.strokeText(`ALLY · BABY DRAGON  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle="#d9ffb0";ctx.fillText(`ALLY · BABY DRAGON  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);
+        ctx.fillStyle="rgba(2,7,8,.84)";ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.fill();
+        const healthGradient=ctx.createLinearGradient(ally.x-46,0,ally.x+46,0);healthGradient.addColorStop(0,"#5ed52d");healthGradient.addColorStop(1,"#b7ff57");ctx.fillStyle=healthGradient;ctx.beginPath();ctx.roundRect(ally.x-46,barY+2,92*healthRatio,3,1.5);ctx.fill();ctx.strokeStyle="rgba(190,255,132,.72)";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.stroke();ctx.restore();
+      }
     };
-    const sumonScale=(progress:number)=>.18+progress*.82;
     const drawMagicalAnimalCard=(name:string,x:number,groundY:number,now:number,formedAt:number,image:HTMLImageElement,portrait:{x:number;y:number;w:number;h:number},palette:CardPalette)=>{
       const elapsed=now-formedAt;
       const reveal=clamp(elapsed/620,0,1);
@@ -1050,11 +1083,11 @@ export default function AshfallGame() {
         const ally=companionRef.current;
         if(item?.type==="animal-card"){
           if(ally.active&&ally.itemId===item.id){
-            ally.active=false;ally.itemId=null;setDeployedItemId(null);tone(250,.18,.024);window.setTimeout(()=>tone(145,.2,.018),80);
+            if(ally.recallStarted===0){ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;tone(350,.16,.024);window.setTimeout(()=>tone(170,.28,.02),110);}
           }else{
             const summonX=clamp(pl.x-pl.facing*82,30,activeWorldW-30);
             const summonGround=companionSurfaceAt(summonX,pl.y+PH,map)??pl.y+PH;
-            ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=summonX;ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;
+            ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=summonX;ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.recallStarted=0;ally.teleportAt=0;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;ally.health=ally.maxHealth;
             setDeployedItemId(item.id);tone(410,.18,.024);window.setTimeout(()=>tone(760,.24,.022),100);
           }
         }
