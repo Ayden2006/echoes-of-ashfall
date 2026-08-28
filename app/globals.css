@@ -20,6 +20,12 @@ button { font:inherit; }
 .health-readout span { color:rgba(231,238,233,.68); font-size:8px; font-weight:900; letter-spacing:.2em; }
 .health-track { height:5px; margin-top:7px; overflow:hidden; border:1px solid rgba(255,255,255,.1); background:#100b12; }
 .health-track span { display:block; height:100%; background:linear-gradient(90deg,#a82e4c,#e45a6e 72%,#f0a17c); box-shadow:0 0 9px rgba(228,90,110,.5); transition:width .2s ease; }
+.stamina-meter { margin-top:9px; padding-top:7px; border-top:1px solid rgba(225,197,148,.12); }
+.stamina-readout { display:flex; align-items:center; justify-content:space-between; color:rgba(202,247,245,.7); font-size:7px; font-weight:900; letter-spacing:.18em; line-height:1; text-transform:uppercase; }
+.stamina-readout strong { color:#d9fffd; font-size:8px; font-variant-numeric:tabular-nums; letter-spacing:.08em; text-shadow:0 0 7px rgba(116,230,226,.48); }
+.stamina-track { position:relative; height:7px; margin-top:5px; overflow:hidden; border:1px solid rgba(178,239,236,.18); background:repeating-linear-gradient(90deg,#0a1113 0,#0a1113 calc(25% - 2px),rgba(194,244,241,.2) calc(25% - 2px),rgba(194,244,241,.2) 25%); }
+.stamina-track span { display:block; height:100%; background:linear-gradient(90deg,#278b91,#74e6e2 70%,#d3fffb); box-shadow:0 0 10px rgba(116,230,226,.58); transition:width .12s linear; }
+.stamina-track::after { content:""; position:absolute; inset:0; background:repeating-linear-gradient(90deg,transparent 0,transparent calc(25% - 1px),rgba(3,11,13,.88) calc(25% - 1px),rgba(3,11,13,.88) 25%); pointer-events:none; }
 .quick-slots { width:clamp(158px,17vw,202px); display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; pointer-events:auto; }
 .quick-slot { position:relative; height:46px; padding:3px; display:grid; place-items:center; border:1px solid rgba(231,238,233,.18); border-radius:3px; background:linear-gradient(145deg,rgba(7,11,13,.92),rgba(24,16,31,.82)); color:rgba(231,238,233,.5); cursor:pointer; box-shadow:0 5px 14px rgba(0,0,0,.24); }
 .quick-slot>span { position:absolute; top:2px; left:4px; z-index:2; font-size:7px; font-weight:900; }
