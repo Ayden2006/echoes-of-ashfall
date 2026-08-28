@@ -10,6 +10,8 @@ type Platform = { x:number; y:number; w:number; h:number };
 type DragonMode = "idle"|"walk"|"run"|"fly"|"sleep"|"attack";
 type Dragon = { x:number; y:number; groundY:number; vx:number; facing:1|-1; mode:DragonMode; modeStarted:number; modeUntil:number; health:number; maxHealth:number; attackDamage:number; lastPlayerAttack:number; attackLanded:boolean; hurtStarted:number; hurtUntil:number; hitDirection:1|-1; lastDamage:number; angry:boolean; landing:boolean; targetX:number; awarenessUntil:number };
 type DragonFrame = { x:number; y:number; w:number; h:number; anchorX:number; anchorY:number };
+type CardPalette = { dark:string; mid:string; accent:string; glow:string };
+type InventoryItem = { id:string; name:string; type:"animal-card"|"item"; description:string; image:string; palette:CardPalette };
 
 const MAP1_W = 5200;
 const MAP2_W = 3600;
@@ -32,6 +34,12 @@ const DRAGON_CHASE_MAX = 2700;
 const DRAGON_PATROL_MIN = 1475;
 const DRAGON_PATROL_MAX = 1990;
 const DRAGON_CELL = 256;
+const INVENTORY_CAPACITY = 30;
+const ACTIVE_SLOT_COUNT = 5;
+const BABY_DRAGON_CARD:InventoryItem = {
+  id:"baby-dragon-card",name:"Baby Dragon",type:"animal-card",description:"A magical card holding the spirit of a young ash dragon.",image:"/baby-dragon-sprite-sheet.png",
+  palette:{dark:"#090d0c",mid:"#202a24",accent:"#71d92f",glow:"#b2ff55"}
+};
 const DRAGON_FRAMES:Record<DragonMode,DragonFrame[]> = {
   idle:[
     {x:256,y:25,w:256,h:260,anchorX:128,anchorY:260},{x:512,y:25,w:256,h:258,anchorX:128,anchorY:258},
@@ -115,6 +123,10 @@ export default function AshfallGame() {
   const triggered = useRef(new Set<string>());
   const actionUntil = useRef(0);
   const actionStartedAt = useRef(0);
+  const pickupQueued = useRef(false);
+  const inventoryOpenRef = useRef(false);
+  const inventoryRef = useRef<InventoryItem[]>([]);
+  const equippedRef = useRef<(string|null)[]>(Array(ACTIVE_SLOT_COUNT).fill(null));
   const audioRef = useRef<AudioContext|null>(null);
   const soundRef = useRef(true);
   const [started,setStarted] = useState(false);
@@ -125,6 +137,38 @@ export default function AshfallGame() {
   const [objective,setObjective] = useState("Follow the signal toward the old bell tower");
   const [soundOn,setSoundOn] = useState(true);
   const [health,setHealth] = useState(MAX_HEALTH);
+  const [inventoryOpen,setInventoryOpen] = useState(false);
+  const [inventory,setInventory] = useState<InventoryItem[]>([]);
+  const [equipped,setEquipped] = useState<(string|null)[]>(Array(ACTIVE_SLOT_COUNT).fill(null));
+
+  const toggleInventory = useCallback(()=>{
+    if(!startedRef.current)return;
+    setInventoryOpen(open=>{
+      const next=!open;inventoryOpenRef.current=next;
+      keys.current={};jumpQueued.current=false;slideQueued.current=false;
+      return next;
+    });
+  },[]);
+
+  const collectInventoryItem = useCallback((item:InventoryItem)=>{
+    if(inventoryRef.current.some(existing=>existing.id===item.id))return true;
+    if(inventoryRef.current.length>=INVENTORY_CAPACITY)return false;
+    const next=[...inventoryRef.current,item];inventoryRef.current=next;setInventory(next);
+    return true;
+  },[]);
+
+  const toggleEquippedItem = useCallback((itemId:string)=>{
+    const current=equippedRef.current;
+    const equippedIndex=current.indexOf(itemId);
+    let next=[...current];
+    if(equippedIndex>=0)next[equippedIndex]=null;
+    else{
+      const openIndex=next.indexOf(null);
+      if(openIndex<0)return;
+      next[openIndex]=itemId;
+    }
+    equippedRef.current=next;setEquipped(next);
+  },[]);
 
   const tone = useCallback((freq:number,duration=.12,volume=.024) => {
     const audio = audioRef.current;
@@ -197,7 +241,7 @@ export default function AshfallGame() {
   },[]);
 
   const attack = useCallback(() => {
-    if (!startedRef.current||dialogueRef.current) return;
+    if (!startedRef.current||dialogueRef.current||inventoryOpenRef.current) return;
     const now=performance.now();
     attackAngle.current=aimAngle.current;
     activeAttackDamage.current=player.current.swordDamage;
@@ -209,13 +253,15 @@ export default function AshfallGame() {
   useEffect(()=>{
     const down=(e:KeyboardEvent)=>{
       const k=e.key.toLowerCase(); keys.current[k]=true;
-      if (["arrowleft","arrowright","arrowup","arrowdown"," "].includes(k)) e.preventDefault();
+      if (["arrowleft","arrowright","arrowup","arrowdown"," ","tab"].includes(k)) e.preventDefault();
+      if(k==="tab"&&!e.repeat){toggleInventory();return;}
+      if(inventoryOpenRef.current){keys.current[k]=false;return;}
       if (!startedRef.current && (k==="enter"||k===" ")) startGame();
       else if (dialogueRef.current && (k==="enter"||k===" "||k==="e")&&!e.repeat) advanceDialogue();
       else {
         if ((k==="w"||k==="arrowup"||k===" ")&&!e.repeat) jumpQueued.current=true;
         if ((k==="s"||k==="arrowdown")&&!e.repeat) slideQueued.current=true;
-        if (k==="e"&&!e.repeat) interact();
+        if (k==="e"&&!e.repeat){pickupQueued.current=true;interact();}
       }
     };
     const up=(e:KeyboardEvent)=>{ keys.current[e.key.toLowerCase()]=false; };
@@ -223,7 +269,7 @@ export default function AshfallGame() {
     window.addEventListener("keydown",down,{passive:false}); window.addEventListener("keyup",up);
     window.addEventListener("pointermove",aim,{passive:true});
     return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up);window.removeEventListener("pointermove",aim);};
-  },[advanceDialogue,interact,startGame,updateAim]);
+  },[advanceDialogue,interact,startGame,toggleInventory,updateAim]);
 
   useEffect(()=>{
     const canvas=canvasRef.current, ctx=canvas?.getContext("2d");
@@ -234,7 +280,7 @@ export default function AshfallGame() {
     const knight=new Image(); knight.src="/knight-sprite-sheet.png";
     const dragonImage=new Image(); dragonImage.src="/baby-dragon-sprite-sheet.png";
     const dragon:Dragon={x:1710,y:570,groundY:570,vx:0,facing:1,mode:"idle",modeStarted:last,modeUntil:last+2800,health:DRAGON_MAX_HEALTH,maxHealth:DRAGON_MAX_HEALTH,attackDamage:DRAGON_ATTACK_DAMAGE,lastPlayerAttack:-1,attackLanded:false,hurtStarted:0,hurtUntil:0,hitDirection:1,lastDamage:0,angry:false,landing:false,targetX:1840,awarenessUntil:0};
-    let playerHurtUntil=0,playerRespawnAt=0;
+    let playerHurtUntil=0,playerRespawnAt=0,dragonCardCollected=inventoryRef.current.some(item=>item.id===BABY_DRAGON_CARD.id);
     const eyeLayer=document.createElement("canvas"),eyeLayerCtx=eyeLayer.getContext("2d");
     const eyeCoverLayer=document.createElement("canvas"),eyeCoverCtx=eyeCoverLayer.getContext("2d");
     const attackBodyLayer=document.createElement("canvas"),attackBodyCtx=attackBodyLayer.getContext("2d");
@@ -600,61 +646,61 @@ export default function AshfallGame() {
         playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
       }
     };
-    const drawMagicalAnimalCard=(name:string,x:number,groundY:number,now:number,formedAt:number,image:HTMLImageElement,portrait:{x:number;y:number;w:number;h:number})=>{
+    const drawMagicalAnimalCard=(name:string,x:number,groundY:number,now:number,formedAt:number,image:HTMLImageElement,portrait:{x:number;y:number;w:number;h:number},palette:CardPalette)=>{
       const elapsed=now-formedAt;
       const reveal=clamp(elapsed/620,0,1);
       if(reveal<=0)return;
       const eased=1-Math.pow(1-reveal,3);
-      const hover=Math.sin(now*.0042)*3;
-      const cardY=groundY-64+hover;
+      const hover=Math.sin(now*.0042)*2;
+      const cardY=groundY-34+hover;
       const riseY=groundY-12+(cardY-(groundY-12))*eased;
-      const scale=.16+eased*.84;
+      const scale=(.16+eased*.84)*.5;
       const spin=(1-eased)*Math.PI*1.7;
       const cardW=76,cardH=112;
 
       ctx.save();
       ctx.globalAlpha=eased;
       ctx.fillStyle="rgba(0,0,0,.38)";
-      ctx.beginPath();ctx.ellipse(x,groundY+4,30*eased,6*eased,0,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.ellipse(x,groundY+4,15*eased,3.5*eased,0,0,Math.PI*2);ctx.fill();
       ctx.restore();
 
       ctx.save();ctx.translate(x,riseY);ctx.rotate(spin+Math.sin(now*.0022)*.025);ctx.scale(scale,scale);
       const glow=ctx.createRadialGradient(0,0,8,0,0,74);
-      glow.addColorStop(0,"rgba(184,255,70,.24)");glow.addColorStop(1,"rgba(70,255,126,0)");
+      glow.addColorStop(0,palette.glow+"55");glow.addColorStop(1,palette.accent+"00");
       ctx.fillStyle=glow;ctx.fillRect(-78,-82,156,164);
-      ctx.shadowColor="rgba(174,255,70,.85)";ctx.shadowBlur=18;
+      ctx.shadowColor=palette.glow;ctx.shadowBlur=18;
       const cardGradient=ctx.createLinearGradient(-cardW/2,-cardH/2,cardW/2,cardH/2);
-      cardGradient.addColorStop(0,"#f5d877");cardGradient.addColorStop(.28,"#8052c6");cardGradient.addColorStop(.72,"#24163f");cardGradient.addColorStop(1,"#bdf35c");
+      cardGradient.addColorStop(0,palette.accent);cardGradient.addColorStop(.28,palette.mid);cardGradient.addColorStop(.72,palette.dark);cardGradient.addColorStop(1,palette.glow);
       ctx.fillStyle=cardGradient;ctx.beginPath();ctx.roundRect(-cardW/2,-cardH/2,cardW,cardH,8);ctx.fill();
-      ctx.shadowBlur=0;ctx.strokeStyle="#efffa1";ctx.lineWidth=2;ctx.stroke();
-      ctx.strokeStyle="rgba(12,6,25,.9)";ctx.lineWidth=3;ctx.beginPath();ctx.roundRect(-cardW/2+5,-cardH/2+5,cardW-10,cardH-10,5);ctx.stroke();
+      ctx.shadowBlur=0;ctx.strokeStyle=palette.glow;ctx.lineWidth=2;ctx.stroke();
+      ctx.strokeStyle=palette.dark;ctx.lineWidth=3;ctx.beginPath();ctx.roundRect(-cardW/2+5,-cardH/2+5,cardW-10,cardH-10,5);ctx.stroke();
 
       ctx.save();ctx.beginPath();ctx.roundRect(-29,-44,58,62,5);ctx.clip();
       const portraitGlow=ctx.createRadialGradient(0,-16,3,0,-16,43);
-      portraitGlow.addColorStop(0,"#557827");portraitGlow.addColorStop(1,"#100b1f");
+      portraitGlow.addColorStop(0,palette.mid);portraitGlow.addColorStop(1,palette.dark);
       ctx.fillStyle=portraitGlow;ctx.fillRect(-29,-44,58,62);
       ctx.imageSmoothingEnabled=true;
       ctx.drawImage(image,portrait.x,portrait.y,portrait.w,portrait.h,-30,-45,60,64);
       ctx.restore();
-      ctx.strokeStyle="#dfff78";ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(-29,-44,58,62,5);ctx.stroke();
+      ctx.strokeStyle=palette.glow;ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(-29,-44,58,62,5);ctx.stroke();
 
       ctx.fillStyle="#f5ffd3";ctx.textAlign="center";ctx.textBaseline="middle";
       ctx.font="900 7px ui-monospace, SFMono-Regular, Menlo, monospace";
       ctx.fillText(name.toUpperCase(),0,29);
-      ctx.fillStyle="#c8ff61";ctx.font="900 12px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("✦",0,43);
+      ctx.fillStyle=palette.glow;ctx.font="900 12px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("✦",0,43);
       ctx.restore();
 
       ctx.save();ctx.globalAlpha=eased;
       for(let mote=0;mote<12;mote++){
         const angle=mote*Math.PI*2/12+now*.0012;
-        const radius=44+Math.sin(now*.004+mote)*9;
+        const radius=23+Math.sin(now*.004+mote)*4;
         const mx=x+Math.cos(angle)*radius,my=riseY+Math.sin(angle)*radius*.72;
-        ctx.fillStyle=mote%3===0?"#f8e985":mote%3===1?"#a9ff4b":"#a66cff";
-        ctx.beginPath();ctx.arc(mx,my,1.2+(mote%2),0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=mote%3===0?palette.glow:mote%3===1?palette.accent:palette.mid;
+        ctx.beginPath();ctx.arc(mx,my,.8+(mote%2)*.6,0,Math.PI*2);ctx.fill();
       }
       if(elapsed<1700){
         ctx.globalAlpha*=clamp(1-elapsed/1700,0,1);
-        ctx.font="900 10px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="bottom";
+        ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="bottom";
         ctx.lineWidth=3;ctx.strokeStyle="rgba(7,3,16,.9)";ctx.strokeText("MAGICAL CARD FORMED",x,riseY-cardH/2*scale-13);
         ctx.fillStyle="#eaff9f";ctx.fillText("MAGICAL CARD FORMED",x,riseY-cardH/2*scale-13);
       }
@@ -682,7 +728,7 @@ export default function AshfallGame() {
         }
         ctx.restore();
       }
-      drawMagicalAnimalCard("Baby Dragon",dragon.x,dragon.groundY,now,dragon.modeStarted+350,dragonImage,{x:0,y:25,w:256,h:260});
+      if(!dragonCardCollected)drawMagicalAnimalCard("Baby Dragon",dragon.x,dragon.groundY,now,dragon.modeStarted+350,dragonImage,{x:0,y:25,w:256,h:260},BABY_DRAGON_CARD.palette);
     };
     const drawDragon=(now:number)=>{
       if(mapRef.current!==1||!dragonImage.complete||!dragonImage.naturalWidth)return;
@@ -849,7 +895,7 @@ export default function AshfallGame() {
       const dt=Math.min((now-last)/1000,.032);last=now;const w=canvas.clientWidth,h=canvas.clientHeight,scale=Math.max(w/1280,h/WORLD_H),pl=player.current,map=mapRef.current,activeWorldW=worldWidthFor(map);
       if(actionUntil.current<=now)activeAttackDamage.current=0;
       if(pl.health!==lastHealth){lastHealth=pl.health;setHealth(pl.health);}
-      if(startedRef.current&&!dialogueRef.current&&playerRespawnAt===0){
+      if(startedRef.current&&!dialogueRef.current&&!inventoryOpenRef.current&&playerRespawnAt===0){
         const left=keys.current.a||keys.current.arrowleft,right=keys.current.d||keys.current.arrowright,target=(right?1:0)-(left?1:0),down=keys.current.s||keys.current.arrowdown;
         const wasGrounded=pl.grounded;
         const wantsSlide=slideQueued.current;slideQueued.current=false;
@@ -881,6 +927,15 @@ export default function AshfallGame() {
         if(pl.y>WORLD_H+80){pl.x=map===1?Math.max(120,pl.x-180):340;pl.y=240;pl.vy=0;pl.grounded=false;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}pl.step+=Math.abs(pl.vx)*dt*.048;
       }else{pl.vx*=.82;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
       updateDragon(dt,now);
+      const cardReady=map===1&&dragon.health<=0&&!dragonCardCollected&&now-dragon.modeStarted>900;
+      const nearDragonCard=cardReady&&Math.abs(pl.x-dragon.x)<105&&Math.abs((pl.y+PH)-dragon.groundY)<85;
+      if(pickupQueued.current){
+        if(nearDragonCard&&collectInventoryItem(BABY_DRAGON_CARD)){
+          dragonCardCollected=true;toggleEquippedItem(BABY_DRAGON_CARD.id);
+          tone(760,.16,.025);window.setTimeout(()=>tone(1040,.22,.018),90);
+        }
+        pickupQueued.current=false;
+      }
       const cameraTarget=clamp(pl.x-w/scale*.38,0,Math.max(0,activeWorldW-w/scale));
       if(cameraReset.current){cameraX=cameraTarget;cameraReset.current=false;}else cameraX+=(cameraTarget-cameraX)*Math.min(1,dt*3.8);
       cameraXRef.current=cameraX;renderScaleRef.current=scale;
@@ -890,7 +945,8 @@ export default function AshfallGame() {
       }
       let action="";
       if(!dialogueRef.current){
-        if(map===1&&Math.abs(pl.x-3850)<155&&!triggered.current.has("tower"))action="Listen to the radio";
+        if(nearDragonCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Baby Dragon card";
+        else if(map===1&&Math.abs(pl.x-3850)<155&&!triggered.current.has("tower"))action="Listen to the radio";
         else if(map===1&&Math.abs(pl.x-(MAP1_PORTAL_X+55))<145)action="Enter Map 2";
         else if(map===2&&Math.abs(pl.x-(MAP2_PORTAL_X+55))<145)action="Return to Map 1";
       }
@@ -910,7 +966,7 @@ export default function AshfallGame() {
     };
     raf=requestAnimationFrame(frame);
     return()=>{cancelAnimationFrame(raf);window.removeEventListener("resize",resize);knight.removeEventListener("load",prepareActualEyes);};
-  },[tone]);
+  },[collectInventoryItem,toggleEquippedItem,tone]);
 
   const touch=useCallback((key:string,value:boolean,e:React.PointerEvent)=>{e.preventDefault();keys.current[key]=value;if(key==="w"&&value&&!dialogueRef.current)jumpQueued.current=true;if(key==="s"&&value&&!dialogueRef.current)slideQueued.current=true;},[]);
   const toggleSound=()=>{soundRef.current=!soundRef.current;setSoundOn(soundRef.current);if(soundRef.current)tone(520,.16,.025);};
@@ -932,13 +988,43 @@ export default function AshfallGame() {
     <section className={"title-screen "+(started?"hidden":"")} aria-hidden={started}>
       <div className="title-card"><p className="title-kicker">A story begins</p><h1 className="game-title">Echoes<br/>of Ashfall<span>Chapter Zero</span></h1><button className="start-button" onClick={startGame}>Enter Ashfall</button><p className="start-hint">Headphones recommended · Best played fullscreen</p></div>
     </section>
+    {inventoryOpen&&<section className="inventory-screen" role="dialog" aria-modal="true" aria-label="Inventory">
+      <div className="inventory-panel">
+        <header className="inventory-header">
+          <div><p className="inventory-kicker">Moon Night&apos;s pack</p><h2>Inventory</h2></div>
+          <div className="inventory-counts"><span>{inventory.length} / {INVENTORY_CAPACITY} stored</span><span>{equipped.filter(Boolean).length} / {ACTIVE_SLOT_COUNT} usable</span></div>
+          <button className="inventory-close" onClick={toggleInventory}><span>Tab</span> Close</button>
+        </header>
+        <div className="inventory-section-title"><span>Usable loadout</span><small>Only these five slots can be used</small></div>
+        <div className="active-slots">
+          {equipped.map((itemId,index)=>{
+            const item=inventory.find(entry=>entry.id===itemId);
+            return <button key={index} className={"active-slot "+(item?"filled":"")} onClick={()=>item&&toggleEquippedItem(item.id)} aria-label={item?`Unequip ${item.name}`:`Empty usable slot ${index+1}`}>
+              <span className="slot-number">{index+1}</span>
+              {item?<><span className="inventory-card-thumb" style={{backgroundImage:`url(${item.image})`,borderColor:item.palette.accent,boxShadow:`0 0 16px ${item.palette.accent}55`}}/><strong>{item.name}</strong></>:<span className="empty-mark">+</span>}
+            </button>;
+          })}
+        </div>
+        <div className="inventory-section-title"><span>Collected items</span><small>Click an item to equip or unequip it</small></div>
+        <div className="inventory-grid">
+          {Array.from({length:INVENTORY_CAPACITY},(_,index)=>{
+            const item=inventory[index],isEquipped=item?equipped.includes(item.id):false;
+            return <button key={index} className={"inventory-slot "+(item?"filled ":"")+(isEquipped?"equipped":"")} onClick={()=>item&&toggleEquippedItem(item.id)} aria-pressed={isEquipped} aria-label={item?`${item.name}, ${isEquipped?"equipped":"stored"}`:`Empty inventory slot ${index+1}`}>
+              <span className="slot-number">{index+1}</span>
+              {item&&<><span className="inventory-card-thumb" style={{backgroundImage:`url(${item.image})`,borderColor:item.palette.accent,boxShadow:`0 0 16px ${item.palette.accent}55`}}/><strong>{item.name}</strong><small>{isEquipped?"Usable":"Stored"}</small></>}
+            </button>;
+          })}
+        </div>
+        <p className="inventory-help">Defeated animals become cards. Stand near a card and press <b>E</b> to collect it.</p>
+      </div>
+    </section>}
     {dialogue&&<div className="dialogue-wrap"><div className="dialogue-box" onClick={advanceDialogue}><p className="speaker">{dialogue[dialogueIndex]?.speaker}</p><p className="dialogue-text">{dialogue[dialogueIndex]?.text}</p><p className="continue-hint">Click or press E to continue</p></div></div>}
     {nearAction&&<div className="interaction"><span className="keycap">E</span>{nearAction}</div>}
-    <div className="controls"><span><b>A D</b> Move</span><span><b>W / Space ×2</b> Double jump</span><span><b>S</b> Crouch / slide</span><span><b>Shift</b> Run</span><span><b>Cursor</b> Aim</span><span><b>Mouse 1</b> Attack</span><span><b>E</b> Interact</span></div>
+    <div className="controls"><span><b>A D</b> Move</span><span><b>W / Space ×2</b> Double jump</span><span><b>S</b> Crouch / slide</span><span><b>Shift</b> Run</span><span><b>Cursor</b> Aim</span><span><b>Mouse 1</b> Attack</span><span><b>E</b> Interact</span><span><b>Tab</b> Inventory</span></div>
     <button className="sound-button" onClick={toggleSound} aria-label={soundOn?"Mute sound":"Turn sound on"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}</button>
     <div className="touch-controls" aria-label="Touch controls">
       <div className="touch-group"><button className="touch-btn" aria-label="Move left" onPointerDown={(e)=>touch("a",true,e)} onPointerUp={(e)=>touch("a",false,e)} onPointerCancel={(e)=>touch("a",false,e)}>←</button><button className="touch-btn" aria-label="Move right" onPointerDown={(e)=>touch("d",true,e)} onPointerUp={(e)=>touch("d",false,e)} onPointerCancel={(e)=>touch("d",false,e)}>→</button></div>
-      <div className="touch-group"><button className="touch-btn attack" aria-label="Sword attack" onPointerDown={(e)=>{e.preventDefault();attack();}}>⚔</button><button className="touch-btn action" aria-label="Interact" onClick={interact}>E</button><button className="touch-btn action" aria-label="Crouch or slide" onPointerDown={(e)=>touch("s",true,e)} onPointerUp={(e)=>touch("s",false,e)} onPointerCancel={(e)=>touch("s",false,e)}>↓</button><button className="touch-btn" aria-label="Jump" onPointerDown={(e)=>touch("w",true,e)} onPointerUp={(e)=>touch("w",false,e)} onPointerCancel={(e)=>touch("w",false,e)}>↑</button></div>
+      <div className="touch-group"><button className="touch-btn attack" aria-label="Sword attack" onPointerDown={(e)=>{e.preventDefault();attack();}}>⚔</button><button className="touch-btn action" aria-label="Interact" onClick={()=>{pickupQueued.current=true;interact();}}>E</button><button className="touch-btn action" aria-label="Crouch or slide" onPointerDown={(e)=>touch("s",true,e)} onPointerUp={(e)=>touch("s",false,e)} onPointerCancel={(e)=>touch("s",false,e)}>↓</button><button className="touch-btn" aria-label="Jump" onPointerDown={(e)=>touch("w",true,e)} onPointerUp={(e)=>touch("w",false,e)} onPointerCancel={(e)=>touch("w",false,e)}>↑</button></div>
     </div>
   </main>;
 }
