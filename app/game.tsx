@@ -600,9 +600,94 @@ export default function AshfallGame() {
         playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
       }
     };
+    const drawMagicalAnimalCard=(name:string,x:number,groundY:number,now:number,formedAt:number,image:HTMLImageElement,portrait:{x:number;y:number;w:number;h:number})=>{
+      const elapsed=now-formedAt;
+      const reveal=clamp(elapsed/620,0,1);
+      if(reveal<=0)return;
+      const eased=1-Math.pow(1-reveal,3);
+      const hover=Math.sin(now*.0042)*3;
+      const cardY=groundY-64+hover;
+      const riseY=groundY-12+(cardY-(groundY-12))*eased;
+      const scale=.16+eased*.84;
+      const spin=(1-eased)*Math.PI*1.7;
+      const cardW=76,cardH=112;
+
+      ctx.save();
+      ctx.globalAlpha=eased;
+      ctx.fillStyle="rgba(0,0,0,.38)";
+      ctx.beginPath();ctx.ellipse(x,groundY+4,30*eased,6*eased,0,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+
+      ctx.save();ctx.translate(x,riseY);ctx.rotate(spin+Math.sin(now*.0022)*.025);ctx.scale(scale,scale);
+      const glow=ctx.createRadialGradient(0,0,8,0,0,74);
+      glow.addColorStop(0,"rgba(184,255,70,.24)");glow.addColorStop(1,"rgba(70,255,126,0)");
+      ctx.fillStyle=glow;ctx.fillRect(-78,-82,156,164);
+      ctx.shadowColor="rgba(174,255,70,.85)";ctx.shadowBlur=18;
+      const cardGradient=ctx.createLinearGradient(-cardW/2,-cardH/2,cardW/2,cardH/2);
+      cardGradient.addColorStop(0,"#f5d877");cardGradient.addColorStop(.28,"#8052c6");cardGradient.addColorStop(.72,"#24163f");cardGradient.addColorStop(1,"#bdf35c");
+      ctx.fillStyle=cardGradient;ctx.beginPath();ctx.roundRect(-cardW/2,-cardH/2,cardW,cardH,8);ctx.fill();
+      ctx.shadowBlur=0;ctx.strokeStyle="#efffa1";ctx.lineWidth=2;ctx.stroke();
+      ctx.strokeStyle="rgba(12,6,25,.9)";ctx.lineWidth=3;ctx.beginPath();ctx.roundRect(-cardW/2+5,-cardH/2+5,cardW-10,cardH-10,5);ctx.stroke();
+
+      ctx.save();ctx.beginPath();ctx.roundRect(-29,-44,58,62,5);ctx.clip();
+      const portraitGlow=ctx.createRadialGradient(0,-16,3,0,-16,43);
+      portraitGlow.addColorStop(0,"#557827");portraitGlow.addColorStop(1,"#100b1f");
+      ctx.fillStyle=portraitGlow;ctx.fillRect(-29,-44,58,62);
+      ctx.imageSmoothingEnabled=true;
+      ctx.drawImage(image,portrait.x,portrait.y,portrait.w,portrait.h,-30,-45,60,64);
+      ctx.restore();
+      ctx.strokeStyle="#dfff78";ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(-29,-44,58,62,5);ctx.stroke();
+
+      ctx.fillStyle="#f5ffd3";ctx.textAlign="center";ctx.textBaseline="middle";
+      ctx.font="900 7px ui-monospace, SFMono-Regular, Menlo, monospace";
+      ctx.fillText(name.toUpperCase(),0,29);
+      ctx.fillStyle="#c8ff61";ctx.font="900 12px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("✦",0,43);
+      ctx.restore();
+
+      ctx.save();ctx.globalAlpha=eased;
+      for(let mote=0;mote<12;mote++){
+        const angle=mote*Math.PI*2/12+now*.0012;
+        const radius=44+Math.sin(now*.004+mote)*9;
+        const mx=x+Math.cos(angle)*radius,my=riseY+Math.sin(angle)*radius*.72;
+        ctx.fillStyle=mote%3===0?"#f8e985":mote%3===1?"#a9ff4b":"#a66cff";
+        ctx.beginPath();ctx.arc(mx,my,1.2+(mote%2),0,Math.PI*2);ctx.fill();
+      }
+      if(elapsed<1700){
+        ctx.globalAlpha*=clamp(1-elapsed/1700,0,1);
+        ctx.font="900 10px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="bottom";
+        ctx.lineWidth=3;ctx.strokeStyle="rgba(7,3,16,.9)";ctx.strokeText("MAGICAL CARD FORMED",x,riseY-cardH/2*scale-13);
+        ctx.fillStyle="#eaff9f";ctx.fillText("MAGICAL CARD FORMED",x,riseY-cardH/2*scale-13);
+      }
+      ctx.restore();
+    };
+    const drawDragonCardTransformation=(now:number)=>{
+      const elapsed=now-dragon.modeStarted;
+      const absorb=clamp((elapsed-120)/760,0,1);
+      const frame=DRAGON_FRAMES.sleep[3],spriteScale=DRAGON_RENDER_SIZE/DRAGON_CELL;
+      if(absorb<1){
+        const pull=1-Math.pow(1-absorb,2);
+        ctx.save();ctx.translate(dragon.x,dragon.y-pull*42);
+        ctx.rotate(dragon.facing*pull*.62);
+        ctx.scale(dragon.facing*(1-pull*.82),1-pull*.72);
+        ctx.globalAlpha=1-pull;
+        ctx.shadowColor="rgba(168,255,67,.95)";ctx.shadowBlur=10+pull*28;
+        ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);
+        ctx.restore();
+        ctx.save();ctx.globalAlpha=1-absorb;
+        for(let wisp=0;wisp<10;wisp++){
+          const angle=wisp*Math.PI*2/10+now*.003;
+          const radius=(1-absorb)*(50+wisp%3*9);
+          ctx.strokeStyle=wisp%2?"#b0ff4a":"#ba77ff";ctx.lineWidth=2;
+          ctx.beginPath();ctx.moveTo(dragon.x+Math.cos(angle)*radius,dragon.y-54+Math.sin(angle)*radius*.55);ctx.lineTo(dragon.x+Math.cos(angle+.45)*radius*.45,dragon.y-48+Math.sin(angle+.45)*radius*.3);ctx.stroke();
+        }
+        ctx.restore();
+      }
+      drawMagicalAnimalCard("Baby Dragon",dragon.x,dragon.groundY,now,dragon.modeStarted+350,dragonImage,{x:0,y:25,w:256,h:260});
+    };
     const drawDragon=(now:number)=>{
       if(mapRef.current!==1||!dragonImage.complete||!dragonImage.naturalWidth)return;
       const elapsed=now-dragon.modeStarted,frames=DRAGON_FRAMES[dragon.mode];
+      if(dragon.health<=0){drawDragonCardTransformation(now);return;}
       let index=0;
       if(dragon.mode==="idle"){
         const phase=elapsed%2900;index=phase<1550?0:phase<2150?1:phase<2500?2:3;
@@ -610,17 +695,14 @@ export default function AshfallGame() {
       else if(dragon.mode==="run")index=Math.floor(elapsed/105)%frames.length;
       else if(dragon.mode==="fly")index=Math.floor(elapsed/130)%frames.length;
       else if(dragon.mode==="sleep"){
-        if(dragon.health<=0){index=3;}
-        else{
-          const remaining=dragon.modeUntil-now;
-          if(elapsed<420)index=0;
-          else if(elapsed<820)index=1;
-          else if(elapsed<1220)index=2;
-          else if(remaining>1050)index=3;
-          else if(remaining>680)index=2;
-          else if(remaining>330)index=1;
-          else index=0;
-        }
+        const remaining=dragon.modeUntil-now;
+        if(elapsed<420)index=0;
+        else if(elapsed<820)index=1;
+        else if(elapsed<1220)index=2;
+        else if(remaining>1050)index=3;
+        else if(remaining>680)index=2;
+        else if(remaining>330)index=1;
+        else index=0;
       }
       else index=Math.min(frames.length-1,Math.floor(elapsed/235));
       const frame=frames[index],size=DRAGON_RENDER_SIZE;
@@ -634,9 +716,9 @@ export default function AshfallGame() {
       ctx.save();ctx.fillStyle="rgba(1,4,5,"+(.58-airHeight*.22)+")";ctx.beginPath();ctx.ellipse(dragon.x,dragon.groundY+3,35*shadowScale,7*shadowScale,0,0,Math.PI*2);ctx.fill();ctx.restore();
       ctx.save();ctx.translate(dragon.x+recoilX,dragon.y);
       if(dragon.mode==="fly")ctx.rotate(Math.sin(elapsed*.004)*.018*dragon.facing);
-      const breatheScale=dragon.health<=0?1:dragon.mode==="sleep"&&index===3?1+Math.sin(now*.0032)*.012:dragon.mode==="idle"?1+Math.sin(now*.0024)*.006:1;
+      const breatheScale=dragon.mode==="sleep"&&index===3?1+Math.sin(now*.0032)*.012:dragon.mode==="idle"?1+Math.sin(now*.0024)*.006:1;
       ctx.scale(dragon.facing*(1+hitSquash),breatheScale-hitSquash);ctx.imageSmoothingEnabled=true;
-      ctx.globalAlpha=hurtActive&&Math.floor(now/48)%2===0?.52:dragon.health<=0?.78:1;
+      ctx.globalAlpha=hurtActive&&Math.floor(now/48)%2===0?.52:1;
       ctx.shadowColor=hurtActive?"rgba(255,245,151,.95)":dragon.mode==="attack"?"rgba(126,255,46,.52)":dragon.angry?"rgba(255,92,58,.58)":"rgba(81,188,41,.24)";ctx.shadowBlur=hurtActive?24:dragon.mode==="attack"?16:dragon.angry?13:7;
       ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);
       ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();
@@ -644,11 +726,11 @@ export default function AshfallGame() {
       const spriteTop=dragon.y-frame.anchorY*spriteScale;
       const barW=86,barH=9,barX=dragon.x+recoilX-barW/2,barY=spriteTop-25;
       const healthRatio=clamp(dragon.health/dragon.maxHealth,0,1);
-      const healthLabel=dragon.health<=0?"BABY DRAGON DEFEATED":(dragon.angry?"ANGRY  ":"")+"BABY DRAGON  "+dragon.health+" / "+dragon.maxHealth;
+      const healthLabel=(dragon.angry?"ANGRY  ":"")+"BABY DRAGON  "+dragon.health+" / "+dragon.maxHealth;
       ctx.save();
       ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="700 9px ui-monospace, SFMono-Regular, Menlo, monospace";
       ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.9)";ctx.strokeText(healthLabel,dragon.x+recoilX,barY-3);
-      ctx.fillStyle=dragon.health<=0?"#d7d7d7":dragon.angry?"#ffb19d":"#efffd6";ctx.fillText(healthLabel,dragon.x+recoilX,barY-3);
+      ctx.fillStyle=dragon.angry?"#ffb19d":"#efffd6";ctx.fillText(healthLabel,dragon.x+recoilX,barY-3);
       ctx.fillStyle="rgba(2,6,8,.9)";ctx.fillRect(barX-2,barY-2,barW+4,barH+4);
       ctx.fillStyle="#401924";ctx.fillRect(barX,barY,barW,barH);
       const healthGradient=ctx.createLinearGradient(barX,barY,barX+barW,barY);
