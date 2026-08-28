@@ -306,11 +306,12 @@ export default function AshfallGame() {
     const eyeLayer=document.createElement("canvas"),eyeLayerCtx=eyeLayer.getContext("2d");
     const eyeCoverLayer=document.createElement("canvas"),eyeCoverCtx=eyeCoverLayer.getContext("2d");
     const attackBodyLayer=document.createElement("canvas"),attackBodyCtx=attackBodyLayer.getContext("2d");
+    const castBodyLayer=document.createElement("canvas"),castBodyCtx=castBodyLayer.getContext("2d");
     const attackWeaponLayer=document.createElement("canvas"),attackWeaponCtx=attackWeaponLayer.getContext("2d");
     const eyeBands=new Map<string,{x:number;y:number;w:number;h:number}|null>();
     let eyePixels:Uint8ClampedArray|null=null;
     const prepareActualEyes=()=>{
-      if(!eyeLayerCtx||!eyeCoverCtx||!attackBodyCtx||!attackWeaponCtx||!knight.naturalWidth)return;
+      if(!eyeLayerCtx||!eyeCoverCtx||!attackBodyCtx||!castBodyCtx||!attackWeaponCtx||!knight.naturalWidth)return;
       eyeLayer.width=knight.naturalWidth;eyeLayer.height=knight.naturalHeight;eyeCoverLayer.width=knight.naturalWidth;eyeCoverLayer.height=knight.naturalHeight;
       eyeLayerCtx.clearRect(0,0,eyeLayer.width,eyeLayer.height);eyeLayerCtx.drawImage(knight,0,0);
       const pixels=eyeLayerCtx.getImageData(0,0,eyeLayer.width,eyeLayer.height),data=pixels.data;
@@ -326,6 +327,9 @@ export default function AshfallGame() {
       attackBodyCtx.clearRect(0,0,attackBodyLayer.width,attackBodyLayer.height);attackBodyCtx.drawImage(knight,0,0);
       attackBodyCtx.globalCompositeOperation="destination-out";attackBodyCtx.beginPath();attackBodyCtx.moveTo(805,1125);attackBodyCtx.lineTo(840,1118);attackBodyCtx.lineTo(1018,1118);attackBodyCtx.lineTo(1018,1177);attackBodyCtx.lineTo(840,1177);attackBodyCtx.lineTo(805,1159);attackBodyCtx.closePath();attackBodyCtx.fill();attackBodyCtx.globalCompositeOperation="source-over";
       attackWeaponCtx.clearRect(0,0,attackWeaponLayer.width,attackWeaponLayer.height);attackWeaponCtx.save();attackWeaponCtx.beginPath();attackWeaponCtx.moveTo(805,1125);attackWeaponCtx.lineTo(840,1118);attackWeaponCtx.lineTo(1018,1118);attackWeaponCtx.lineTo(1018,1177);attackWeaponCtx.lineTo(840,1177);attackWeaponCtx.lineTo(805,1159);attackWeaponCtx.closePath();attackWeaponCtx.clip();attackWeaponCtx.drawImage(knight,0,0);attackWeaponCtx.restore();
+
+      castBodyLayer.width=knight.naturalWidth;castBodyLayer.height=knight.naturalHeight;castBodyCtx.clearRect(0,0,castBodyLayer.width,castBodyLayer.height);castBodyCtx.drawImage(knight,0,0);
+      castBodyCtx.globalCompositeOperation="destination-out";castBodyCtx.beginPath();castBodyCtx.moveTo(900,1120);castBodyCtx.lineTo(1018,1120);castBodyCtx.lineTo(1018,1174);castBodyCtx.lineTo(900,1174);castBodyCtx.closePath();castBodyCtx.fill();castBodyCtx.globalCompositeOperation="source-over";
     };
     knight.addEventListener("load",prepareActualEyes);
     if(knight.complete&&knight.naturalWidth)prepareActualEyes();
@@ -440,7 +444,7 @@ export default function AshfallGame() {
       if(progress>=1){cast.kind=null;return;}
       const eased=progress*progress*(3-2*progress),fade=1-clamp((progress-.72)/.28,0,1);
       const direction=cast.direction,color=cast.kind==="summon"?"#b8ff55":"#dbb2ff";
-      const handX=pl.x+direction*42,handY=pl.y+43-Math.sin(progress*Math.PI)*5;
+      const handX=pl.x+direction*26,handY=pl.y+59-Math.sin(progress*Math.PI)*3;
       const pulse=.7+Math.sin(now*.018)*.3;
 
       ctx.save();ctx.globalCompositeOperation="screen";
@@ -502,7 +506,8 @@ export default function AshfallGame() {
       if(knight.complete&&knight.naturalWidth){
         ctx.imageSmoothingEnabled=false;
         ctx.shadowColor="rgba(103,45,179,.36)";ctx.shadowBlur=8;
-        if((attacking||casting)&&attackBodyLayer.width)ctx.drawImage(attackBodyLayer,f.x,f.y,f.w,f.h,-dw/2,drawY,dw,dh);
+        if(casting&&castBodyLayer.width)ctx.drawImage(castBodyLayer,f.x,f.y,f.w,f.h,-dw/2,drawY,dw,dh);
+        else if(attacking&&attackBodyLayer.width)ctx.drawImage(attackBodyLayer,f.x,f.y,f.w,f.h,-dw/2,drawY,dw,dh);
         else ctx.drawImage(knight,f.x,f.y,f.w,f.h,-dw/2,drawY,dw,dh);
         ctx.shadowBlur=0;ctx.imageSmoothingEnabled=true;
       }else{
