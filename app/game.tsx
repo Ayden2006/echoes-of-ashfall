@@ -35,6 +35,9 @@ const DRAGON_CHASE_MAX = 2700;
 const DRAGON_PATROL_MIN = 1475;
 const DRAGON_PATROL_MAX = 1990;
 const DRAGON_CELL = 256;
+const COMPANION_TELEPORT_DISTANCE = 720;
+const COMPANION_SUMMON_DURATION = 900;
+const COMPANION_RECALL_DURATION = 980;
 const INVENTORY_CAPACITY = 30;
 const ACTIVE_SLOT_COUNT = 5;
 const BABY_DRAGON_CARD:InventoryItem = {
@@ -690,7 +693,7 @@ export default function AshfallGame() {
       const pl=player.current,map=mapRef.current;
       if(ally.recallStarted>0){
         ally.attackUntil=0;ally.vx+=(0-ally.vx)*(1-Math.exp(-12*dt));ally.x+=ally.vx*dt;
-        if(now-ally.recallStarted>=680){ally.active=false;ally.itemId=null;ally.recallStarted=0;setDeployedItemId(null);}
+        if(now-ally.recallStarted>=COMPANION_RECALL_DURATION){ally.active=false;ally.itemId=null;ally.recallStarted=0;setDeployedItemId(null);}
         return;
       }
       if(ally.map!==map){ally.map=map;ally.x=pl.x-pl.facing*96;ally.groundY=pl.y+PH;ally.y=ally.groundY-52;ally.vx=0;ally.mode="fly";ally.modeStarted=now;ally.teleportAt=now;}
@@ -698,7 +701,7 @@ export default function AshfallGame() {
       const hostileActive=map===1&&dragon.health>0&&now<ally.attackUntil;
       const followX=clamp(pl.x-pl.facing*104,28,worldWidthFor(map)-28);
       const playerGround=pl.y+PH;
-      if(Math.abs(pl.x-ally.x)>390){
+      if(Math.abs(pl.x-ally.x)>COMPANION_TELEPORT_DISTANCE){
         const arrivalGround=companionSurfaceAt(followX,playerGround,map)??playerGround;
         ally.x=followX;ally.groundY=arrivalGround;ally.y=arrivalGround-58;ally.vx=0;ally.attackUntil=0;ally.teleportAt=now;ally.facing=pl.facing;setCompanionMode("fly",now);
       }
@@ -758,9 +761,13 @@ export default function AshfallGame() {
       else if(ally.mode==="fly")index=Math.floor(elapsed/125)%frames.length;
       else if(ally.mode==="attack")index=Math.min(frames.length-1,Math.floor(elapsed/175));
       const frame=frames[index],size=108,spriteScale=size/DRAGON_CELL;
-      const summon=clamp((now-ally.summonedAt)/520,0,1),summonEase=1-Math.pow(1-summon,3);
-      const recall=ally.recallStarted>0?clamp((now-ally.recallStarted)/680,0,1):0,recallEase=recall*recall*(3-2*recall);
-      const visibility=summonEase*(1-recallEase),spriteGrow=.18+summonEase*.82;
+      const smooth=(value:number)=>value*value*(3-2*value);
+      const summon=clamp((now-ally.summonedAt)/COMPANION_SUMMON_DURATION,0,1);
+      const summonCreature=smooth(clamp((summon-.22)/.58,0,1));
+      const recall=ally.recallStarted>0?clamp((now-ally.recallStarted)/COMPANION_RECALL_DURATION,0,1):0;
+      const recallCreature=1-smooth(clamp((recall-.08)/.68,0,1));
+      const visibility=summonCreature*recallCreature;
+      const spriteGrow=(.32+summonCreature*.68)*(.22+recallCreature*.78);
       const airHeight=clamp((ally.groundY-ally.y)/110,0,1);
       ctx.save();ctx.globalAlpha=.5*visibility;ctx.fillStyle="rgba(70,255,46,.45)";ctx.beginPath();ctx.ellipse(ally.x,ally.groundY+3,27*(1-airHeight*.45),5.5*(1-airHeight*.4),0,0,Math.PI*2);ctx.fill();ctx.restore();
 
@@ -771,8 +778,57 @@ export default function AshfallGame() {
         for(let ring=0;ring<3;ring++){const r=12+teleport*46+ring*9;ctx.beginPath();ctx.ellipse(0,0,r,r*.42,now*.003+ring,0,Math.PI*2);ctx.stroke();}
         ctx.restore();
       }
+
+      const ritualProgress=recall>0?recall:summon;
+      const ritualActive=recall>0||summon<1;
+      const ritualColor=recall>0?"#dcb5ff":"#b8ff55";
+      const ritualPeak=Math.sin(clamp(ritualProgress,0,1)*Math.PI);
+      if(ritualActive){
+        const beam=ctx.createLinearGradient(ally.x,ally.groundY-178,ally.x,ally.groundY+4);
+        beam.addColorStop(0,"rgba(185,255,84,0)");beam.addColorStop(.34,recall>0?`rgba(218,181,255,${ritualPeak*.18})`:`rgba(184,255,85,${ritualPeak*.2})`);beam.addColorStop(1,"rgba(111,255,54,0)");
+        ctx.save();ctx.globalCompositeOperation="screen";ctx.fillStyle=beam;ctx.fillRect(ally.x-30-ritualPeak*12,ally.groundY-178,60+ritualPeak*24,184);ctx.restore();
+
+        ctx.save();ctx.translate(ally.x,ally.groundY+1);ctx.strokeStyle=ritualColor;ctx.shadowColor=ritualColor;ctx.shadowBlur=16;ctx.lineWidth=2;
+        for(let ring=0;ring<4;ring++){
+          const phase=clamp(ritualProgress*1.7-ring*.13,0,1),radius=13+phase*46+ring*5;
+          ctx.globalAlpha=(1-phase)*.72+ritualPeak*.18;ctx.beginPath();ctx.ellipse(0,0,radius,radius*.22,(ring%2?1:-1)*now*.0025,0,Math.PI*2);ctx.stroke();
+        }
+        ctx.restore();
+
+        ctx.save();ctx.globalCompositeOperation="screen";
+        for(let mote=0;mote<22;mote++){
+          const lane=((mote*37)%100)/100-.5;
+          const cycle=(ritualProgress*1.8+mote*.087)%1;
+          const rise=recall>0?cycle:1-cycle;
+          const mx=ally.x+lane*(38+ritualPeak*36)+Math.sin(now*.009+mote)*5;
+          const my=ally.groundY-8-rise*(105+(mote%5)*13);
+          ctx.globalAlpha=(.25+.75*(1-cycle))*ritualPeak;ctx.fillStyle=mote%4===0?"#ffffff":mote%3===0?"#dbb5ff":"#aaff4f";ctx.beginPath();ctx.arc(mx,my,1+(mote%4)*.45,0,Math.PI*2);ctx.fill();
+        }
+        ctx.restore();
+
+        const flashPoint=recall>0?.62:.38;
+        const flash=Math.max(0,1-Math.abs(ritualProgress-flashPoint)/.18);
+        if(flash>0){const burst=ctx.createRadialGradient(ally.x,ally.y-44,0,ally.x,ally.y-44,74);burst.addColorStop(0,`rgba(240,255,210,${flash*.62})`);burst.addColorStop(.28,recall>0?`rgba(204,147,255,${flash*.34})`:`rgba(139,255,63,${flash*.34})`);burst.addColorStop(1,"rgba(89,255,43,0)");ctx.fillStyle=burst;ctx.fillRect(ally.x-78,ally.y-122,156,156);}
+      }
+
+      const drawSpiritCard=(progress:number,recalling:boolean)=>{
+        const arrive=recalling?smooth(clamp((progress-.26)/.25,0,1)):smooth(clamp(progress/.16,0,1));
+        const leave=recalling?1-smooth(clamp((progress-.82)/.18,0,1)):1-smooth(clamp((progress-.42)/.3,0,1));
+        const cardAlpha=arrive*leave;
+        if(cardAlpha<=0)return;
+        const cardRise=recalling?smooth(clamp((progress-.8)/.2,0,1))*78:(1-arrive)*28;
+        const cardScale=.38+arrive*.62;
+        const cardFrame=DRAGON_FRAMES.idle[0];
+        ctx.save();ctx.translate(ally.x,ally.groundY-66-cardRise);ctx.rotate((recalling?1:-1)*(1-arrive)*1.4+(recalling?progress:-progress)*.18);ctx.scale(cardScale,cardScale);ctx.globalAlpha=cardAlpha;ctx.shadowColor=recalling?"#d8a7ff":"#aaff4d";ctx.shadowBlur=24;
+        const cardGradient=ctx.createLinearGradient(-22,-34,22,34);cardGradient.addColorStop(0,"#9cff44");cardGradient.addColorStop(.22,"#263b25");cardGradient.addColorStop(.72,"#090d0c");cardGradient.addColorStop(1,recalling?"#cf9cff":"#b9ff58");ctx.fillStyle=cardGradient;ctx.beginPath();ctx.roundRect(-22,-34,44,68,6);ctx.fill();
+        ctx.shadowBlur=0;ctx.strokeStyle=recalling?"#e6c9ff":"#dcff9e";ctx.lineWidth=2;ctx.stroke();ctx.strokeStyle="#0d1710";ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(-18,-30,36,60,4);ctx.stroke();
+        ctx.save();ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.clip();ctx.fillStyle="#101a13";ctx.fillRect(-14,-24,28,34);ctx.drawImage(dragonImage,cardFrame.x,cardFrame.y,cardFrame.w,cardFrame.h,-15,-25,30,36);ctx.restore();
+        ctx.strokeStyle="#b9ff58";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.stroke();ctx.fillStyle="#eaffcf";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="900 4.5px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("BABY DRAGON",0,17);ctx.fillStyle=recalling?"#dfbaff":"#b9ff58";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("✦",0,26);ctx.restore();
+      };
+      drawSpiritCard(ritualProgress,recall>0);
+
       if(summon<1||recall>0){
-        const magicProgress=recall>0?recall:summon;
+        const magicProgress=ritualProgress;
         const magicAlpha=recall>0?1-recall*.28:1-summon*.38;
         const magicColor=recall>0?"#d9b8ff":"#b4ff58";
         ctx.save();ctx.translate(ally.x,ally.groundY-50);ctx.globalAlpha=magicAlpha;ctx.strokeStyle=magicColor;ctx.shadowColor=magicColor;ctx.shadowBlur=18;
@@ -782,14 +838,12 @@ export default function AshfallGame() {
         ctx.save();ctx.globalAlpha=magicAlpha*.85;for(let mote=0;mote<14;mote++){const a=mote*Math.PI*2/14+now*.003;const spread=recall>0?(1-magicProgress)*58:18+magicProgress*44;const mx=ally.x+Math.cos(a)*spread,my=ally.y-42+Math.sin(a)*spread*.72;ctx.fillStyle=mote%3===0?"#d9b8ff":mote%2?"#b7ff56":"#63e83e";ctx.beginPath();ctx.arc(mx,my,1+(mote%3)*.45,0,Math.PI*2);ctx.fill();}ctx.restore();
       }
 
-      ctx.save();ctx.translate(ally.x,ally.y-26*recallEase);ctx.rotate(ally.facing*recallEase*.62);ctx.scale(ally.facing*spriteGrow*(1-recallEase*.78),spriteGrow*(1-recallEase*.78));
+      const summonLift=(1-summonCreature)*34,recallPull=(1-recallCreature)*30;
+      ctx.save();ctx.translate(ally.x,ally.y+summonLift-recallPull);ctx.rotate(ally.facing*(1-recallCreature)*.72);ctx.scale(ally.facing*spriteGrow,spriteGrow);
       ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?"rgba(179,255,71,.8)":"rgba(95,224,48,.42)";ctx.shadowBlur=ally.mode==="attack"?17:9;
       ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);ctx.restore();
 
-      if(recall>0){
-        ctx.save();ctx.translate(ally.x,ally.y-46);ctx.rotate(recallEase*Math.PI*1.25);ctx.scale(.25+recallEase*.75,.25+recallEase*.75);ctx.globalAlpha=recallEase*(1-recall*.55);ctx.strokeStyle="#d7adff";ctx.lineWidth=2;ctx.shadowColor="#aaff55";ctx.shadowBlur=20;ctx.beginPath();ctx.roundRect(-19,-28,38,56,5);ctx.stroke();ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);ctx.stroke();ctx.restore();
-      }
-      if(recall<.58){
+      if(summon>.72&&recall<.46){
         const healthRatio=clamp(ally.health/ally.maxHealth,0,1),barY=ally.y-112;
         ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.92)";ctx.strokeText(`ALLY · BABY DRAGON  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle="#d9ffb0";ctx.fillText(`ALLY · BABY DRAGON  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);
         ctx.fillStyle="rgba(2,7,8,.84)";ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.fill();
@@ -1083,12 +1137,12 @@ export default function AshfallGame() {
         const ally=companionRef.current;
         if(item?.type==="animal-card"){
           if(ally.active&&ally.itemId===item.id){
-            if(ally.recallStarted===0){ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;tone(350,.16,.024);window.setTimeout(()=>tone(170,.28,.02),110);}
+            if(ally.recallStarted===0){ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;tone(470,.16,.022);window.setTimeout(()=>tone(280,.22,.024),180);window.setTimeout(()=>tone(135,.34,.022),610);}
           }else{
             const summonX=clamp(pl.x-pl.facing*82,30,activeWorldW-30);
             const summonGround=companionSurfaceAt(summonX,pl.y+PH,map)??pl.y+PH;
             ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=summonX;ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.recallStarted=0;ally.teleportAt=0;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;ally.health=ally.maxHealth;
-            setDeployedItemId(item.id);tone(410,.18,.024);window.setTimeout(()=>tone(760,.24,.022),100);
+            setDeployedItemId(item.id);tone(330,.18,.024);window.setTimeout(()=>tone(620,.22,.022),170);window.setTimeout(()=>tone(940,.28,.02),420);
           }
         }
         deployQueued.current=false;
