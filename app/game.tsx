@@ -436,7 +436,7 @@ export default function AshfallGame() {
     const drawCompanionCast=(pl:Player,now:number)=>{
       const cast=companionCastRef.current;
       if(!cast.kind)return;
-      const duration=780,progress=clamp((now-cast.started)/duration,0,1);
+      const duration=cast.kind==="recall"?COMPANION_RECALL_DURATION:780,progress=clamp((now-cast.started)/duration,0,1);
       if(progress>=1){cast.kind=null;return;}
       const eased=progress*progress*(3-2*progress),fade=1-clamp((progress-.72)/.28,0,1);
       const direction=cast.direction,color=cast.kind==="summon"?"#b8ff55":"#dbb2ff";
@@ -460,14 +460,25 @@ export default function AshfallGame() {
       }
       ctx.restore();
 
-      const cardArrive=clamp(progress/.2,0,1),cardFade=1-clamp((progress-.62)/.28,0,1);
-      ctx.save();ctx.translate(handX,handY);ctx.rotate(direction*(-.18+Math.sin(progress*Math.PI)*.3));ctx.scale(.55+cardArrive*.45,.55+cardArrive*.45);ctx.globalAlpha=cardArrive*cardFade;ctx.shadowColor=color;ctx.shadowBlur=18;
+      const ally=companionRef.current,isSummon=cast.kind==="summon";
+      const rawThrow=clamp((progress-.12)/.56,0,1),throwProgress=isSummon?rawThrow*rawThrow*(3-2*rawThrow):0;
+      const cardArrive=clamp(progress/.18,0,1);
+      const cardFade=isSummon?1-clamp((progress-.7)/.18,0,1):1-clamp((progress-.94)/.06,0,1);
+      const targetX=ally.active?ally.x:handX,targetY=ally.active?ally.y-48:handY;
+      const controlX=(handX+targetX)/2,controlY=Math.min(handY,targetY)-72;
+      const inverseThrow=1-throwProgress;
+      const cardX=isSummon?inverseThrow*inverseThrow*handX+2*inverseThrow*throwProgress*controlX+throwProgress*throwProgress*targetX:handX;
+      const cardY=isSummon?inverseThrow*inverseThrow*handY+2*inverseThrow*throwProgress*controlY+throwProgress*throwProgress*targetY:handY;
+      ctx.save();ctx.translate(cardX,cardY);ctx.rotate(isSummon?direction*(-.18+throwProgress*Math.PI*3.2):direction*(-.12+Math.sin(progress*Math.PI)*.08));ctx.scale(.55+cardArrive*.45,.55+cardArrive*.45);ctx.globalAlpha=cardArrive*cardFade;ctx.shadowColor=color;ctx.shadowBlur=18;
       const cardGradient=ctx.createLinearGradient(-8,-13,8,13);cardGradient.addColorStop(0,color);cardGradient.addColorStop(.3,"#283428");cardGradient.addColorStop(1,"#090c0b");ctx.fillStyle=cardGradient;ctx.beginPath();ctx.roundRect(-8,-13,16,26,2.5);ctx.fill();ctx.strokeStyle="#efffd7";ctx.lineWidth=1.2;ctx.stroke();ctx.strokeStyle=color;ctx.beginPath();ctx.arc(0,-1,4,0,Math.PI*2);ctx.stroke();ctx.fillStyle="#efffd7";ctx.font="900 5px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("✦",0,7);ctx.restore();
 
-      const trailProgress=clamp((progress-.18)/.62,0,1),ally=companionRef.current;
+      const trailProgress=clamp((progress-.18)/.62,0,1);
       if(trailProgress>0&&ally.active){
-        const targetX=ally.x,targetY=ally.y-45;
-        ctx.save();ctx.globalCompositeOperation="screen";ctx.strokeStyle=color;ctx.shadowColor=color;ctx.shadowBlur=12;ctx.lineWidth=1.5;ctx.globalAlpha=fade*(1-trailProgress*.45);ctx.setLineDash([4,7]);ctx.lineDashOffset=-now*.035;ctx.beginPath();ctx.moveTo(handX,handY);ctx.quadraticCurveTo((handX+targetX)/2,Math.min(handY,targetY)-38-Math.sin(progress*Math.PI)*18,targetX,targetY);ctx.stroke();ctx.restore();
+        ctx.save();ctx.globalCompositeOperation="screen";ctx.strokeStyle=color;ctx.shadowColor=color;ctx.shadowBlur=12;ctx.lineWidth=1.5;ctx.globalAlpha=fade*(1-trailProgress*.35);ctx.setLineDash([4,7]);ctx.lineDashOffset=(isSummon?-1:1)*now*.035;ctx.beginPath();ctx.moveTo(isSummon?handX:targetX,isSummon?handY:targetY);ctx.quadraticCurveTo(controlX,controlY,isSummon?targetX:handX,isSummon?targetY:handY);ctx.stroke();ctx.restore();
+        if(!isSummon){
+          ctx.save();ctx.globalCompositeOperation="screen";ctx.shadowColor=color;ctx.shadowBlur=10;
+          for(let mote=0;mote<9;mote++){const travel=(progress*1.65+mote/9)%1,back=1-travel;const mx=back*back*targetX+2*back*travel*controlX+travel*travel*handX,my=back*back*targetY+2*back*travel*controlY+travel*travel*handY;ctx.globalAlpha=fade*(.25+travel*.7);ctx.fillStyle=mote%3===0?"#ffffff":color;ctx.beginPath();ctx.arc(mx,my,1+(mote%2)*.7,0,Math.PI*2);ctx.fill();}ctx.restore();
+        }
       }
     };
     const drawPlayer=(pl:Player,now:number)=>{
@@ -479,7 +490,7 @@ export default function AshfallGame() {
       let list=SPRITE_FRAMES.idle;
       let index=Math.floor(now/620)%list.length;
       const attacking=actionUntil.current>now;
-      const castState=companionCastRef.current,casting=Boolean(castState.kind&&now-castState.started<780);
+      const castState=companionCastRef.current,castDuration=castState.kind==="recall"?COMPANION_RECALL_DURATION:780,casting=Boolean(castState.kind&&now-castState.started<castDuration);
       if(attacking||casting){list=SPRITE_FRAMES.action;index=1;}
       else if(!pl.grounded){list=SPRITE_FRAMES.jump;index=0;}
       else if(pl.sliding){list=SPRITE_FRAMES.slide;index=0;}
@@ -852,8 +863,8 @@ export default function AshfallGame() {
       }
 
       const drawSpiritCard=(progress:number,recalling:boolean)=>{
-        const arrive=recalling?smooth(clamp((progress-.26)/.25,0,1)):smooth(clamp(progress/.16,0,1));
-        const leave=recalling?1-smooth(clamp((progress-.82)/.18,0,1)):1-smooth(clamp((progress-.42)/.3,0,1));
+        const arrive=recalling?smooth(clamp((progress-.26)/.25,0,1)):smooth(clamp((progress-.48)/.16,0,1));
+        const leave=recalling?1-smooth(clamp((progress-.82)/.18,0,1)):1-smooth(clamp((progress-.72)/.16,0,1));
         const cardAlpha=arrive*leave;
         if(cardAlpha<=0)return;
         const cardRise=recalling?smooth(clamp((progress-.8)/.2,0,1))*78:(1-arrive)*28;
@@ -865,7 +876,7 @@ export default function AshfallGame() {
         ctx.save();ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.clip();ctx.fillStyle="#101a13";ctx.fillRect(-14,-24,28,34);ctx.drawImage(dragonImage,cardFrame.x,cardFrame.y,cardFrame.w,cardFrame.h,-15,-25,30,36);ctx.restore();
         ctx.strokeStyle="#b9ff58";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.stroke();ctx.fillStyle="#eaffcf";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="900 4.5px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("BABY DRAGON",0,17);ctx.fillStyle=recalling?"#dfbaff":"#b9ff58";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("✦",0,26);ctx.restore();
       };
-      drawSpiritCard(ritualProgress,recall>0);
+      if(recall===0)drawSpiritCard(summon,false);
 
       if(summon<1||recall>0){
         const magicProgress=ritualProgress;
@@ -1171,7 +1182,8 @@ export default function AshfallGame() {
         if(pl.y>WORLD_H+80){pl.x=map===1?Math.max(120,pl.x-180):340;pl.y=240;pl.vy=0;pl.grounded=false;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}pl.step+=Math.abs(pl.vx)*dt*.048;
       }else{pl.vx*=.82;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
       const castState=companionCastRef.current;
-      if(castState.kind&&now-castState.started<780)pl.facing=castState.direction;
+      const castDuration=castState.kind==="recall"?COMPANION_RECALL_DURATION:780;
+      if(castState.kind&&now-castState.started<castDuration)pl.facing=castState.direction;
       updateDragon(dt,now);
       if(deployQueued.current){
         const itemId=equippedRef.current[selectedSlotRef.current];
