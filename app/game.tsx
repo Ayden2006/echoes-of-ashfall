@@ -129,7 +129,7 @@ export default function AshfallGame() {
   const actionStartedAt = useRef(0);
   const pickupQueued = useRef(false);
   const deployQueued = useRef(false);
-  const companionGestureRef = useRef<{startedAt:number;kind:"summon"|"recall"}>({startedAt:0,kind:"summon"});
+  const companionCastRef = useRef<{started:number;kind:"summon"|"recall"|null;direction:1|-1}>({started:0,kind:null,direction:1});
   const inventoryOpenRef = useRef(false);
   const inventoryRef = useRef<InventoryItem[]>([]);
   const equippedRef = useRef<(string|null)[]>(Array(ACTIVE_SLOT_COUNT).fill(null));
@@ -178,7 +178,7 @@ export default function AshfallGame() {
     if(equippedIndex>=0){
       next[equippedIndex]=null;
       const ally=companionRef.current;
-      if(ally.active&&ally.itemId===itemId&&ally.recallStarted===0){const now=performance.now();companionGestureRef.current={startedAt:now,kind:"recall"};ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;}
+      if(ally.active&&ally.itemId===itemId&&ally.recallStarted===0){const now=performance.now(),direction:1|-1=ally.x>=player.current.x?1:-1;ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;companionCastRef.current={started:now,kind:"recall",direction};player.current.facing=direction;}
     }
     else{
       const openIndex=next.indexOf(null);
@@ -433,14 +433,45 @@ export default function AshfallGame() {
       ctx.drawImage(attackWeaponLayer,ATTACK_WEAPON.x,ATTACK_WEAPON.y,ATTACK_WEAPON.w,ATTACK_WEAPON.h,-(ATTACK_WEAPON.anchorX-ATTACK_WEAPON.x)*weaponScale,-(ATTACK_WEAPON.anchorY-ATTACK_WEAPON.y)*weaponScale,ATTACK_WEAPON.w*weaponScale,ATTACK_WEAPON.h*weaponScale);
       ctx.shadowBlur=0;ctx.imageSmoothingEnabled=true;ctx.restore();
     };
+    const drawCompanionCast=(pl:Player,now:number)=>{
+      const cast=companionCastRef.current;
+      if(!cast.kind)return;
+      const duration=780,progress=clamp((now-cast.started)/duration,0,1);
+      if(progress>=1){cast.kind=null;return;}
+      const eased=progress*progress*(3-2*progress),fade=1-clamp((progress-.72)/.28,0,1);
+      const direction=cast.direction,color=cast.kind==="summon"?"#b8ff55":"#dbb2ff";
+      const handX=pl.x+direction*42,handY=pl.y+43-Math.sin(progress*Math.PI)*5;
+      const pulse=.7+Math.sin(now*.018)*.3;
+
+      ctx.save();ctx.globalCompositeOperation="screen";
+      const bodyGlow=ctx.createRadialGradient(pl.x,pl.y+48,2,pl.x,pl.y+48,66);bodyGlow.addColorStop(0,cast.kind==="summon"?`rgba(147,255,74,${.19*fade})`:`rgba(200,137,255,${.2*fade})`);bodyGlow.addColorStop(1,"rgba(80,40,150,0)");ctx.fillStyle=bodyGlow;ctx.fillRect(pl.x-72,pl.y-22,144,142);
+      ctx.restore();
+
+      ctx.save();ctx.translate(pl.x,pl.y+PH+2);ctx.scale(1,.26);ctx.globalAlpha=fade*(.35+.35*pulse);ctx.strokeStyle=color;ctx.shadowColor=color;ctx.shadowBlur=16;ctx.lineWidth=2;
+      for(let ring=0;ring<2;ring++){const radius=18+eased*26+ring*11;ctx.beginPath();ctx.arc(0,0,radius,0,Math.PI*2);ctx.stroke();}
+      ctx.restore();
+
+      ctx.save();ctx.globalAlpha=fade;ctx.strokeStyle=color;ctx.shadowColor=color;ctx.shadowBlur=14;ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(pl.x+direction*8,pl.y+55);ctx.quadraticCurveTo(pl.x+direction*25,pl.y+27-Math.sin(progress*Math.PI)*9,handX,handY);ctx.stroke();
+      for(let mote=0;mote<10;mote++){
+        const angle=mote*Math.PI*.2+now*.006*(mote%2?1:-1),radius=9+(mote%3)*4+eased*5;
+        const mx=handX+Math.cos(angle)*radius,my=handY+Math.sin(angle)*radius*.65;
+        ctx.globalAlpha=fade*(.45+(mote%3)*.2);ctx.fillStyle=mote%3===0?"#ffffff":color;ctx.beginPath();ctx.arc(mx,my,.9+(mote%2)*.7,0,Math.PI*2);ctx.fill();
+      }
+      ctx.restore();
+
+      const cardArrive=clamp(progress/.2,0,1),cardFade=1-clamp((progress-.62)/.28,0,1);
+      ctx.save();ctx.translate(handX,handY);ctx.rotate(direction*(-.18+Math.sin(progress*Math.PI)*.3));ctx.scale(.55+cardArrive*.45,.55+cardArrive*.45);ctx.globalAlpha=cardArrive*cardFade;ctx.shadowColor=color;ctx.shadowBlur=18;
+      const cardGradient=ctx.createLinearGradient(-8,-13,8,13);cardGradient.addColorStop(0,color);cardGradient.addColorStop(.3,"#283428");cardGradient.addColorStop(1,"#090c0b");ctx.fillStyle=cardGradient;ctx.beginPath();ctx.roundRect(-8,-13,16,26,2.5);ctx.fill();ctx.strokeStyle="#efffd7";ctx.lineWidth=1.2;ctx.stroke();ctx.strokeStyle=color;ctx.beginPath();ctx.arc(0,-1,4,0,Math.PI*2);ctx.stroke();ctx.fillStyle="#efffd7";ctx.font="900 5px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("✦",0,7);ctx.restore();
+
+      const trailProgress=clamp((progress-.18)/.62,0,1),ally=companionRef.current;
+      if(trailProgress>0&&ally.active){
+        const targetX=ally.x,targetY=ally.y-45;
+        ctx.save();ctx.globalCompositeOperation="screen";ctx.strokeStyle=color;ctx.shadowColor=color;ctx.shadowBlur=12;ctx.lineWidth=1.5;ctx.globalAlpha=fade*(1-trailProgress*.45);ctx.setLineDash([4,7]);ctx.lineDashOffset=-now*.035;ctx.beginPath();ctx.moveTo(handX,handY);ctx.quadraticCurveTo((handX+targetX)/2,Math.min(handY,targetY)-38-Math.sin(progress*Math.PI)*18,targetX,targetY);ctx.stroke();ctx.restore();
+      }
+    };
     const drawPlayer=(pl:Player,now:number)=>{
-      const gesture=companionGestureRef.current;
-      const gestureDuration=gesture.kind==="recall"?780:720;
-      const gestureProgress=gesture.startedAt>0?clamp((now-gesture.startedAt)/gestureDuration,0,1):1;
-      const gesturing=gesture.startedAt>0&&gestureProgress<1;
-      const gesturePeak=gesturing?Math.sin(gestureProgress*Math.PI):0;
-      const gestureSnap=gesturing?Math.sin(clamp(gestureProgress/.42,0,1)*Math.PI):0;
-      ctx.save();ctx.translate(pl.x,pl.y-gesturePeak*3);ctx.rotate(pl.facing*(gesture.kind==="recall"?-.045:.045)*gestureSnap);ctx.scale(pl.facing,1);
+      ctx.save();ctx.translate(pl.x,pl.y);ctx.scale(pl.facing,1);
       if(pl.grounded){
         ctx.fillStyle="rgba(1,2,4,.72)";ctx.beginPath();ctx.ellipse(0,PH+1,31,7,0,0,Math.PI*2);ctx.fill();
         ctx.fillStyle=mapRef.current===1?"rgba(179,158,235,.3)":"rgba(255,215,139,.36)";ctx.fillRect(-20,PH-1,40,2);
@@ -448,8 +479,8 @@ export default function AshfallGame() {
       let list=SPRITE_FRAMES.idle;
       let index=Math.floor(now/620)%list.length;
       const attacking=actionUntil.current>now;
-      if(gesturing){list=SPRITE_FRAMES.idle;index=gestureProgress<.48?1:0;}
-      else if(attacking){list=SPRITE_FRAMES.action;index=1;}
+      const castState=companionCastRef.current,casting=Boolean(castState.kind&&now-castState.started<780);
+      if(attacking||casting){list=SPRITE_FRAMES.action;index=1;}
       else if(!pl.grounded){list=SPRITE_FRAMES.jump;index=0;}
       else if(pl.sliding){list=SPRITE_FRAMES.slide;index=0;}
       else if(pl.crouched){list=SPRITE_FRAMES.crouch;index=0;}
@@ -460,7 +491,7 @@ export default function AshfallGame() {
       if(knight.complete&&knight.naturalWidth){
         ctx.imageSmoothingEnabled=false;
         ctx.shadowColor="rgba(103,45,179,.36)";ctx.shadowBlur=8;
-        if(attacking&&attackBodyLayer.width)ctx.drawImage(attackBodyLayer,f.x,f.y,f.w,f.h,-dw/2,drawY,dw,dh);
+        if((attacking||casting)&&attackBodyLayer.width)ctx.drawImage(attackBodyLayer,f.x,f.y,f.w,f.h,-dw/2,drawY,dw,dh);
         else ctx.drawImage(knight,f.x,f.y,f.w,f.h,-dw/2,drawY,dw,dh);
         ctx.shadowBlur=0;ctx.imageSmoothingEnabled=true;
       }else{
@@ -476,34 +507,9 @@ export default function AshfallGame() {
         ctx.imageSmoothingEnabled=false;ctx.drawImage(eyeCoverLayer,eyeBand.x,eyeBand.y,eyeBand.w,eyeBand.h,bandX,bandY,bandW,bandH);ctx.drawImage(eyeLayer,eyeBand.x,eyeBand.y,eyeBand.w,eyeBand.h,bandX+shiftX,bandY+shiftY,bandW,bandH);ctx.imageSmoothingEnabled=true;
         ctx.restore();
       }
-      if(gesturing){
-        const ritualColor=gesture.kind==="recall"?"#d8a7ff":"#b7ff56";
-        const handX=31,handY=43;
-        ctx.save();ctx.globalCompositeOperation="screen";ctx.globalAlpha=.9*gesturePeak;
-        const handGlow=ctx.createRadialGradient(handX,handY,1,handX,handY,31+gesturePeak*13);
-        handGlow.addColorStop(0,"rgba(255,255,255,.88)");
-        handGlow.addColorStop(.2,gesture.kind==="recall"?"rgba(216,167,255,.72)":"rgba(183,255,86,.72)");
-        handGlow.addColorStop(1,"rgba(120,70,220,0)");
-        ctx.fillStyle=handGlow;ctx.fillRect(handX-48,handY-48,96,96);
-        ctx.strokeStyle=ritualColor;ctx.shadowColor=ritualColor;ctx.shadowBlur=14;ctx.lineWidth=1.8;
-        for(let ring=0;ring<2;ring++){
-          const spin=(gesture.kind==="recall"?-1:1)*(now*.006+ring*1.4);
-          const radius=12+ring*8+gesturePeak*5;
-          ctx.beginPath();ctx.ellipse(handX,handY,radius,radius*.38,spin,0,Math.PI*2);ctx.stroke();
-        }
-        ctx.shadowBlur=0;
-        for(let mote=0;mote<9;mote++){
-          const angle=mote*Math.PI*2/9+(gesture.kind==="recall"?-1:1)*now*.004;
-          const radius=14+gesturePeak*24+(mote%3)*4;
-          ctx.fillStyle=mote%3===0?"#ffffff":ritualColor;
-          ctx.globalAlpha=(.35+.65*gesturePeak)*(1-mote*.035);
-          ctx.beginPath();ctx.arc(handX+Math.cos(angle)*radius,handY+Math.sin(angle)*radius*.58,1+(mote%2)*.65,0,Math.PI*2);ctx.fill();
-        }
-        ctx.globalAlpha=.6*gesturePeak;ctx.strokeStyle=ritualColor;ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(0,PH+2,27+gesturePeak*8,5+gesturePeak*2,0,0,Math.PI*2);ctx.stroke();
-        ctx.restore();
-      }
       ctx.restore();
-      if(!gesturing)drawActualAttackArm(pl,now);
+      drawActualAttackArm(pl,now);
+      drawCompanionCast(pl,now);
     };
     const beginDragonMode=(mode:DragonMode,now:number,duration:number)=>{
       dragon.mode=mode;dragon.modeStarted=now;dragon.modeUntil=now+duration;dragon.landing=false;
@@ -1164,6 +1170,8 @@ export default function AshfallGame() {
         if(wasGrounded&&!didJump&&!pl.grounded)pl.jumpsLeft=Math.min(pl.jumpsLeft,1);
         if(pl.y>WORLD_H+80){pl.x=map===1?Math.max(120,pl.x-180):340;pl.y=240;pl.vy=0;pl.grounded=false;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}pl.step+=Math.abs(pl.vx)*dt*.048;
       }else{pl.vx*=.82;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
+      const castState=companionCastRef.current;
+      if(castState.kind&&now-castState.started<780)pl.facing=castState.direction;
       updateDragon(dt,now);
       if(deployQueued.current){
         const itemId=equippedRef.current[selectedSlotRef.current];
@@ -1171,13 +1179,12 @@ export default function AshfallGame() {
         const ally=companionRef.current;
         if(item?.type==="animal-card"){
           if(ally.active&&ally.itemId===item.id){
-            if(ally.recallStarted===0){companionGestureRef.current={startedAt:now,kind:"recall"};ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;tone(470,.16,.022);window.setTimeout(()=>tone(280,.22,.024),180);window.setTimeout(()=>tone(135,.34,.022),610);}
+            if(ally.recallStarted===0){const direction:1|-1=ally.x>=pl.x?1:-1;ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;companionCastRef.current={started:now,kind:"recall",direction};pl.facing=direction;tone(470,.16,.022);window.setTimeout(()=>tone(280,.22,.024),180);window.setTimeout(()=>tone(135,.34,.022),610);}
           }else{
             const summonX=clamp(pl.x-pl.facing*82,30,activeWorldW-30);
             const summonGround=companionSurfaceAt(summonX,pl.y+PH,map)??pl.y+PH;
-            companionGestureRef.current={startedAt:now,kind:"summon"};
             ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=summonX;ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.recallStarted=0;ally.teleportAt=0;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;ally.health=ally.maxHealth;
-            setDeployedItemId(item.id);tone(330,.18,.024);window.setTimeout(()=>tone(620,.22,.022),170);window.setTimeout(()=>tone(940,.28,.02),420);
+            const direction:1|-1=summonX>=pl.x?1:-1;companionCastRef.current={started:now,kind:"summon",direction};pl.facing=direction;setDeployedItemId(item.id);tone(330,.18,.024);window.setTimeout(()=>tone(620,.22,.022),170);window.setTimeout(()=>tone(940,.28,.02),420);
           }
         }
         deployQueued.current=false;
