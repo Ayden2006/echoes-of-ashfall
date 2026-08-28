@@ -129,6 +129,7 @@ export default function AshfallGame() {
   const actionStartedAt = useRef(0);
   const pickupQueued = useRef(false);
   const deployQueued = useRef(false);
+  const companionGestureRef = useRef<{startedAt:number;kind:"summon"|"recall"}>({startedAt:0,kind:"summon"});
   const inventoryOpenRef = useRef(false);
   const inventoryRef = useRef<InventoryItem[]>([]);
   const equippedRef = useRef<(string|null)[]>(Array(ACTIVE_SLOT_COUNT).fill(null));
@@ -177,7 +178,7 @@ export default function AshfallGame() {
     if(equippedIndex>=0){
       next[equippedIndex]=null;
       const ally=companionRef.current;
-      if(ally.active&&ally.itemId===itemId&&ally.recallStarted===0){ally.recallStarted=performance.now();ally.attackUntil=0;ally.vx=0;}
+      if(ally.active&&ally.itemId===itemId&&ally.recallStarted===0){const now=performance.now();companionGestureRef.current={startedAt:now,kind:"recall"};ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;}
     }
     else{
       const openIndex=next.indexOf(null);
@@ -433,7 +434,13 @@ export default function AshfallGame() {
       ctx.shadowBlur=0;ctx.imageSmoothingEnabled=true;ctx.restore();
     };
     const drawPlayer=(pl:Player,now:number)=>{
-      ctx.save();ctx.translate(pl.x,pl.y);ctx.scale(pl.facing,1);
+      const gesture=companionGestureRef.current;
+      const gestureDuration=gesture.kind==="recall"?780:720;
+      const gestureProgress=gesture.startedAt>0?clamp((now-gesture.startedAt)/gestureDuration,0,1):1;
+      const gesturing=gesture.startedAt>0&&gestureProgress<1;
+      const gesturePeak=gesturing?Math.sin(gestureProgress*Math.PI):0;
+      const gestureSnap=gesturing?Math.sin(clamp(gestureProgress/.42,0,1)*Math.PI):0;
+      ctx.save();ctx.translate(pl.x,pl.y-gesturePeak*3);ctx.rotate(pl.facing*(gesture.kind==="recall"?-.045:.045)*gestureSnap);ctx.scale(pl.facing,1);
       if(pl.grounded){
         ctx.fillStyle="rgba(1,2,4,.72)";ctx.beginPath();ctx.ellipse(0,PH+1,31,7,0,0,Math.PI*2);ctx.fill();
         ctx.fillStyle=mapRef.current===1?"rgba(179,158,235,.3)":"rgba(255,215,139,.36)";ctx.fillRect(-20,PH-1,40,2);
@@ -441,7 +448,8 @@ export default function AshfallGame() {
       let list=SPRITE_FRAMES.idle;
       let index=Math.floor(now/620)%list.length;
       const attacking=actionUntil.current>now;
-      if(attacking){list=SPRITE_FRAMES.action;index=1;}
+      if(gesturing){list=SPRITE_FRAMES.idle;index=gestureProgress<.48?1:0;}
+      else if(attacking){list=SPRITE_FRAMES.action;index=1;}
       else if(!pl.grounded){list=SPRITE_FRAMES.jump;index=0;}
       else if(pl.sliding){list=SPRITE_FRAMES.slide;index=0;}
       else if(pl.crouched){list=SPRITE_FRAMES.crouch;index=0;}
@@ -468,8 +476,34 @@ export default function AshfallGame() {
         ctx.imageSmoothingEnabled=false;ctx.drawImage(eyeCoverLayer,eyeBand.x,eyeBand.y,eyeBand.w,eyeBand.h,bandX,bandY,bandW,bandH);ctx.drawImage(eyeLayer,eyeBand.x,eyeBand.y,eyeBand.w,eyeBand.h,bandX+shiftX,bandY+shiftY,bandW,bandH);ctx.imageSmoothingEnabled=true;
         ctx.restore();
       }
+      if(gesturing){
+        const ritualColor=gesture.kind==="recall"?"#d8a7ff":"#b7ff56";
+        const handX=31,handY=43;
+        ctx.save();ctx.globalCompositeOperation="screen";ctx.globalAlpha=.9*gesturePeak;
+        const handGlow=ctx.createRadialGradient(handX,handY,1,handX,handY,31+gesturePeak*13);
+        handGlow.addColorStop(0,"rgba(255,255,255,.88)");
+        handGlow.addColorStop(.2,gesture.kind==="recall"?"rgba(216,167,255,.72)":"rgba(183,255,86,.72)");
+        handGlow.addColorStop(1,"rgba(120,70,220,0)");
+        ctx.fillStyle=handGlow;ctx.fillRect(handX-48,handY-48,96,96);
+        ctx.strokeStyle=ritualColor;ctx.shadowColor=ritualColor;ctx.shadowBlur=14;ctx.lineWidth=1.8;
+        for(let ring=0;ring<2;ring++){
+          const spin=(gesture.kind==="recall"?-1:1)*(now*.006+ring*1.4);
+          const radius=12+ring*8+gesturePeak*5;
+          ctx.beginPath();ctx.ellipse(handX,handY,radius,radius*.38,spin,0,Math.PI*2);ctx.stroke();
+        }
+        ctx.shadowBlur=0;
+        for(let mote=0;mote<9;mote++){
+          const angle=mote*Math.PI*2/9+(gesture.kind==="recall"?-1:1)*now*.004;
+          const radius=14+gesturePeak*24+(mote%3)*4;
+          ctx.fillStyle=mote%3===0?"#ffffff":ritualColor;
+          ctx.globalAlpha=(.35+.65*gesturePeak)*(1-mote*.035);
+          ctx.beginPath();ctx.arc(handX+Math.cos(angle)*radius,handY+Math.sin(angle)*radius*.58,1+(mote%2)*.65,0,Math.PI*2);ctx.fill();
+        }
+        ctx.globalAlpha=.6*gesturePeak;ctx.strokeStyle=ritualColor;ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(0,PH+2,27+gesturePeak*8,5+gesturePeak*2,0,0,Math.PI*2);ctx.stroke();
+        ctx.restore();
+      }
       ctx.restore();
-      drawActualAttackArm(pl,now);
+      if(!gesturing)drawActualAttackArm(pl,now);
     };
     const beginDragonMode=(mode:DragonMode,now:number,duration:number)=>{
       dragon.mode=mode;dragon.modeStarted=now;dragon.modeUntil=now+duration;dragon.landing=false;
@@ -1137,10 +1171,11 @@ export default function AshfallGame() {
         const ally=companionRef.current;
         if(item?.type==="animal-card"){
           if(ally.active&&ally.itemId===item.id){
-            if(ally.recallStarted===0){ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;tone(470,.16,.022);window.setTimeout(()=>tone(280,.22,.024),180);window.setTimeout(()=>tone(135,.34,.022),610);}
+            if(ally.recallStarted===0){companionGestureRef.current={startedAt:now,kind:"recall"};ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;tone(470,.16,.022);window.setTimeout(()=>tone(280,.22,.024),180);window.setTimeout(()=>tone(135,.34,.022),610);}
           }else{
             const summonX=clamp(pl.x-pl.facing*82,30,activeWorldW-30);
             const summonGround=companionSurfaceAt(summonX,pl.y+PH,map)??pl.y+PH;
+            companionGestureRef.current={startedAt:now,kind:"summon"};
             ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=summonX;ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.recallStarted=0;ally.teleportAt=0;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;ally.health=ally.maxHealth;
             setDeployedItemId(item.id);tone(330,.18,.024);window.setTimeout(()=>tone(620,.22,.022),170);window.setTimeout(()=>tone(940,.28,.02),420);
           }
