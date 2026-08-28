@@ -24,7 +24,11 @@ const MAP1_PORTAL_X = 5070;
 const MAP2_PORTAL_X = 105;
 const MAX_HEALTH = 100;
 const SWORD_DAMAGE = 15;
-const PLAYER_NAME = "Moon Night";
+const MAX_STAMINA = 100;
+const SWORD_STAMINA_COST = 25;
+const STAMINA_REGEN_DELAY = 650;
+const STAMINA_REGEN_PER_SECOND = 45;
+const PLAYER_NAME = "Moon Knight";
 const DRAGON_MAX_HEALTH = 150;
 const DRAGON_ATTACK_DAMAGE = 10;
 const DRAGON_RENDER_SIZE = 138;
@@ -122,6 +126,8 @@ export default function AshfallGame() {
   const aimAngle = useRef(0);
   const attackAngle = useRef(0);
   const activeAttackDamage = useRef(0);
+  const staminaRef = useRef(MAX_STAMINA);
+  const staminaUsedAt = useRef(-Infinity);
   const player = useRef<Player>({x:230,y:498,vx:0,vy:0,grounded:true,facing:1,step:0,jumpsLeft:2,crouched:false,sliding:false,health:MAX_HEALTH,maxHealth:MAX_HEALTH,swordDamage:SWORD_DAMAGE});
   const startedRef = useRef(false);
   const dialogueRef = useRef<Line[]|null>(null);
@@ -147,6 +153,7 @@ export default function AshfallGame() {
   const [objective,setObjective] = useState("Follow the signal toward the old bell tower");
   const [soundOn,setSoundOn] = useState(true);
   const [health,setHealth] = useState(MAX_HEALTH);
+  const [stamina,setStamina] = useState(MAX_STAMINA);
   const [inventoryOpen,setInventoryOpen] = useState(false);
   const [inventory,setInventory] = useState<InventoryItem[]>([]);
   const [equipped,setEquipped] = useState<(string|null)[]>(Array(ACTIVE_SLOT_COUNT).fill(null));
@@ -265,6 +272,9 @@ export default function AshfallGame() {
   const attack = useCallback(() => {
     if (!startedRef.current||dialogueRef.current||inventoryOpenRef.current) return;
     const now=performance.now();
+    if(staminaRef.current<SWORD_STAMINA_COST){tone(72,.12,.018);return;}
+    staminaRef.current=Math.max(0,staminaRef.current-SWORD_STAMINA_COST);
+    staminaUsedAt.current=now;setStamina(Math.round(staminaRef.current));
     attackAngle.current=aimAngle.current;
     activeAttackDamage.current=player.current.swordDamage;
     player.current.facing=Math.cos(attackAngle.current)>=0?1:-1;
@@ -298,7 +308,7 @@ export default function AshfallGame() {
   useEffect(()=>{
     const canvas=canvasRef.current, ctx=canvas?.getContext("2d");
     if (!canvas||!ctx) return;
-    let raf=0,last=performance.now(),cameraX=0,lastAction="",lastHealth=player.current.health;
+    let raf=0,last=performance.now(),cameraX=0,lastAction="",lastHealth=player.current.health,lastStamina=Math.round(staminaRef.current);
     const backdrop=new Image(); backdrop.src="/pixel-castle-night.png";
     const beachBackdrop=new Image(); beachBackdrop.src="/map2-sunset-beach.png";
     const knight=new Image(); knight.src="/knight-sprite-sheet.png";
@@ -736,6 +746,7 @@ export default function AshfallGame() {
 
       if(playerRespawnAt&&now>=playerRespawnAt){
         pl.health=pl.maxHealth;pl.x=230;pl.y=498;pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
+        staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;
         playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
       }
     };
@@ -1163,6 +1174,9 @@ export default function AshfallGame() {
       const dt=Math.min((now-last)/1000,.032);last=now;const w=canvas.clientWidth,h=canvas.clientHeight,scale=Math.max(w/1280,h/WORLD_H),pl=player.current,map=mapRef.current,activeWorldW=worldWidthFor(map);
       if(actionUntil.current<=now)activeAttackDamage.current=0;
       if(pl.health!==lastHealth){lastHealth=pl.health;setHealth(pl.health);}
+      if(startedRef.current&&staminaRef.current<MAX_STAMINA&&now-staminaUsedAt.current>=STAMINA_REGEN_DELAY){staminaRef.current=Math.min(MAX_STAMINA,staminaRef.current+STAMINA_REGEN_PER_SECOND*dt);}
+      const displayedStamina=Math.round(staminaRef.current);
+      if(displayedStamina!==lastStamina){lastStamina=displayedStamina;setStamina(displayedStamina);}
       if(startedRef.current&&!dialogueRef.current&&!inventoryOpenRef.current&&playerRespawnAt===0){
         const left=keys.current.a||keys.current.arrowleft,right=keys.current.d||keys.current.arrowright,target=(right?1:0)-(left?1:0),down=keys.current.s||keys.current.arrowdown;
         const wasGrounded=pl.grounded;
@@ -1260,14 +1274,20 @@ export default function AshfallGame() {
   const toggleSound=()=>{soundRef.current=!soundRef.current;setSoundOn(soundRef.current);if(soundRef.current)tone(520,.16,.025);};
 
   return <main className="game-shell" aria-label="Echoes of Ashfall game">
-    <canvas ref={canvasRef} className="game-canvas" data-sword-damage={SWORD_DAMAGE} aria-label={`${PLAYER_NAME} in a playable side-scrolling world. Move the cursor to aim and left click to attack for ${SWORD_DAMAGE} damage.`} onPointerDown={(e)=>{if(e.button===0){e.preventDefault();updateAim(e.clientX,e.clientY);attack();}}}/>
+    <canvas ref={canvasRef} className="game-canvas" data-sword-damage={SWORD_DAMAGE} aria-label={`${PLAYER_NAME} in a playable side-scrolling world. Move the cursor to aim and left click to attack for ${SWORD_DAMAGE} damage. Four rapid sword attacks are available before stamina must recover.`} onPointerDown={(e)=>{if(e.button===0){e.preventDefault();updateAim(e.clientX,e.clientY);attack();}}}/>
     <div className="vignette"/><div className="film-grain"/>
     <div className="topbar">
       <div className="hud-left">
-        <div className="health-hud" role="meter" aria-label={`${PLAYER_NAME} health: ${health} out of ${MAX_HEALTH}`} aria-valuemin={0} aria-valuemax={MAX_HEALTH} aria-valuenow={health}>
+        <div className="health-hud">
           <p className="knight-name">{PLAYER_NAME}</p>
-          <div className="health-readout"><Heart size={16} strokeWidth={2.4} aria-hidden="true"/><strong>{health}</strong><span>Health</span></div>
-          <div className="health-track"><span style={{width:`${health}%`}}/></div>
+          <div role="meter" aria-label={`${PLAYER_NAME} health: ${health} out of ${MAX_HEALTH}`} aria-valuemin={0} aria-valuemax={MAX_HEALTH} aria-valuenow={health}>
+            <div className="health-readout"><Heart size={16} strokeWidth={2.4} aria-hidden="true"/><strong>{health}</strong><span>Health</span></div>
+            <div className="health-track"><span style={{width:`${health}%`}}/></div>
+          </div>
+          <div className="stamina-meter" role="meter" aria-label={`${PLAYER_NAME} stamina: ${stamina} out of ${MAX_STAMINA}`} aria-valuemin={0} aria-valuemax={MAX_STAMINA} aria-valuenow={stamina}>
+            <div className="stamina-readout"><span>Stamina</span><strong>{Math.floor(stamina/SWORD_STAMINA_COST)} / 4</strong></div>
+            <div className="stamina-track"><span style={{width:`${stamina}%`}}/></div>
+          </div>
         </div>
         <div className="quick-slots" aria-label="Five usable item slots">
           {equipped.map((itemId,index)=>{
