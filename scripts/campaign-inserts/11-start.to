@@ -1,0 +1,4 @@
+    startedRef.current=true; setStarted(true);
+    seenIntroRef.current.add(1);
+    showDialogue(CAMPAIGN_OPENING);
+  },[showDialogue]);
