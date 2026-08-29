@@ -101,11 +101,6 @@ const map1Platforms: Platform[] = [
   {x:1020,y:475,w:170,h:18},{x:2260,y:470,w:160,h:18},{x:3320,y:455,w:180,h:18}
 ];
 const map2Platforms: Platform[] = [{x:0,y:590,w:MAP2_W,h:180}];
-const tower: Line[] = [
-  {speaker:"Radio",text:"Don't climb the tower. The portal waits at the far edge of this world."},
-  {speaker:"Mara",text:"You know I'm here. Tell me who you are."},
-  {speaker:"Radio",text:"I think you already know."}
-];
 const clamp = (n:number,a:number,b:number) => Math.max(a,Math.min(b,n));
 const rgbaFromHex = (hex:string,alpha:number) => {const value=parseInt(hex.replace("#",""),16);return `rgba(${value>>16},${value>>8&255},${value&255},${alpha})`;};
 const worldWidthFor = (map:MapId) => map===1?MAP1_W:MAP2_W;
@@ -132,7 +127,6 @@ export default function AshfallGame() {
   const startedRef = useRef(false);
   const dialogueRef = useRef<Line[]|null>(null);
   const dialogueIndexRef = useRef(0);
-  const triggered = useRef(new Set<string>());
   const actionUntil = useRef(0);
   const actionStartedAt = useRef(0);
   const pickupQueued = useRef(false);
@@ -150,7 +144,7 @@ export default function AshfallGame() {
   const [dialogue,setDialogue] = useState<Line[]|null>(null);
   const [dialogueIndex,setDialogueIndex] = useState(0);
   const [nearAction,setNearAction] = useState<string|null>(null);
-  const [objective,setObjective] = useState("Follow the signal toward the old bell tower");
+  const [objective,setObjective] = useState("Reach the portal at the far right of Map 1");
   const [soundOn,setSoundOn] = useState(true);
   const [health,setHealth] = useState(MAX_HEALTH);
   const [stamina,setStamina] = useState(MAX_STAMINA);
@@ -207,11 +201,6 @@ export default function AshfallGame() {
     osc.connect(gain).connect(audio.destination); osc.start(); osc.stop(audio.currentTime+duration);
   },[]);
 
-  const beginDialogue = useCallback((lines:Line[]) => {
-    dialogueRef.current=lines; dialogueIndexRef.current=0;
-    setDialogue(lines); setDialogueIndex(0); tone(420,.18,.02);
-  },[tone]);
-
   const advanceDialogue = useCallback(() => {
     const lines=dialogueRef.current;
     if (!lines) return;
@@ -249,14 +238,12 @@ export default function AshfallGame() {
     if (dialogueRef.current) { advanceDialogue(); return; }
     const x=player.current.x;
     const map=mapRef.current;
-    if (map===1&&Math.abs(x-3850)<155&&!triggered.current.has("tower")) {
-      triggered.current.add("tower"); beginDialogue(tower); setObjective("Reach the portal at the far right of Map 1");
-    }else if(map===1&&Math.abs(x-(MAP1_PORTAL_X+55))<145){
+    if(map===1&&Math.abs(x-(MAP1_PORTAL_X+55))<145){
       enterMap(2);
     }else if(map===2&&Math.abs(x-(MAP2_PORTAL_X+55))<145){
       enterMap(1);
     }
-  },[advanceDialogue,beginDialogue,enterMap]);
+  },[advanceDialogue,enterMap]);
 
   const updateAim = useCallback((clientX:number,clientY:number) => {
     const canvas=canvasRef.current;
@@ -1248,7 +1235,6 @@ export default function AshfallGame() {
       let action="";
       if(!dialogueRef.current){
         if(nearDragonCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Baby Dragon card";
-        else if(map===1&&Math.abs(pl.x-3850)<155&&!triggered.current.has("tower"))action="Listen to the radio";
         else if(map===1&&Math.abs(pl.x-(MAP1_PORTAL_X+55))<145)action="Enter Map 2";
         else if(map===2&&Math.abs(pl.x-(MAP2_PORTAL_X+55))<145)action="Return to Map 1";
       }
