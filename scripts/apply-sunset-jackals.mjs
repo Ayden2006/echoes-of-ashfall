@@ -1,25 +1,27 @@
 import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
+import { execSync } from "node:child_process";
 
-const marker = "const JACKAL_MAX_HEALTH = 70;";
 const dest = "app/game.tsx";
 const current = readFileSync(dest, "utf8");
-if (current.includes(marker)) {
+if (current.includes("const JACKAL_MAX_HEALTH = 70;")) {
   console.log("Sunset Jackals already present in app/game.tsx");
   process.exit(0);
 }
 
-const dir = "scripts/jackal-payload";
+const dir = "scripts/jackal-patch";
 const parts = readdirSync(dir)
-  .filter((name) => name.startsWith("game.tsx.gz.b64."))
+  .filter((name) => name.startsWith("part."))
   .sort();
 if (!parts.length) {
-  throw new Error("Missing jackal payload chunks");
+  throw new Error("Missing jackal patch parts");
 }
 const b64 = parts.map((name) => readFileSync(`${dir}/${name}`, "utf8").trim()).join("");
-const next = gunzipSync(Buffer.from(b64, "base64")).toString("utf8");
-if (!next.includes(marker) || !next.includes("drawPixelJackal")) {
-  throw new Error("Decoded payload is not the Sunset Jackal game source");
+const patch = gunzipSync(Buffer.from(b64, "base64")).toString("utf8");
+writeFileSync("jackals.patch", patch);
+execSync("patch -p0 < jackals.patch", { stdio: "inherit" });
+const next = readFileSync(dest, "utf8");
+if (!next.includes("drawPixelJackal")) {
+  throw new Error("Patch applied but jackals are still missing");
 }
-writeFileSync(dest, next);
-console.log(`Wrote ${dest} (${next.length} bytes) with Sunset Jackals`);
+console.log(`Patched ${dest} (${next.length} bytes) with Sunset Jackals`);
