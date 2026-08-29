@@ -1,0 +1,3 @@
+    if(!startedRef.current)return;
+    const jackals=wildPackFor(mapRef.current);
+    if(!jackals)return;
