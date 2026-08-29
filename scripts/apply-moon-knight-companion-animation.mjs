@@ -8,6 +8,15 @@ if (text.includes("const companionGestureRef = useRef")) {
   process.exit(0);
 }
 
+// The companion deploy/recall animation has since been reimplemented directly in
+// app/game.tsx as `companionCastRef` (a superset of this legacy patch). When that
+// evolved implementation is present, this one-time generation step is a no-op and
+// must not try to re-apply the obsolete source blocks.
+if (text.includes("const companionCastRef = useRef")) {
+  console.log("Moon Knight companion cast animation already present; skipping legacy patch.");
+  process.exit(0);
+}
+
 function replaceOnce(oldText, newText) {
   if (!text.includes(oldText)) {
     throw new Error("Expected Echoes of Ashfall source block was not found; refusing to apply a partial Moon Knight animation patch.");
