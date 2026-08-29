@@ -38,8 +38,9 @@ npm run build
 - Map 2: sunset beach world
 - Moon Night: 100 health, 15 sword damage
 - Baby dragon: 150 health, 10 attack damage, passive roaming, sleeping, flying, and persistent retaliation after being attacked
+- Sunset Jackals: three animals on Map 2, 70 health, 8 attack damage, idle / walk / run / leap / sleep / pounce animations, and the same card capture + Q deploy / recall system as the dragon
 
-The dragon keeps chasing and attacking whoever hurt it until that target is defeated or escapes its sight range. It is intentionally left alive at 1 health so the future creature-capture system can be added without redesigning combat.
+The dragon and jackals keep chasing and attacking whoever hurt them until that target is defeated or escapes sight range. Defeat an animal to form its magical card, press `E` to collect it, equip it, then press `Q` to deploy or recall the companion.
 
 ## Main project files
 
