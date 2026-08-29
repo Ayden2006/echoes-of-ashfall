@@ -18,12 +18,19 @@ const MAP1_W = 5200;
 const MAP2_W = 3600;
 const MAP3_W = 4000;
 const MAP4_W = 4200;
+const MAP3_W = 4000;
+const MAP4_W = 4200;
 const WORLD_H = 720;
 const PW = 46;
 const PH = 92;
 const STEP_HEIGHT = 32;
 const MAP1_PORTAL_X = 5070;
 const MAP2_PORTAL_X = 105;
+const MAP2_EXIT_X = 3470;
+const MAP3_ENTRY_X = 105;
+const MAP3_EXIT_X = 3870;
+const MAP4_ENTRY_X = 105;
+const MAP4_EXIT_X = 4070;
 const MAP2_EXIT_X = 3470;
 const MAP3_ENTRY_X = 105;
 const MAP3_EXIT_X = 3870;
@@ -118,10 +125,25 @@ const map1Platforms: Platform[] = [
   {x:1020,y:475,w:170,h:18},{x:2260,y:470,w:160,h:18},{x:3320,y:455,w:180,h:18}
 ];
 const map2Platforms: Platform[] = [{x:0,y:590,w:MAP2_W,h:180}];
+const map3Platforms: Platform[] = [
+  {x:0,y:590,w:MAP3_W,h:180},{x:620,y:470,w:180,h:18},{x:1480,y:455,w:200,h:18},{x:2480,y:465,w:190,h:18},{x:3320,y:450,w:170,h:18}
+];
+const map4Platforms: Platform[] = [
+  {x:0,y:590,w:1180,h:180},{x:1140,y:560,w:980,h:210},{x:2080,y:575,w:900,h:195},{x:2940,y:545,w:1260,h:225},
+  {x:720,y:455,w:160,h:18},{x:1760,y:430,w:180,h:18},{x:2860,y:420,w:190,h:18}
+];
 const clamp = (n:number,a:number,b:number) => Math.max(a,Math.min(b,n));
 const rgbaFromHex = (hex:string,alpha:number) => {const value=parseInt(hex.replace("#",""),16);return `rgba(${value>>16},${value>>8&255},${value&255},${alpha})`;};
-const worldWidthFor = (map:MapId) => map===1?MAP1_W:MAP2_W;
-const platformsFor = (map:MapId) => map===1?map1Platforms:map2Platforms;
+const worldWidthFor = (map:MapId) => map===1?MAP1_W:map===2?MAP2_W:map===3?MAP3_W:map===4?MAP4_W:map===5?4400:4800;
+const platformsFor = (map:MapId) => map===1?map1Platforms:map===2?map2Platforms:map===3?map3Platforms:map4Platforms;
+const spawnFor = (map:MapId, from:MapId|null) => {
+  if(from===null) return {x:230,y:498,facing:1 as 1|-1};
+  if(map===1) return {x:4860,y:483,facing:-1 as 1|-1};
+  const arrivingFromPrev = (map===2&&from===1)||(map===3&&from===2)||(map===4&&from===3);
+  if(arrivingFromPrev) return {x:340,y:498,facing:1 as 1|-1};
+  return {x:Math.max(240,worldWidthFor(map)-340),y:498,facing:-1 as 1|-1};
+};
+const respawnXFor = (map:MapId) => map===1?230:340;
 
 export default function AshfallGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
