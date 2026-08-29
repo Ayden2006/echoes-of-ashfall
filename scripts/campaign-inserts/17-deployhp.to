@@ -1,0 +1,1 @@
+ally.maxHealth=cardStats(item.id).hp;ally.health=ally.maxHealth;
