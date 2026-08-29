@@ -1,0 +1,2 @@
+  const seenIntroRef = useRef<Set<MapId>>(new Set());
+  const audioRef = useRef<AudioContext|null>(null);

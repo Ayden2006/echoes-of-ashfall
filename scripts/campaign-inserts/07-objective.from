@@ -1,0 +1,1 @@
+  const [objective,setObjective] = useState("Reach the portal at the far right of Map 1");
