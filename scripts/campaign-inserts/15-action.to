@@ -1,0 +1,7 @@
+else if(map===1&&Math.abs(pl.x-(MAP1_PORTAL_X+55))<145)action="Enter Map 2";
+    else if(map===2&&Math.abs(pl.x-(MAP2_PORTAL_X+55))<145)action="Return to Map 1";
+    else if(map===2&&Math.abs(pl.x-(MAP2_EXIT_X+55))<145)action="Enter Ash Hollow";
+    else if(map===3&&Math.abs(pl.x-(MAP3_ENTRY_X+55))<145)action="Return to Sunset Shore";
+    else if(map===3&&Math.abs(pl.x-(MAP3_EXIT_X+55))<145)action="Enter Moonwell Cliffs";
+    else if(map===4&&Math.abs(pl.x-(MAP4_ENTRY_X+55))<145)action="Return to Ash Hollow";
+    else if(map===4&&Math.abs(pl.x-(MAP4_EXIT_X+55))<145)action="The path ahead is sealed";
