@@ -4,8 +4,8 @@ A 2D story-action game starring Moon Night, built as a React canvas game with a 
 
 ## Play / download
 
-- **Play from source (this branch):** download the zip, then run locally:
-  - Zip: https://github.com/Ayden2006/echoes-of-ashfall/archive/refs/heads/cursor/finish-story-campaign-maps-5-6-26b0.zip
+- **Play from the published source (`main`):** download the zip, then run locally:
+  - Zip: https://github.com/Ayden2006/echoes-of-ashfall/archive/refs/heads/main.zip
   - `npm ci` then `npm run dev`
 - **Repo:** https://github.com/Ayden2006/echoes-of-ashfall
 
@@ -30,6 +30,7 @@ npm run build
 - Left mouse button: sword attack toward the cursor
 - `E`: interact with portals, talk to people, study landmarks (kiln, vein, altar), and pick up animal cards
 - `Tab`: inventory
+- `M`: open the Ashfall world map; unreached regions stay hidden until unlocked
 - `1`–`5`: select a usable card slot
 - `Q`: deploy or recall the equipped animal companion
 
@@ -44,11 +45,13 @@ Moon Night follows a fading signal through Ashfall. The road runs castle → bea
 - Map 5 — The Quiet Ember (kiln terrace): Ember Lynx; Reed talks if you press `E`; the quiet kiln can be studied with `E`
 - Map 6 — Ashfall's Heart (inner chamber): Heart Wyrm; Kest talks if you press `E`; a cooled vein and the Ashfall Heart Altar both use `E` (the altar ends the campaign)
 
+Maps 2 and 3 use multi-height terrain instead of a single flat strip, ground animals track the terrain surface they stand on, later maps use layered regional backdrops, and the world map only reveals regions the player has unlocked.
+
 Moon Night has 100 health and 15 sword damage. Defeat an animal to form its magical card, press `E` to collect it, equip it, then press `Q` to deploy or recall the companion. Animals keep chasing and attacking whoever hurt them until that target is defeated or escapes sight range. Every unique animal uses that same card + Q pattern.
 
 ## Main project files
 
-- `app/game.tsx`: gameplay, physics, combat, maps, animation, and canvas rendering
+- `app/game.tsx`: gameplay, physics, combat, maps, animation, world-map UI, and canvas rendering
 - `lib/campaign.ts`: story framework, objectives, dialogue, and map metadata
 - `app/globals.css`: game page layout and interface styling
 - `app/page.tsx`: page entry point
