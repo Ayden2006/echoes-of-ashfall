@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Heart, Volume2, VolumeX } from "lucide-react";
 
-type Line = { speaker: string; text: string };
-type MapId = 1|2;
+type DialogueChoice = { label:string; effect?:()=>void; next?:Line[] };
+type Line = { speaker: string; text: string; choices?:DialogueChoice[] };
+type MapId = 1|2|3|4;
 type Player = { x:number; y:number; vx:number; vy:number; grounded:boolean; facing:1|-1; step:number; jumpsLeft:number; crouched:boolean; sliding:boolean; health:number; maxHealth:number; swordDamage:number };
 type Platform = { x:number; y:number; w:number; h:number };
 type DragonMode = "idle"|"walk"|"run"|"fly"|"sleep"|"attack";
@@ -13,15 +14,26 @@ type DragonFrame = { x:number; y:number; w:number; h:number; anchorX:number; anc
 type CardPalette = { dark:string; mid:string; accent:string; glow:string };
 type InventoryItem = { id:string; name:string; type:"animal-card"|"item"; description:string; image:string; palette:CardPalette };
 type Companion = { active:boolean; itemId:string|null; map:MapId; x:number; y:number; groundY:number; vx:number; facing:1|-1; mode:DragonMode; modeStarted:number; summonedAt:number; recallStarted:number; teleportAt:number; attackUntil:number; attackLanded:boolean; targetX:number; lastPlayerAttack:number; health:number; maxHealth:number };
+type BondTier = "wary"|"familiar"|"bonded"|"loyal";
+type NpcId = "old-tomas"|"wren"|"sela";
+type NpcDef = { id:NpcId; name:string; title:string; map:MapId; x:number; palette:{skin:string;cloak:string;trim:string;accent:string} };
+type Objective = { id:string; label:string };
+type Chapter = { id:number; name:string; objectives:Objective[] };
 
 const MAP1_W = 5200;
 const MAP2_W = 3600;
+const MAP3_W = 3900;
+const MAP4_W = 4200;
 const WORLD_H = 720;
 const PW = 46;
 const PH = 92;
 const STEP_HEIGHT = 32;
 const MAP1_PORTAL_X = 5070;
 const MAP2_PORTAL_X = 105;
+const MAP2_GROVE_PORTAL_X = 3420;
+const MAP3_SHORE_PORTAL_X = 105;
+const MAP3_CRATER_PORTAL_X = 3720;
+const MAP4_GROVE_PORTAL_X = 105;
 const MAX_HEALTH = 100;
 const SWORD_DAMAGE = 15;
 const MAX_STAMINA = 100;
@@ -59,6 +71,90 @@ const SUNSET_JACKAL_CARD:InventoryItem = {
   palette:{dark:"#2a120c",mid:"#7a3118",accent:"#f08a3a",glow:"#ffd27a"}
 };
 type Jackal = Dragon & {id:string; patrolMin:number; patrolMax:number};
+
+// ---- Ember Fox: new capturable companion creature (Ashwood Grove, Map 3) ----
+const FOX_MAX_HEALTH = 60;
+const FOX_ATTACK_DAMAGE = 9;
+const FOX_SIGHT_RANGE = 560;
+const FOX_ATTACK_RANGE = 110;
+const FOX_RENDER_SIZE = 82;
+const EMBER_FOX_CARD:InventoryItem = {
+  id:"ember-fox-card",name:"Ember Fox",type:"animal-card",description:"A magical card holding the spirit of a quick ember fox from Ashwood Grove.",image:"/baby-dragon-sprite-sheet.png",
+  palette:{dark:"#1c0d08",mid:"#6a2a12",accent:"#ff8a3d",glow:"#ffd9a0"}
+};
+
+// ---- Warg Alpha: the Ashfall Crater mid/final-boss encounter (Map 4) ----
+const WARG_MAX_HEALTH = 340;
+const WARG_ATTACK_DAMAGE = 16;
+const WARG_SIGHT_RANGE = 780;
+const WARG_ATTACK_RANGE = 150;
+const WARG_RENDER_SIZE = 150;
+const WARG_PATROL_MIN = 2650;
+const WARG_PATROL_MAX = 3450;
+
+// ---- Companion Bond / Affection relationship system (purely additive perks) ----
+const BOND_MAX = 100;
+const BOND_PASSIVE_PER_SECOND = 0.55;
+const BOND_PER_LANDED_HIT = 1.1;
+const BOND_PER_KILL_ASSIST = 4;
+const BOND_PER_PET = 3;
+const BOND_PET_COOLDOWN = 5200;
+const BOND_PET_RANGE = 130;
+const BOND_TIER_LABEL:Record<BondTier,string> = {wary:"Wary",familiar:"Familiar",bonded:"Bonded",loyal:"Loyal"};
+const BOND_TIER_THRESHOLDS:Record<BondTier,number> = {wary:0,familiar:25,bonded:50,loyal:75};
+const bondTierFor = (bond:number):BondTier => bond>=BOND_TIER_THRESHOLDS.loyal?"loyal":bond>=BOND_TIER_THRESHOLDS.bonded?"bonded":bond>=BOND_TIER_THRESHOLDS.familiar?"familiar":"wary";
+const bondDamageBonus = (tier:BondTier) => tier==="loyal"?.35:tier==="bonded"?.2:tier==="familiar"?.1:0;
+const bondHealthBonus = (tier:BondTier) => tier==="loyal"?.3:tier==="bonded"?.18:tier==="familiar"?.08:0;
+const bondCastSpeedMultiplier = (tier:BondTier) => tier==="loyal"?.72:tier==="bonded"?.87:1;
+const COMPANION_BASE_STRIKE_DAMAGE = 8;
+const companionBaseMaxHealth = (itemId:string|null) => itemId===SUNSET_JACKAL_CARD.id?JACKAL_MAX_HEALTH:itemId===EMBER_FOX_CARD.id?FOX_MAX_HEALTH:DRAGON_MAX_HEALTH;
+const companionDisplayName = (itemId:string|null) => itemId===SUNSET_JACKAL_CARD.id?"SUNSET JACKAL":itemId===EMBER_FOX_CARD.id?"EMBER FOX":"BABY DRAGON";
+const companionEpilogueFor = (bonds:Record<string,number>):string => {
+  let bestId:string|null=null,bestVal=-1;
+  for(const id of Object.keys(bonds)){if(bonds[id]>bestVal){bestVal=bonds[id];bestId=id;}}
+  if(bestId&&bestVal>0){
+    const tier=bondTierFor(bestVal);
+    const name=companionDisplayName(bestId).toLowerCase().replace(/(^|\s)\w/g,c=>c.toUpperCase());
+    return `Your ${name} still watches the tree line for you -- ${BOND_TIER_LABEL[tier].toLowerCase()} runs deeper than most people ever let it.`;
+  }
+  return "You walked this whole road without a single companion at your side. That takes its own kind of courage.";
+};
+
+// ---- NPC relationships: friendly characters with dialogue trees + reputation ----
+const NPCS:NpcDef[] = [
+  {id:"old-tomas",name:"Old Tomas",title:"the Tidewatcher",map:2,x:1620,palette:{skin:"#c99a68",cloak:"#375065",trim:"#93b6c4",accent:"#ffb347"}},
+  {id:"wren",name:"Wren",title:"the Forager",map:3,x:960,palette:{skin:"#d8b48a",cloak:"#3c5a34",trim:"#8be54e",accent:"#c8ff8a"}},
+  {id:"sela",name:"Sela",title:"the Warden",map:4,x:340,palette:{skin:"#b98c6a",cloak:"#2c3440",trim:"#8ee7ff",accent:"#d7fbff"}}
+];
+const npcById = (id:NpcId) => NPCS.find(n=>n.id===id)!;
+const REPUTATION_TIER_LABEL = (rep:number) => rep>=80?"Trusted":rep>=50?"Friend":rep>=20?"Acquaintance":"Stranger";
+const npcNearPlayer = (npc:NpcDef, map:MapId, playerX:number) => npc.map===map && Math.abs(playerX-(npc.x+34))<140;
+const TOMAS_KEEPSAKE:InventoryItem = {id:"tomas-lucky-hook",name:"Tomas's Lucky Hook",type:"item",description:"A bent old fishing hook. Tomas swears it has never once come up empty.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#12222c",mid:"#375065",accent:"#93b6c4",glow:"#dff3ff"}};
+const WREN_KEEPSAKE:InventoryItem = {id:"wren-sunlit-acorn",name:"Sunlit Acorn",type:"item",description:"An acorn that stays warm to the touch. Wren says the grove gave it to her first.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#152410",mid:"#3c5a34",accent:"#8be54e",glow:"#e7ffc8"}};
+const SELA_KEEPSAKE:InventoryItem = {id:"sela-ash-iron-charm",name:"Warden's Ash-Iron Charm",type:"item",description:"A charm forged from crater-iron. Sela has carried it since the last watch fell silent.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#0c1418",mid:"#2c3440",accent:"#8ee7ff",glow:"#eafeff"}};
+
+// ---- Chapters & objective tracker (additive HUD quest log) ----
+const CHAPTERS:Chapter[] = [
+  {id:1,name:"The Signal in the Rain",objectives:[
+    {id:"ch1-dragon",label:"Bind the Baby Dragon's spirit"},
+    {id:"ch1-portal",label:"Reach the far portal on Map 1"}
+  ]},
+  {id:2,name:"Sunset Shore",objectives:[
+    {id:"ch2-jackals",label:"Track the three Sunset Jackals"},
+    {id:"ch2-tomas",label:"Speak with Old Tomas"},
+    {id:"ch2-portal",label:"Find the eastern path to Ashwood Grove"}
+  ]},
+  {id:3,name:"Ashwood Grove",objectives:[
+    {id:"ch3-wren",label:"Speak with Wren the Forager"},
+    {id:"ch3-fox",label:"Bind the Ember Fox's spirit"},
+    {id:"ch3-portal",label:"Find the path to Ashfall Crater"}
+  ]},
+  {id:4,name:"Ashfall Crater",objectives:[
+    {id:"ch4-sela",label:"Speak with Sela the Warden"},
+    {id:"ch4-warg",label:"Face the Warg Alpha"},
+    {id:"ch4-ending",label:"Witness Ashfall's dawn"}
+  ]}
+];
 const DRAGON_FRAMES:Record<DragonMode,DragonFrame[]> = {
   idle:[
     {x:256,y:25,w:256,h:260,anchorX:128,anchorY:260},{x:512,y:25,w:256,h:258,anchorX:128,anchorY:258},
@@ -111,10 +207,22 @@ const map1Platforms: Platform[] = [
   {x:1020,y:475,w:170,h:18},{x:2260,y:470,w:160,h:18},{x:3320,y:455,w:180,h:18}
 ];
 const map2Platforms: Platform[] = [{x:0,y:590,w:MAP2_W,h:180}];
+const map3Platforms: Platform[] = [
+  {x:0,y:600,w:900,h:170},{x:860,y:575,w:560,h:195},{x:1360,y:610,w:620,h:160},
+  {x:1920,y:560,w:600,h:210},{x:2460,y:595,w:540,h:175},{x:2940,y:555,w:960,h:215},
+  {x:640,y:465,w:150,h:18},{x:1720,y:445,w:170,h:18},{x:2760,y:460,w:160,h:18}
+];
+const map4Platforms: Platform[] = [
+  {x:0,y:610,w:760,h:160},{x:700,y:580,w:620,h:190},{x:1260,y:625,w:520,h:145},
+  {x:1720,y:565,w:660,h:205},{x:2320,y:600,w:520,h:170},{x:2780,y:545,w:700,h:225},
+  {x:3420,y:595,w:780,h:175},
+  {x:1000,y:455,w:170,h:18},{x:2060,y:440,w:180,h:18},{x:3040,y:450,w:170,h:18}
+];
 const clamp = (n:number,a:number,b:number) => Math.max(a,Math.min(b,n));
 const rgbaFromHex = (hex:string,alpha:number) => {const value=parseInt(hex.replace("#",""),16);return `rgba(${value>>16},${value>>8&255},${value&255},${alpha})`;};
-const worldWidthFor = (map:MapId) => map===1?MAP1_W:MAP2_W;
-const platformsFor = (map:MapId) => map===1?map1Platforms:map2Platforms;
+const worldWidthFor = (map:MapId) => map===1?MAP1_W:map===2?MAP2_W:map===3?MAP3_W:MAP4_W;
+const platformsFor = (map:MapId):Platform[] => map===1?map1Platforms:map===2?map2Platforms:map===3?map3Platforms:map4Platforms;
+const CHAPTER_NAME:Record<MapId,string> = {1:CHAPTERS[0].name,2:CHAPTERS[1].name,3:CHAPTERS[2].name,4:CHAPTERS[3].name};
 
 export default function AshfallGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -141,7 +249,7 @@ export default function AshfallGame() {
   const actionStartedAt = useRef(0);
   const pickupQueued = useRef(false);
   const deployQueued = useRef(false);
-  const companionCastRef = useRef<{started:number;kind:"summon"|"recall"|null;direction:1|-1}>({started:0,kind:null,direction:1});
+  const companionCastRef = useRef<{started:number;kind:"summon"|"recall"|null;direction:1|-1;itemId:string|null}>({started:0,kind:null,direction:1,itemId:null});
   const inventoryOpenRef = useRef(false);
   const inventoryRef = useRef<InventoryItem[]>([]);
   const equippedRef = useRef<(string|null)[]>(Array(ACTIVE_SLOT_COUNT).fill(null));
@@ -163,6 +271,59 @@ export default function AshfallGame() {
   const [equipped,setEquipped] = useState<(string|null)[]>(Array(ACTIVE_SLOT_COUNT).fill(null));
   const [selectedSlot,setSelectedSlot] = useState(0);
   const [deployedItemId,setDeployedItemId] = useState<string|null>(null);
+
+  // ---- Relationship systems: companion bond + NPC reputation (client-only, in-memory) ----
+  const initialCompanionBonds:Record<string,number> = {[BABY_DRAGON_CARD.id]:0,[SUNSET_JACKAL_CARD.id]:0,[EMBER_FOX_CARD.id]:0};
+  const companionBondRef = useRef<Record<string,number>>(initialCompanionBonds);
+  const [companionBonds,setCompanionBonds] = useState<Record<string,number>>(initialCompanionBonds);
+  const petQueued = useRef(false);
+  const lastPetAtRef = useRef(0);
+  const petFlashRef = useRef(0);
+  const initialNpcReputation:Record<NpcId,number> = {"old-tomas":0,"wren":0,"sela":0};
+  const npcReputationRef = useRef<Record<NpcId,number>>(initialNpcReputation);
+  const [npcReputation,setNpcReputation] = useState<Record<NpcId,number>>(initialNpcReputation);
+  const npcMetRef = useRef<Record<NpcId,boolean>>({"old-tomas":false,"wren":false,"sela":false});
+  const npcRewardGivenRef = useRef<Record<NpcId,boolean>>({"old-tomas":false,"wren":false,"sela":false});
+  const activeNpcRef = useRef<NpcId|null>(null);
+  const [activeNpc,setActiveNpc] = useState<NpcId|null>(null);
+  const seenIntroRef = useRef<Set<MapId>>(new Set([1]));
+
+  // ---- Chapter / objective quest tracker (additive HUD layer) ----
+  const [chapterId,setChapterId] = useState(1);
+  const [objectivesDone,setObjectivesDone] = useState<Record<string,boolean>>({});
+  const objectivesDoneRef = useRef<Record<string,boolean>>({});
+
+  // ---- Pause menu + ending/credits screen ----
+  const pauseOpenRef = useRef(false);
+  const [pauseOpen,setPauseOpen] = useState(false);
+  const endingReachedRef = useRef(false);
+  const [endingReached,setEndingReached] = useState(false);
+  const [endingOverlayOpen,setEndingOverlayOpen] = useState(false);
+  const [endingEpilogue,setEndingEpilogue] = useState("");
+
+  const completeObjective = useCallback((id:string)=>{
+    if(objectivesDoneRef.current[id]) return;
+    const next={...objectivesDoneRef.current,[id]:true};
+    objectivesDoneRef.current=next; setObjectivesDone(next);
+  },[]);
+
+  const reachEnding = useCallback(()=>{
+    if(endingReachedRef.current)return;
+    endingReachedRef.current=true;setEndingReached(true);setEndingOverlayOpen(true);
+    setEndingEpilogue(companionEpilogueFor(companionBondRef.current));
+    completeObjective("ch4-ending");
+    setObjective("Ashfall's dawn has come. Explore freely, or revisit old friends.");
+  },[completeObjective]);
+
+  const dismissEndingOverlay = useCallback(()=>{setEndingOverlayOpen(false);},[]);
+
+  const bumpReputation = useCallback((id:NpcId,amount:number)=>{
+    const current=npcReputationRef.current;
+    const nextValue=clamp((current[id]??0)+amount,0,100);
+    if(nextValue===current[id])return;
+    const next={...current,[id]:nextValue};
+    npcReputationRef.current=next; setNpcReputation(next);
+  },[]);
 
   const selectUsableSlot = useCallback((slot:number)=>{
     const next=clamp(slot,0,ACTIVE_SLOT_COUNT-1);selectedSlotRef.current=next;setSelectedSlot(next);
@@ -187,11 +348,11 @@ export default function AshfallGame() {
   const toggleEquippedItem = useCallback((itemId:string)=>{
     const current=equippedRef.current;
     const equippedIndex=current.indexOf(itemId);
-    let next=[...current];
+    const next=[...current];
     if(equippedIndex>=0){
       next[equippedIndex]=null;
       const ally=companionRef.current;
-      if(ally.active&&ally.itemId===itemId&&ally.recallStarted===0){const now=performance.now(),direction:1|-1=ally.x>=player.current.x?1:-1;ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;companionCastRef.current={started:now,kind:"recall",direction};player.current.facing=direction;}
+      if(ally.active&&ally.itemId===itemId&&ally.recallStarted===0){const now=performance.now(),direction:1|-1=ally.x>=player.current.x?1:-1;ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;companionCastRef.current={started:now,kind:"recall",direction,itemId};player.current.facing=direction;}
     }
     else{
       const openIndex=next.indexOf(null);
@@ -211,21 +372,177 @@ export default function AshfallGame() {
     osc.connect(gain).connect(audio.destination); osc.start(); osc.stop(audio.currentTime+duration);
   },[]);
 
+  const showDialogue = useCallback((lines:Line[])=>{
+    if(!lines.length)return;
+    dialogueRef.current=lines;dialogueIndexRef.current=0;setDialogue(lines);setDialogueIndex(0);
+  },[]);
+
   const advanceDialogue = useCallback(() => {
     const lines=dialogueRef.current;
     if (!lines) return;
+    const current=lines[dialogueIndexRef.current];
+    if(current?.choices?.length) return;
     const next=dialogueIndexRef.current+1;
-    if (next>=lines.length) { dialogueRef.current=null; setDialogue(null); return; }
+    if (next>=lines.length) { dialogueRef.current=null; setDialogue(null); activeNpcRef.current=null; setActiveNpc(null); return; }
     dialogueIndexRef.current=next; setDialogueIndex(next); tone(470+next*35,.12,.016);
   },[tone]);
 
-  const enterMap = useCallback((map:MapId) => {
-    mapRef.current=map;setMapNumber(map);
-    dialogueRef.current=null;setDialogue(null);
+  const chooseDialogueOption = useCallback((choice:DialogueChoice)=>{
+    choice.effect?.();
+    if(choice.next&&choice.next.length){
+      dialogueRef.current=choice.next;dialogueIndexRef.current=0;setDialogue(choice.next);setDialogueIndex(0);tone(520,.12,.018);
+    }else{
+      dialogueRef.current=null;setDialogue(null);activeNpcRef.current=null;setActiveNpc(null);tone(360,.14,.016);
+    }
+  },[tone]);
+
+  // ---- NPC dialogue trees: branching, reputation-gated conversations ----
+  const bondEpilogueLine = useCallback((): string => companionEpilogueFor(companionBondRef.current),[]);
+
+  const buildTomasDialogue = useCallback((): Line[] => {
+    const id:NpcId="old-tomas";
+    const rep=npcReputationRef.current[id],met=npcMetRef.current[id];
+    npcMetRef.current={...npcMetRef.current,[id]:true};
+    if(!met){
+      return [
+        {speaker:"Old Tomas",text:"Careful where you swing that sword, stranger. Waves carry echoes further than you'd think."},
+        {speaker:"Old Tomas",text:"Moon Knight, is it? Names don't mean much to the tide, but yours carries a strange mist with it.",choices:[
+          {label:"Ask about the Sunset Jackals",effect:()=>bumpReputation(id,6),next:[
+            {speaker:"Old Tomas",text:"Dusk-born spirits, those three. They run this shoreline chasing a sun that never quite sets for them."},
+            {speaker:"Old Tomas",text:"Startle one and it will test you before it trusts you. Same as most things worth knowing, I'd say."}
+          ]},
+          {label:"Ask what he's fishing for",effect:()=>bumpReputation(id,6),next:[
+            {speaker:"Old Tomas",text:"Nothing that bites anymore. I fish for the quiet. Ashfall doesn't give much of that these days."}
+          ]},
+          {label:"Just nod and move on",effect:()=>bumpReputation(id,2)}
+        ]}
+      ];
+    }
+    if(rep<20)return [{speaker:"Old Tomas",text:"Back again. The shore keeps its secrets slow, same as people."}];
+    if(rep<50)return [
+      {speaker:"Old Tomas",text:`You've a steadier step than when you arrived, ${PLAYER_NAME}.`},
+      {speaker:"Old Tomas",text:"There's a scorched wood east of here, past where the jackals run -- Ashwood Grove, the old maps called it. Mind the fox spirits."}
+    ];
+    if(rep<80)return [
+      {speaker:"Old Tomas",text:`${REPUTATION_TIER_LABEL(rep)} now, are we. I'll take it.`},
+      {speaker:"Old Tomas",text:"Ashfall fell to fire and forgetting, in that order. The dragon and I are both older than the second castle wall."},
+      {speaker:"Old Tomas",text:"Treat your companions kindly and they'll return the favor tenfold. I've seen it happen. Once."}
+    ];
+    if(!npcRewardGivenRef.current[id]){
+      npcRewardGivenRef.current={...npcRewardGivenRef.current,[id]:true};
+      collectInventoryItem(TOMAS_KEEPSAKE);
+      return [
+        {speaker:"Old Tomas",text:"You've earned more trust from this old fisherman than most manage in a lifetime."},
+        {speaker:"Old Tomas",text:"Take this. It's brought me nothing but luck since before the fall. Maybe it'll do the same for you."},
+        {speaker:"Old Tomas",text:"(Old Tomas gives you his lucky fishing hook.)"}
+      ];
+    }
+    return [{speaker:"Old Tomas",text:`Good tides to you, ${PLAYER_NAME}. The shore's a little brighter with you in it.`}];
+  },[bumpReputation,collectInventoryItem]);
+
+  const buildWrenDialogue = useCallback((): Line[] => {
+    const id:NpcId="wren";
+    const rep=npcReputationRef.current[id],met=npcMetRef.current[id];
+    npcMetRef.current={...npcMetRef.current,[id]:true};
+    if(!met){
+      return [
+        {speaker:"Wren",text:"Oh! You're not a fox. Sorry -- I keep hoping the ember fox will finally trust me enough to come close."},
+        {speaker:"Wren",text:"I'm Wren. I forage this grove. You're the knight from the castle stories, aren't you?",choices:[
+          {label:"Ask about the Ember Fox",effect:()=>bumpReputation(id,6),next:[
+            {speaker:"Wren",text:"She's quick and shy and burnt-orange as the leaves here. Move slow. Let her choose you, not the other way around."}
+          ]},
+          {label:"Offer to help her forage",effect:()=>bumpReputation(id,8),next:[
+            {speaker:"Wren",text:"Bold offer to a stranger with a sword! But... alright. Watch the roots -- some of them still bite."}
+          ]},
+          {label:"Just wave and say nothing",effect:()=>bumpReputation(id,2)}
+        ]}
+      ];
+    }
+    if(rep<20)return [{speaker:"Wren",text:"The grove's still watching you. Give it time."}];
+    if(rep<50)return [
+      {speaker:"Wren",text:"If you do bind the fox's spirit, be gentle with her. She's been alone in this ash a long while."},
+      {speaker:"Wren",text:"There's a cracked gate further east -- Ashfall Crater. I don't go past it. Something old still guards it."}
+    ];
+    if(rep<80)return [
+      {speaker:"Wren",text:"You actually listened. She likes you more for it, I think -- I can tell these things."},
+      {speaker:"Wren",text:`Every bond you keep makes the ash a little less lonely. That's not nothing, ${PLAYER_NAME}.`}
+    ];
+    if(!npcRewardGivenRef.current[id]){
+      npcRewardGivenRef.current={...npcRewardGivenRef.current,[id]:true};
+      collectInventoryItem(WREN_KEEPSAKE);
+      return [
+        {speaker:"Wren",text:"Here -- an acorn from the oldest tree in the grove. It's stayed warm for years. Feels right to give it to you."},
+        {speaker:"Wren",text:"(Wren gives you a sunlit acorn.)"}
+      ];
+    }
+    return [{speaker:"Wren",text:"Go gently out there. The grove's rooting for you -- pun intended."}];
+  },[bumpReputation,collectInventoryItem]);
+
+  const buildSelaDialogue = useCallback((): Line[] => {
+    const id:NpcId="sela";
+    const rep=npcReputationRef.current[id],met=npcMetRef.current[id];
+    if(endingReachedRef.current){
+      npcMetRef.current={...npcMetRef.current,[id]:true};
+      return [
+        {speaker:"Sela",text:"You did what three watches of wardens couldn't. The crater's quiet for the first time in memory."},
+        {speaker:"Sela",text:bondEpilogueLine()},
+        {speaker:"Sela",text:`Ashfall remembers its friends, ${PLAYER_NAME}. So will I.`}
+      ];
+    }
+    npcMetRef.current={...npcMetRef.current,[id]:true};
+    if(!met){
+      return [
+        {speaker:"Sela",text:"Stop there. Ashfall Crater has taken better fighters than you and given nothing back."},
+        {speaker:"Sela",text:"I am Sela. I've warded this gate since the Warg Alpha first climbed out of the ash.",choices:[
+          {label:"Ask about the Warg Alpha",effect:()=>bumpReputation(id,6),next:[
+            {speaker:"Sela",text:"Old, huge, and it remembers every warden who's fallen trying to end it. Bring more than steel. Bring a companion who trusts you -- it hates that more than any blade."}
+          ]},
+          {label:"Ask to be let through",effect:()=>bumpReputation(id,4),next:[
+            {speaker:"Sela",text:"I won't stop you. I can't. Just don't say I didn't warn you."}
+          ]},
+          {label:"Say nothing, walk past",effect:()=>bumpReputation(id,1)}
+        ]}
+      ];
+    }
+    if(rep<20)return [{speaker:"Sela",text:"Still here. Good. The crater doesn't reward hesitation, but it doesn't reward recklessness either."}];
+    if(rep<50)return [{speaker:"Sela",text:"You've fought for this world before you ever reached my gate. I can see it in how you stand."}];
+    if(rep<80)return [{speaker:"Sela",text:"I've warned wardens twice your rank away from that ash field. I won't warn you again -- I trust you'll come back."}];
+    if(!npcRewardGivenRef.current[id]){
+      npcRewardGivenRef.current={...npcRewardGivenRef.current,[id]:true};
+      collectInventoryItem(SELA_KEEPSAKE);
+      return [
+        {speaker:"Sela",text:"Take this charm. Ash-iron, warden-forged. It won't make you stronger, but it might make you harder to forget."},
+        {speaker:"Sela",text:"(Sela gives you a warden's ash-iron charm.)"}
+      ];
+    }
+    return [{speaker:"Sela",text:`The gate is yours whenever you're ready, ${PLAYER_NAME}.`}];
+  },[bumpReputation,bondEpilogueLine,collectInventoryItem]);
+
+  const talkToNpc = useCallback((id:NpcId)=>{
+    if(id==="old-tomas")completeObjective("ch2-tomas");
+    else if(id==="wren")completeObjective("ch3-wren");
+    else if(id==="sela")completeObjective("ch4-sela");
+    const lines=id==="old-tomas"?buildTomasDialogue():id==="wren"?buildWrenDialogue():buildSelaDialogue();
+    activeNpcRef.current=id;setActiveNpc(id);
+    showDialogue(lines);
+    tone(430,.14,.018);
+  },[buildTomasDialogue,buildWrenDialogue,buildSelaDialogue,showDialogue,tone,completeObjective]);
+
+  const enterMap = useCallback((map:MapId,from:MapId|null=null) => {
+    mapRef.current=map;setMapNumber(map);setChapterId(map);
     const pl=player.current;
     if(map===2){
-      pl.x=340;pl.y=498;pl.facing=1;
-      setObjective("Track the three Sunset Jackals on the shore, or return through the portal");
+      pl.x=from===3?MAP2_GROVE_PORTAL_X-90:340;pl.y=498;pl.facing=from===3?-1:1;
+      if(from===1)completeObjective("ch1-portal");
+      setObjective("Track the three Sunset Jackals, speak with Old Tomas, then find the eastern path onward");
+    }else if(map===3){
+      pl.x=from===4?MAP3_CRATER_PORTAL_X-90:MAP3_SHORE_PORTAL_X+230;pl.y=498;pl.facing=from===4?-1:1;
+      if(from===2)completeObjective("ch2-portal");
+      setObjective("Meet Wren, bind the Ember Fox, then find the path to Ashfall Crater");
+    }else if(map===4){
+      pl.x=MAP4_GROVE_PORTAL_X+230;pl.y=498;pl.facing=1;
+      completeObjective("ch3-portal");
+      setObjective("Speak with Sela, then face the Warg Alpha at the crater's heart");
     }else{
       pl.x=4860;pl.y=483;pl.facing=-1;
       setObjective("Explore Map 1 or return to the far-right portal");
@@ -236,24 +553,59 @@ export default function AshfallGame() {
     slideUntil.current=0;actionUntil.current=0;cameraReset.current=true;
     portalFlashUntil.current=performance.now()+430;
     tone(610,.25,.028);window.setTimeout(()=>tone(360,.2,.02),100);
-  },[tone]);
+    if(!seenIntroRef.current.has(map)){
+      seenIntroRef.current.add(map);
+      if(map===3)showDialogue([
+        {speaker:"Moon Night",text:"Ashwood Grove. The rain never quite reaches here -- only ash, drifting like snow that forgot how to melt."},
+        {speaker:"Moon Night",text:"Something small and quick moves between the trunks. Best keep the sword loose in its sheath."}
+      ]);
+      else if(map===4)showDialogue([
+        {speaker:"Moon Night",text:"Ashfall Crater. The heat still rises here, years after whatever fell."},
+        {speaker:"Moon Night",text:"This is where the signal in the rain was always leading. One way to find out why."}
+      ]);
+    }else{dialogueRef.current=null;setDialogue(null);}
+  },[showDialogue,tone,completeObjective]);
 
   const startGame = useCallback(() => {
     if (!audioRef.current) audioRef.current=new AudioContext();
     audioRef.current.resume();
     startedRef.current=true; setStarted(true);
+    showDialogue([
+      {speaker:"Moon Night",text:"The rain over Ashfall hasn't stopped in three nights. Something in it is calling -- to the dragon, and to me."},
+      {speaker:"Moon Night",text:"Whatever is waiting past the crater, I won't be walking to it alone. Not anymore."}
+    ]);
+  },[showDialogue]);
+
+  const togglePause = useCallback(()=>{
+    if(!startedRef.current||dialogueRef.current||inventoryOpenRef.current)return;
+    setPauseOpen(open=>{
+      const next=!open;pauseOpenRef.current=next;
+      if(next){keys.current={};jumpQueued.current=false;slideQueued.current=false;}
+      return next;
+    });
   },[]);
 
   const interact = useCallback(() => {
     if (dialogueRef.current) { advanceDialogue(); return; }
+    if(pauseOpenRef.current)return;
     const x=player.current.x;
     const map=mapRef.current;
+    const npc=NPCS.find(n=>npcNearPlayer(n,map,x));
+    if(npc){talkToNpc(npc.id);return;}
     if(map===1&&Math.abs(x-(MAP1_PORTAL_X+55))<145){
-      enterMap(2);
+      enterMap(2,1);
     }else if(map===2&&Math.abs(x-(MAP2_PORTAL_X+55))<145){
-      enterMap(1);
+      enterMap(1,2);
+    }else if(map===2&&Math.abs(x-(MAP2_GROVE_PORTAL_X+55))<145){
+      enterMap(3,2);
+    }else if(map===3&&Math.abs(x-(MAP3_SHORE_PORTAL_X+55))<145){
+      enterMap(2,3);
+    }else if(map===3&&Math.abs(x-(MAP3_CRATER_PORTAL_X+55))<145){
+      enterMap(4,3);
+    }else if(map===4&&Math.abs(x-(MAP4_GROVE_PORTAL_X+55))<145){
+      enterMap(3,4);
     }
-  },[advanceDialogue,enterMap]);
+  },[advanceDialogue,enterMap,talkToNpc]);
 
   const updateAim = useCallback((clientX:number,clientY:number) => {
     const canvas=canvasRef.current;
