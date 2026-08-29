@@ -1,0 +1,1 @@
+const map2Platforms: Platform[] = [{x:0,y:590,w:MAP2_W,h:180}];
