@@ -1,0 +1,5 @@
+    if(map===1&&Math.abs(x-(MAP1_PORTAL_X+55))<145){
+      enterMap(2);
+    }else if(map===2&&Math.abs(x-(MAP2_PORTAL_X+55))<145){
+      enterMap(1);
+    }
