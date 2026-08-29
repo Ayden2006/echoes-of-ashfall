@@ -1,0 +1,1 @@
+ally.maxHealth=item.id===SUNSET_JACKAL_CARD.id?JACKAL_MAX_HEALTH:DRAGON_MAX_HEALTH;ally.health=ally.maxHealth;
