@@ -1,0 +1,16 @@
+  const showDialogue = useCallback((lines:Line[]) => {
+    if(!lines.length) return;
+    dialogueRef.current=lines;dialogueIndexRef.current=0;setDialogue(lines);setDialogueIndex(0);
+  },[]);
+  const enterMap = useCallback((map:MapId, from:MapId|null=mapRef.current) => {
+    mapRef.current=map;setMapNumber(map);
+    const pl=player.current;
+    const spawn=spawnFor(map, from);
+    pl.x=spawn.x;pl.y=spawn.y;pl.facing=spawn.facing;
+    setObjective(MAP_STORY[map].objective);
+    if(!seenIntroRef.current.has(map)){
+      seenIntroRef.current.add(map);
+      showDialogue(MAP_STORY[map].intro);
+    }else{
+      dialogueRef.current=null;setDialogue(null);
+    }
