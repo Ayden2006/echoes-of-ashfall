@@ -29,6 +29,12 @@ const MAP3_ENTRY_X = 105;
 const MAP3_EXIT_X = 3870;
 const MAP4_ENTRY_X = 105;
 const MAP4_EXIT_X = 4070;
+const MAP5_W = 4400;
+const MAP6_W = 4800;
+const MAP5_ENTRY_X = 105;
+const MAP5_EXIT_X = 4270;
+const MAP6_ENTRY_X = 105;
+const MAP6_HEART_X = 4670;
 const MAX_HEALTH = 100;
 const SWORD_DAMAGE = 15;
 const MAX_STAMINA = 100;
@@ -73,11 +79,63 @@ const STAG_MAX_HEALTH = 95;
 const STAG_ATTACK_DAMAGE = 10;
 const STAG_RENDER_SIZE = 118;
 const PALE_STAG_CARD:InventoryItem = {id:"pale-stag-card",name:"Pale Stag",type:"animal-card",description:"A moonwell stag spirit from the cliffs.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#0b1418",mid:"#2a4a55",accent:"#8ee7ff",glow:"#d7fbff"}};
+const LYNX_MAX_HEALTH = 95;
+const LYNX_ATTACK_DAMAGE = 10;
+const LYNX_RENDER_SIZE = 94;
+const EMBER_LYNX_CARD:InventoryItem = {id:"ember-lynx-card",name:"Ember Lynx",type:"animal-card",description:"A magical card holding the spirit of a coal-pelt lynx from The Quiet Ember.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#1a0c08",mid:"#7a2e14",accent:"#e07030",glow:"#ffb060"}};
+const WYRM_MAX_HEALTH = 170;
+const WYRM_ATTACK_DAMAGE = 14;
+const WYRM_RENDER_SIZE = 152;
+const HEART_WYRM_CARD:InventoryItem = {id:"heart-wyrm-card",name:"Heart Wyrm",type:"animal-card",description:"A magical card holding the last pulse of Ashfall's Heart.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#140816",mid:"#4a2048",accent:"#d45a6a",glow:"#ffc8a0"}};
 const CAMPAIGN_OPENING:Line[] = [{speaker:"Moon Night",text:"The rain carries a signal. Something in Ashfall is still calling."},{speaker:"Moon Night",text:"Follow the echo through castle, shore, ash, and moonwell. Press E for cards, Q to deploy."}];
-const MAP_STORY:Record<MapId,{name:string;objective:string;intro:Line[]}> = {1:{name:"The Signal in the Rain",objective:"Find the baby dragon in the rain, then take the far-right portal.",intro:[{speaker:"Moon Night",text:"Moonlit stone. A young ash dragon hunts these ruins."}]},2:{name:"Sunset Shore",objective:"Track the Sunset Jackals, then take the eastern portal to Ash Hollow.",intro:[{speaker:"Moon Night",text:"The shore burns gold. Bind a jackal, then push east."}]},3:{name:"Ash Hollow",objective:"Bind a Cinder Fox, then reach the moonwell gate.",intro:[{speaker:"Moon Night",text:"Foxfire moves through the ash."}]},4:{name:"Moonwell Cliffs",objective:"Face the Pale Stag. Maps 5 and 6 are still sealed.",intro:[{speaker:"Moon Night",text:"The far gate is sealed. Maps 5 and 6 still wait."}]},5:{name:"The Quiet Ember",objective:"Reserved for Game Builder 2.",intro:[{speaker:"Moon Night",text:"Not open yet."}]},6:{name:"Ashfall's Heart",objective:"Reserved for Game Builder 2.",intro:[{speaker:"Moon Night",text:"The last echo is still unwritten."}]}};
-const SEALED_GATE_LINES:Line[] = [{speaker:"Moon Night",text:"The gate answers, but Maps 5 and 6 are not open yet."}];
-const cardStats = (id:string|null) => id===SUNSET_JACKAL_CARD.id?{hp:JACKAL_MAX_HEALTH,ground:true as const,kind:"jackal"}:id===CINDER_FOX_CARD.id?{hp:FOX_MAX_HEALTH,ground:true as const,kind:"fox"}:id===PALE_STAG_CARD.id?{hp:STAG_MAX_HEALTH,ground:true as const,kind:"stag"}:{hp:DRAGON_MAX_HEALTH,ground:false as const,kind:"dragon"};
+const MAP_STORY:Record<MapId,{name:string;objective:string;intro:Line[]}> = {1:{name:"The Signal in the Rain",objective:"Find the baby dragon in the rain, then take the far-right portal.",intro:[{speaker:"Moon Night",text:"Moonlit stone. A young ash dragon hunts these ruins."}]},2:{name:"Sunset Shore",objective:"Track the Sunset Jackals, then take the eastern portal to Ash Hollow.",intro:[{speaker:"Moon Night",text:"The shore burns gold. Bind a jackal, then push east."}]},3:{name:"Ash Hollow",objective:"Bind a Cinder Fox, then reach the moonwell gate.",intro:[{speaker:"Moon Night",text:"Foxfire moves through the ash."}]},4:{name:"Moonwell Cliffs",objective:"Face the Pale Stag, then take the far gate into The Quiet Ember.",intro:[{speaker:"Moon Night",text:"The moonwell pools the signal. The far gate is open now."},{speaker:"Moon Night",text:"A Pale Stag keeps this cliff. East is The Quiet Ember."}]},5:{name:"The Quiet Ember",objective:"Talk to Reed, bind an Ember Lynx, then follow the coals to Ashfall's Heart.",intro:[{speaker:"Moon Night",text:"The fire here does not roar. It waits."},{speaker:"Moon Night",text:"Lynx-shaped coals hunt the dark. A person is tending the kiln."}]},6:{name:"Ashfall's Heart",objective:"Speak with Kest, face the Heart Wyrm, and let the signal rest.",intro:[{speaker:"Moon Night",text:"This is the last echo. The heart of Ashfall still beats."},{speaker:"Moon Night",text:"Someone walked here ahead of me. I am not the only one who followed."}]}};
+const ENDING_LINES:Line[] = [{speaker:"Moon Night",text:"The echo is still. Ashfall keeps its heart, and I keep the road."},{speaker:"Kest",text:"Come on. Reed will want to know the kiln can rest."}];
+const cardStats = (id:string|null) => id===SUNSET_JACKAL_CARD.id?{hp:JACKAL_MAX_HEALTH,ground:true as const,kind:"jackal"}:id===CINDER_FOX_CARD.id?{hp:FOX_MAX_HEALTH,ground:true as const,kind:"fox"}:id===PALE_STAG_CARD.id?{hp:STAG_MAX_HEALTH,ground:true as const,kind:"stag"}:id===EMBER_LYNX_CARD.id?{hp:LYNX_MAX_HEALTH,ground:true as const,kind:"lynx"}:id===HEART_WYRM_CARD.id?{hp:WYRM_MAX_HEALTH,ground:false as const,kind:"wyrm"}:{hp:DRAGON_MAX_HEALTH,ground:false as const,kind:"dragon"};
+const GROUND_BEAST_CARD_IDS = new Set([SUNSET_JACKAL_CARD.id,CINDER_FOX_CARD.id,PALE_STAG_CARD.id,EMBER_LYNX_CARD.id]);
+const CARD_DISPLAY_NAME:Record<string,string> = {
+  [SUNSET_JACKAL_CARD.id]:"SUNSET JACKAL",[CINDER_FOX_CARD.id]:"CINDER FOX",[PALE_STAG_CARD.id]:"PALE STAG",
+  [EMBER_LYNX_CARD.id]:"EMBER LYNX",[HEART_WYRM_CARD.id]:"HEART WYRM"
+};
+const cardDisplayName = (id:string|null) => (id&&CARD_DISPLAY_NAME[id])||"BABY DRAGON";
+type BeastTint = {fur:string;furDark:string;furLight:string;chest:string;eye:string};
+const FOX_TINT:BeastTint = {fur:"#ff7a3a",furDark:"#6a2414",furLight:"#ffc08a",chest:"#ffe0b0",eye:"#fff0a0"};
+const STAG_TINT:BeastTint = {fur:"#5c7a85",furDark:"#2a4a55",furLight:"#a8d8e0",chest:"#d7fbff",eye:"#8ee7ff"};
+const LYNX_TINT:BeastTint = {fur:"#e07030",furDark:"#7a2e14",furLight:"#ffb060",chest:"#ffd9a0",eye:"#fff0c0"};
+const beastTintFor = (id:string|null):BeastTint|null => id===CINDER_FOX_CARD.id?FOX_TINT:id===PALE_STAG_CARD.id?STAG_TINT:id===EMBER_LYNX_CARD.id?LYNX_TINT:null;
+const beastAntlersFor = (id:string|null) => id===PALE_STAG_CARD.id;
+const beastTuftsFor = (id:string|null) => id===EMBER_LYNX_CARD.id;
 type Jackal = Dragon & {id:string; patrolMin:number; patrolMax:number};
+type Npc = {id:string; name:string; map:MapId; x:number; talkRadius:number; firstTalk:Line[]; againTalk:Line[]; afterCaptureTalk:Line[]; cardId:string; palette:{skin:string;cloak:string;trim:string;accent:string}};
+const NPCS:Npc[] = [
+  {id:"reed",name:"Reed",map:5,x:760,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
+    firstTalk:[
+      {speaker:"Reed",text:"Easy. The coals here bite if you rush them."},
+      {speaker:"Moon Night",text:"I followed the signal from the moonwell."},
+      {speaker:"Reed",text:"Then you're like me. I used to keep the castle kilns. Now I keep this quiet fire alive."},
+      {speaker:"Reed",text:"The lynx wear the last heat. Bind one if you can. I'll be here when you come back."}
+    ],
+    againTalk:[{speaker:"Reed",text:"Still walking, Moon Night. The heart is east. Don't go in cold."}],
+    afterCaptureTalk:[
+      {speaker:"Reed",text:"You kept your word. If you reach the heart, tell Kest I didn't quit the fire."},
+      {speaker:"Moon Night",text:"I will."}
+    ],
+    palette:{skin:"#d9a878",cloak:"#5a2c1e",trim:"#e07030",accent:"#ffb060"}
+  },
+  {id:"kest",name:"Kest",map:6,x:920,talkRadius:150,cardId:HEART_WYRM_CARD.id,
+    firstTalk:[
+      {speaker:"Kest",text:"So the rain-walker made it. I heard you in the signal days ago."},
+      {speaker:"Moon Night",text:"You walked this road ahead of me."},
+      {speaker:"Kest",text:"Someone had to. The Heart Wyrm is the last pulse. I couldn't bind it alone."},
+      {speaker:"Kest",text:"If we finish this, we walk out together. Not as ghosts. As people."}
+    ],
+    againTalk:[{speaker:"Kest",text:"I'm still here. The wyrm is farther in. I'm not leaving you to it."}],
+    afterCaptureTalk:[
+      {speaker:"Kest",text:"The signal is quiet. We can go home, Moon Night. The road remembers us now."},
+      {speaker:"Moon Night",text:"Then we walk it together."}
+    ],
+    palette:{skin:"#c99a80",cloak:"#3a2048",trim:"#d45a6a",accent:"#ffc8a0"}
+  }
+];
 const DRAGON_FRAMES:Record<DragonMode,DragonFrame[]> = {
   idle:[
     {x:256,y:25,w:256,h:260,anchorX:128,anchorY:260},{x:512,y:25,w:256,h:258,anchorX:128,anchorY:258},
@@ -137,14 +195,24 @@ const map4Platforms: Platform[] = [
   {x:0,y:590,w:1180,h:180},{x:1140,y:560,w:980,h:210},{x:2080,y:575,w:900,h:195},{x:2940,y:545,w:1260,h:225},
   {x:720,y:455,w:160,h:18},{x:1760,y:430,w:180,h:18},{x:2860,y:420,w:190,h:18}
 ];
+const map5Platforms: Platform[] = [
+  {x:0,y:590,w:980,h:180},{x:940,y:565,w:720,h:200},{x:1620,y:590,w:780,h:180},{x:2360,y:545,w:640,h:220},
+  {x:2960,y:575,w:700,h:190},{x:3620,y:555,w:780,h:210},
+  {x:1180,y:455,w:160,h:18},{x:2480,y:430,w:170,h:18},{x:3340,y:445,w:150,h:18}
+];
+const map6Platforms: Platform[] = [
+  {x:0,y:590,w:1100,h:180},{x:1060,y:560,w:820,h:210},{x:1840,y:535,w:900,h:230},{x:2700,y:560,w:780,h:210},
+  {x:3440,y:545,w:1360,h:220},
+  {x:1520,y:430,w:180,h:18},{x:2680,y:415,w:190,h:18},{x:3920,y:425,w:200,h:18}
+];
 const clamp = (n:number,a:number,b:number) => Math.max(a,Math.min(b,n));
 const rgbaFromHex = (hex:string,alpha:number) => {const value=parseInt(hex.replace("#",""),16);return `rgba(${value>>16},${value>>8&255},${value&255},${alpha})`;};
-const worldWidthFor = (map:MapId) => map===1?MAP1_W:map===2?MAP2_W:map===3?MAP3_W:map===4?MAP4_W:map===5?4400:4800;
-const platformsFor = (map:MapId) => map===1?map1Platforms:map===2?map2Platforms:map===3?map3Platforms:map4Platforms;
+const worldWidthFor = (map:MapId) => map===1?MAP1_W:map===2?MAP2_W:map===3?MAP3_W:map===4?MAP4_W:map===5?MAP5_W:MAP6_W;
+const platformsFor = (map:MapId) => map===1?map1Platforms:map===2?map2Platforms:map===3?map3Platforms:map===4?map4Platforms:map===5?map5Platforms:map6Platforms;
 const spawnFor = (map:MapId, from:MapId|null) => {
   if(from===null) return {x:230,y:498,facing:1 as 1|-1};
   if(map===1) return {x:4860,y:483,facing:-1 as 1|-1};
-  const arrivingFromPrev = (map===2&&from===1)||(map===3&&from===2)||(map===4&&from===3);
+  const arrivingFromPrev = (map===2&&from===1)||(map===3&&from===2)||(map===4&&from===3)||(map===5&&from===4)||(map===6&&from===5);
   if(arrivingFromPrev) return {x:340,y:498,facing:1 as 1|-1};
   return {x:Math.max(240,worldWidthFor(map)-340),y:498,facing:-1 as 1|-1};
 };
@@ -182,6 +250,8 @@ export default function AshfallGame() {
   const selectedSlotRef = useRef(0);
   const companionRef = useRef<Companion>({active:false,itemId:null,map:1,x:150,y:590,groundY:590,vx:0,facing:1,mode:"idle",modeStarted:0,summonedAt:0,recallStarted:0,teleportAt:0,attackUntil:0,attackLanded:false,targetX:0,lastPlayerAttack:-1,health:DRAGON_MAX_HEALTH,maxHealth:DRAGON_MAX_HEALTH});
   const seenIntroRef = useRef<Set<MapId>>(new Set());
+  const metNpcRef = useRef<Set<string>>(new Set());
+  const campaignEndedRef = useRef(false);
   const audioRef = useRef<AudioContext|null>(null);
   const soundRef = useRef(true);
   const [started,setStarted] = useState(false);
@@ -190,6 +260,7 @@ export default function AshfallGame() {
   const [dialogueIndex,setDialogueIndex] = useState(0);
   const [nearAction,setNearAction] = useState<string|null>(null);
   const [objective,setObjective] = useState(MAP_STORY[1].objective);
+  const [campaignEnded,setCampaignEnded] = useState(false);
   const [soundOn,setSoundOn] = useState(true);
   const [health,setHealth] = useState(MAX_HEALTH);
   const [stamina,setStamina] = useState(MAX_STAMINA);
@@ -222,7 +293,7 @@ export default function AshfallGame() {
   const toggleEquippedItem = useCallback((itemId:string)=>{
     const current=equippedRef.current;
     const equippedIndex=current.indexOf(itemId);
-    let next=[...current];
+    const next=[...current];
     if(equippedIndex>=0){
       next[equippedIndex]=null;
       const ally=companionRef.current;
@@ -290,13 +361,28 @@ export default function AshfallGame() {
     if (dialogueRef.current) { advanceDialogue(); return; }
     const x=player.current.x;
     const map=mapRef.current;
+    const npc=NPCS.find(n=>n.map===map&&Math.abs(x-n.x)<n.talkRadius);
+    if(npc){
+      const hasCard=inventoryRef.current.some(entry=>entry.id===npc.cardId);
+      if(!metNpcRef.current.has(npc.id)){metNpcRef.current.add(npc.id);showDialogue(npc.firstTalk);}
+      else if(hasCard) showDialogue(npc.afterCaptureTalk);
+      else showDialogue(npc.againTalk);
+      return;
+    }
     if(map===1&&Math.abs(x-(MAP1_PORTAL_X+55))<145) enterMap(2,1);
     else if(map===2&&Math.abs(x-(MAP2_PORTAL_X+55))<145) enterMap(1,2);
     else if(map===2&&Math.abs(x-(MAP2_EXIT_X+55))<145) enterMap(3,2);
     else if(map===3&&Math.abs(x-(MAP3_ENTRY_X+55))<145) enterMap(2,3);
     else if(map===3&&Math.abs(x-(MAP3_EXIT_X+55))<145) enterMap(4,3);
     else if(map===4&&Math.abs(x-(MAP4_ENTRY_X+55))<145) enterMap(3,4);
-    else if(map===4&&Math.abs(x-(MAP4_EXIT_X+55))<145) showDialogue(SEALED_GATE_LINES);
+    else if(map===4&&Math.abs(x-(MAP4_EXIT_X+55))<145) enterMap(5,4);
+    else if(map===5&&Math.abs(x-(MAP5_ENTRY_X+55))<145) enterMap(4,5);
+    else if(map===5&&Math.abs(x-(MAP5_EXIT_X+55))<145) enterMap(6,5);
+    else if(map===6&&Math.abs(x-(MAP6_ENTRY_X+55))<145) enterMap(5,6);
+    else if(map===6&&Math.abs(x-MAP6_HEART_X)<160){
+      if(!campaignEndedRef.current){campaignEndedRef.current=true;setCampaignEnded(true);}
+      showDialogue(ENDING_LINES);
+    }
   },[advanceDialogue,enterMap,showDialogue]);
 
   const updateAim = useCallback((clientX:number,clientY:number) => {
@@ -373,10 +459,21 @@ export default function AshfallGame() {
     const stags:Jackal[]=[
       createBeast("pale-stag-a",1760,1180,2680,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE)
     ];
-    const wildPackFor=(map:MapId)=>map===2?jackals:map===3?foxes:map===4?stags:null;
-    const wildCardFor=(map:MapId)=>map===2?SUNSET_JACKAL_CARD:map===3?CINDER_FOX_CARD:map===4?PALE_STAG_CARD:null;
+    const lynxes:Jackal[]=[
+      createBeast("ember-lynx-a",1280,980,1680,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE),
+      createBeast("ember-lynx-b",3120,2760,3580,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE)
+    ];
+    const wyrmPack:Jackal[]=[
+      createBeast("heart-wyrm",2480,1880,3180,WYRM_MAX_HEALTH,WYRM_ATTACK_DAMAGE)
+    ];
+    const wildPackFor=(map:MapId)=>map===2?jackals:map===3?foxes:map===4?stags:map===5?lynxes:map===6?wyrmPack:null;
+    const wildCardFor=(map:MapId)=>map===2?SUNSET_JACKAL_CARD:map===3?CINDER_FOX_CARD:map===4?PALE_STAG_CARD:map===5?EMBER_LYNX_CARD:map===6?HEART_WYRM_CARD:null;
     let playerHurtUntil=0,playerRespawnAt=0,dragonCardCollected=inventoryRef.current.some(item=>item.id===BABY_DRAGON_CARD.id);
     let jackalCardCollected=inventoryRef.current.some(item=>item.id===SUNSET_JACKAL_CARD.id);
+    const otherWildCollected=new Set(
+      [CINDER_FOX_CARD.id,PALE_STAG_CARD.id,EMBER_LYNX_CARD.id,HEART_WYRM_CARD.id]
+        .filter(id=>inventoryRef.current.some(item=>item.id===id))
+    );
     const eyeLayer=document.createElement("canvas"),eyeLayerCtx=eyeLayer.getContext("2d");
     const eyeCoverLayer=document.createElement("canvas"),eyeCoverCtx=eyeCoverLayer.getContext("2d");
     const attackBodyLayer=document.createElement("canvas"),attackBodyCtx=attackBodyLayer.getContext("2d");
@@ -430,12 +527,15 @@ export default function AshfallGame() {
       return best;
     };
     const drawBackdrop=(w:number,h:number,now:number,map:MapId)=>{
-      const activeBackdrop=map===1?backdrop:beachBackdrop;
+      const embery=map===5||map===6;
+      const activeBackdrop=map===1?backdrop:embery?null:beachBackdrop;
       const g=ctx.createLinearGradient(0,0,0,h);
       if(map===1){g.addColorStop(0,"#030710");g.addColorStop(.56,"#0b1428");g.addColorStop(1,"#070811");}
+      else if(map===5){g.addColorStop(0,"#140806");g.addColorStop(.5,"#3a1810");g.addColorStop(1,"#1a0c0a");}
+      else if(map===6){g.addColorStop(0,"#120814");g.addColorStop(.5,"#3a2038");g.addColorStop(1,"#241018");}
       else{g.addColorStop(0,"#4b5288");g.addColorStop(.48,"#ed766b");g.addColorStop(1,"#c36f49");}
       ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
-      if (activeBackdrop.complete&&activeBackdrop.naturalWidth) {
+      if (activeBackdrop&&activeBackdrop.complete&&activeBackdrop.naturalWidth) {
         const cover=Math.max(w/activeBackdrop.naturalWidth,h/activeBackdrop.naturalHeight);
         const breathe=(map===1?1.12:1.06)+Math.sin(now*.00008)*.006;
         const iw=activeBackdrop.naturalWidth*cover*breathe, ih=activeBackdrop.naturalHeight*cover*breathe;
@@ -474,6 +574,34 @@ export default function AshfallGame() {
         ctx.restore();
         const storm=(now%17000);
         if(storm>15600&&storm<15830){const flash=Math.sin((storm-15600)/230*Math.PI)*.055;ctx.fillStyle="rgba(190,204,226,"+flash+")";ctx.fillRect(0,0,w,h);}
+      }else if(embery){
+        ctx.save();
+        for(let i=0;i<4;i++){
+          const cx=((now*.005*(i+1)+i*w*.34)%(w+480))-240;
+          const cy=h*(.14+i*.06);
+          const cloud=ctx.createRadialGradient(cx,cy,10,cx,cy,220+i*30);
+          const cloudColor=map===5?"18,7,4":"14,6,16";
+          cloud.addColorStop(0,"rgba("+cloudColor+",.32)");cloud.addColorStop(1,"rgba("+cloudColor+",0)");
+          ctx.fillStyle=cloud;ctx.fillRect(cx-320,cy-170,640,340);
+        }
+        ctx.restore();
+        for(let i=0;i<22;i++){
+          const emberX=(w*(i*61%100)/100+Math.sin(now*.0009+i)*18)%w;
+          const emberY=h-((now*.028*(1+i%5)+i*83)%(h*.82));
+          const alpha=.22+Math.max(0,Math.sin(now*.0022+i))*.42;
+          ctx.fillStyle=map===5?"rgba(255,140,72,"+alpha+")":"rgba(224,110,150,"+alpha+")";
+          ctx.fillRect(emberX,emberY,1.6+(i%3)*.8,3+(i%3));
+        }
+        const glowPulse=map===6?.14+Math.sin(now*.0016)*.08:0;
+        if(glowPulse>0){
+          const heart=ctx.createRadialGradient(w*.5,h*.4,10,w*.5,h*.4,w*.62);
+          heart.addColorStop(0,"rgba(212,90,106,"+glowPulse+")");heart.addColorStop(1,"rgba(212,90,106,0)");
+          ctx.fillStyle=heart;ctx.fillRect(0,0,w,h);
+        }
+        const warmth=ctx.createLinearGradient(0,h*.55,0,h);
+        warmth.addColorStop(0,map===5?"rgba(255,120,60,0)":"rgba(212,90,106,0)");
+        warmth.addColorStop(1,map===5?"rgba(120,50,20,.22)":"rgba(80,30,60,.24)");
+        ctx.fillStyle=warmth;ctx.fillRect(0,h*.55,w,h*.45);
       }else{
         for(let i=0;i<18;i++){
           const waveY=h*(.55+(i%4)*.037),waveX=((i*173+now*.015*(1+i%3))%(w+180))-90;
@@ -971,7 +1099,7 @@ export default function AshfallGame() {
         }
       }
       if(playerRespawnAt&&now>=playerRespawnAt){
-        pl.health=pl.maxHealth;pl.x=mapRef.current===2?340:230;pl.y=498;pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
+        pl.health=pl.maxHealth;pl.x=respawnXFor(mapRef.current);pl.y=498;pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
         staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;
         playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
       }
@@ -1059,7 +1187,7 @@ export default function AshfallGame() {
         ally.facing=pl.x>=ally.x?1:-1;
       }
     };
-    const drawPixelJackal=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean)=>{
+    const drawPixelJackal=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean,variant?:{tint?:BeastTint;antlers?:boolean;tufts?:boolean})=>{
       const scale=size/90;
       const runCycle=(elapsed/(mode==="run"?90:160))%1;
       const gait=Math.sin(runCycle*Math.PI*2);
@@ -1076,7 +1204,8 @@ export default function AshfallGame() {
       ctx.translate(x+facing*lunge*18,y-bob-leap*8);
       ctx.rotate(facing*(sleep?0.15:mode==="fly"?-0.28:mode==="attack"?-0.12+lunge*0.35:gait*0.04));
       ctx.scale(facing*scale,scale);
-      const fur="#c45a28",furDark="#6b2e18",furLight="#f0a056",chest="#ffd2a0",outline="#2a1410",eye="#ffe27a";
+      const tint=variant?.tint;
+      const fur=tint?.fur??"#c45a28",furDark=tint?.furDark??"#6b2e18",furLight=tint?.furLight??"#f0a056",chest=tint?.chest??"#ffd2a0",outline="#2a1410",eye=tint?.eye??"#ffe27a";
       if(hurt&&Math.floor(now/45)%2===0)ctx.globalAlpha=.55;
       const drawLimb=(lx:number,ly:number,lw:number,lh:number,rot:number)=>{
         ctx.save();ctx.translate(lx,ly);ctx.rotate(rot);ctx.fillStyle=outline;ctx.fillRect(-lw/2-1,-1,lw+2,lh+2);ctx.fillStyle=furDark;ctx.fillRect(-lw/2,0,lw,lh);ctx.restore();
@@ -1104,8 +1233,18 @@ export default function AshfallGame() {
       ctx.fillStyle=furLight;ctx.fillRect(20,-16,7,5);
       ctx.fillStyle=outline;ctx.fillRect(26,-15,4,3);
       ctx.fillStyle="#1a0c08";ctx.fillRect(27,-14,3,2);
-      ctx.save();ctx.translate(12,-22);ctx.rotate(-0.2-earFlick);ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(4,-14);ctx.lineTo(8,1);ctx.fill();ctx.fillStyle=furLight;ctx.beginPath();ctx.moveTo(1,0);ctx.lineTo(4,-12);ctx.lineTo(7,1);ctx.fill();ctx.fillStyle="#e8784a";ctx.beginPath();ctx.moveTo(3,-1);ctx.lineTo(4,-8);ctx.lineTo(6,0);ctx.fill();ctx.restore();
-      ctx.save();ctx.translate(18,-21);ctx.rotate(0.15+earFlick*0.6);ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(3,-12);ctx.lineTo(7,1);ctx.fill();ctx.fillStyle=fur;ctx.beginPath();ctx.moveTo(1,0);ctx.lineTo(3,-10);ctx.lineTo(6,1);ctx.fill();ctx.restore();
+      ctx.save();ctx.translate(12,-22);ctx.rotate(-0.2-earFlick);ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(4,-14);ctx.lineTo(8,1);ctx.fill();ctx.fillStyle=furLight;ctx.beginPath();ctx.moveTo(1,0);ctx.lineTo(4,-12);ctx.lineTo(7,1);ctx.fill();ctx.fillStyle="#e8784a";ctx.beginPath();ctx.moveTo(3,-1);ctx.lineTo(4,-8);ctx.lineTo(6,0);ctx.fill();
+      if(variant?.tufts){ctx.strokeStyle=furLight;ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(4,-13);ctx.lineTo(2,-19);ctx.stroke();}
+      ctx.restore();
+      ctx.save();ctx.translate(18,-21);ctx.rotate(0.15+earFlick*0.6);ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(3,-12);ctx.lineTo(7,1);ctx.fill();ctx.fillStyle=fur;ctx.beginPath();ctx.moveTo(1,0);ctx.lineTo(3,-10);ctx.lineTo(6,1);ctx.fill();
+      if(variant?.tufts){ctx.strokeStyle=furLight;ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(3,-11);ctx.lineTo(5,-17);ctx.stroke();}
+      ctx.restore();
+      if(variant?.antlers){
+        ctx.save();ctx.translate(14,-26);ctx.strokeStyle=furLight;ctx.lineWidth=2;ctx.lineCap="round";
+        ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(3,-16);ctx.moveTo(2,-8);ctx.lineTo(-3,-13);ctx.moveTo(3,-12);ctx.lineTo(8,-16);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(6,-2);ctx.lineTo(10,-17);ctx.moveTo(8,-9);ctx.lineTo(4,-15);ctx.moveTo(9,-13);ctx.lineTo(14,-17);ctx.stroke();
+        ctx.restore();
+      }
       ctx.fillStyle=eye;ctx.beginPath();ctx.ellipse(20,-16,2.4,2.1,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle="#2a1410";ctx.beginPath();ctx.ellipse(20.7,-16,1.1,1.4,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle="#fff6c8";ctx.fillRect(19.2,-16.8,1,1);
@@ -1118,10 +1257,12 @@ export default function AshfallGame() {
     const drawCompanion=(now:number)=>{
       const ally=companionRef.current;
       if(!ally.active||ally.map!==mapRef.current)return;
-      const isJackal=ally.itemId===SUNSET_JACKAL_CARD.id;
+      const isJackal=Boolean(ally.itemId&&GROUND_BEAST_CARD_IDS.has(ally.itemId));
       if(!isJackal&&(!dragonImage.complete||!dragonImage.naturalWidth))return;
       const palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??(isJackal?SUNSET_JACKAL_CARD.palette:BABY_DRAGON_CARD.palette);
-      const companionName=isJackal?"SUNSET JACKAL":"BABY DRAGON";
+      const companionName=cardDisplayName(ally.itemId);
+      const companionTint=beastTintFor(ally.itemId),companionAntlers=beastAntlersFor(ally.itemId),companionTufts=beastTuftsFor(ally.itemId);
+      const wyrmTint=ally.itemId===HEART_WYRM_CARD.id;
       const frames=DRAGON_FRAMES[ally.mode],elapsed=now-ally.modeStarted;
       let index=0;
       if(ally.mode==="idle")index=Math.floor(elapsed/520)%2;
@@ -1192,8 +1333,9 @@ export default function AshfallGame() {
         const cardGradient=ctx.createLinearGradient(-22,-34,22,34);cardGradient.addColorStop(0,palette.accent);cardGradient.addColorStop(.22,palette.mid);cardGradient.addColorStop(.72,palette.dark);cardGradient.addColorStop(1,palette.glow);ctx.fillStyle=cardGradient;ctx.beginPath();ctx.roundRect(-22,-34,44,68,6);ctx.fill();
         ctx.shadowBlur=0;ctx.strokeStyle=palette.glow;ctx.lineWidth=2;ctx.stroke();ctx.strokeStyle=palette.dark;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(-18,-30,36,60,4);ctx.stroke();
         ctx.save();ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.clip();ctx.fillStyle=isJackal?"#2a120c":"#101a13";ctx.fillRect(-14,-24,28,34);
-        if(isJackal){ctx.save();ctx.translate(0,8);ctx.scale(0.42,0.42);drawPixelJackal(0,0,18,1,"idle",elapsed,now,70,false);ctx.restore();}
-        else ctx.drawImage(dragonImage,cardFrame.x,cardFrame.y,cardFrame.w,cardFrame.h,-15,-25,30,36);ctx.restore();
+        if(isJackal){ctx.save();ctx.translate(0,8);ctx.scale(0.42,0.42);drawPixelJackal(0,0,18,1,"idle",elapsed,now,70,false,{tint:companionTint,antlers:companionAntlers,tufts:companionTufts});ctx.restore();}
+        else{if(wyrmTint)ctx.filter="hue-rotate(300deg) saturate(1.3)";ctx.drawImage(dragonImage,cardFrame.x,cardFrame.y,cardFrame.w,cardFrame.h,-15,-25,30,36);ctx.filter="none";}
+        ctx.restore();
         ctx.strokeStyle=palette.glow;ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.stroke();ctx.fillStyle="#eaffcf";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="900 4.5px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText(companionName,0,17);ctx.fillStyle=palette.glow;ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("✦",0,26);ctx.restore();
       };
       if(recall===0)drawSpiritCard(summon,false);
@@ -1212,17 +1354,18 @@ export default function AshfallGame() {
       const summonLift=(1-summonCreature)*34,recallPull=(1-recallCreature)*30;
       if(isJackal){
         ctx.save();ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?"rgba(255,186,82,.85)":"rgba(240,138,58,.45)";ctx.shadowBlur=ally.mode==="attack"?16:8;
-        drawPixelJackal(ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,96*spriteGrow,false);
+        drawPixelJackal(ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,96*spriteGrow,false,{tint:companionTint,antlers:companionAntlers,tufts:companionTufts});
         ctx.restore();
       }else{
         ctx.save();ctx.translate(ally.x,ally.y+summonLift-recallPull);ctx.rotate(ally.facing*(1-recallCreature)*.72);ctx.scale(ally.facing*spriteGrow,spriteGrow);
-        ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?"rgba(179,255,71,.8)":"rgba(95,224,48,.42)";ctx.shadowBlur=ally.mode==="attack"?17:9;
-        ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);ctx.restore();
+        ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?(wyrmTint?"rgba(212,90,106,.85)":"rgba(179,255,71,.8)"):(wyrmTint?"rgba(212,90,106,.5)":"rgba(95,224,48,.42)");ctx.shadowBlur=ally.mode==="attack"?17:9;
+        if(wyrmTint)ctx.filter="hue-rotate(300deg) saturate(1.3)";
+        ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);ctx.filter="none";ctx.restore();
       }
 
       if(summon>.72&&recall<.46){
         const healthRatio=clamp(ally.health/ally.maxHealth,0,1),barY=ally.y-112;
-        ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.92)";ctx.strokeText(`ALLY · ${companionName}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle=isJackal?"#ffe1b0":"#d9ffb0";ctx.fillText(`ALLY · ${companionName}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);
+        ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.92)";ctx.strokeText(`ALLY · ${companionName}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle=isJackal?"#ffe1b0":wyrmTint?"#ffc8d8":"#d9ffb0";ctx.fillText(`ALLY · ${companionName}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);
         ctx.fillStyle="rgba(2,7,8,.84)";ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.fill();
         const healthGradient=ctx.createLinearGradient(ally.x-46,0,ally.x+46,0);healthGradient.addColorStop(0,"#5ed52d");healthGradient.addColorStop(1,"#b7ff57");ctx.fillStyle=healthGradient;ctx.beginPath();ctx.roundRect(ally.x-46,barY+2,92*healthRatio,3,1.5);ctx.fill();ctx.strokeStyle="rgba(190,255,132,.72)";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.stroke();ctx.restore();
       }
@@ -1260,8 +1403,14 @@ export default function AshfallGame() {
       const portraitGlow=ctx.createRadialGradient(0,-16,3,0,-16,43);
       portraitGlow.addColorStop(0,palette.mid);portraitGlow.addColorStop(1,palette.dark);
       ctx.fillStyle=portraitGlow;ctx.fillRect(-29,-44,58,62);
-      if(name.toLowerCase().includes("jackal")){
-        ctx.save();ctx.translate(0,18);drawPixelJackal(0,0,16,1,"idle",now,now,78,false);ctx.restore();
+      const lowerName=name.toLowerCase();
+      if(lowerName.includes("jackal")||lowerName.includes("fox")||lowerName.includes("stag")||lowerName.includes("lynx")){
+        const tint=lowerName.includes("fox")?FOX_TINT:lowerName.includes("stag")?STAG_TINT:lowerName.includes("lynx")?LYNX_TINT:undefined;
+        ctx.save();ctx.translate(0,18);drawPixelJackal(0,0,16,1,"idle",now,now,78,false,{tint,antlers:lowerName.includes("stag"),tufts:lowerName.includes("lynx")});ctx.restore();
+      }else if(lowerName.includes("wyrm")){
+        ctx.save();ctx.filter="hue-rotate(300deg) saturate(1.3)";ctx.imageSmoothingEnabled=true;
+        ctx.drawImage(image,portrait.x,portrait.y,portrait.w,portrait.h,-30,-45,60,64);
+        ctx.filter="none";ctx.restore();
       }else{
         ctx.imageSmoothingEnabled=true;
         ctx.drawImage(image,portrait.x,portrait.y,portrait.w,portrait.h,-30,-45,60,64);
@@ -1429,20 +1578,164 @@ export default function AshfallGame() {
         ctx.restore();
       }
     };
+    const drawWyrmCardTransformation=(wyrm:Jackal,now:number)=>{
+      const elapsed=now-wyrm.modeStarted;
+      const absorb=clamp((elapsed-140)/820,0,1);
+      if(absorb<1&&dragonImage.complete&&dragonImage.naturalWidth){
+        const pull=1-Math.pow(1-absorb,2);
+        const frame=DRAGON_FRAMES.sleep[3],spriteScale=(WYRM_RENDER_SIZE/DRAGON_CELL)*(1-pull*.7);
+        ctx.save();ctx.translate(wyrm.x,wyrm.y-pull*44);ctx.filter="hue-rotate(300deg) saturate(1.3)";ctx.globalAlpha=1-pull;
+        ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);
+        ctx.filter="none";ctx.restore();
+      }
+      if(!otherWildCollected.has(HEART_WYRM_CARD.id))drawMagicalAnimalCard("Heart Wyrm",wyrm.x,wyrm.groundY,now,wyrm.modeStarted+380,dragonImage,{x:0,y:25,w:256,h:260},HEART_WYRM_CARD.palette);
+    };
+    const drawWyrm=(wyrm:Jackal,now:number)=>{
+      if(wyrm.health<=0){drawWyrmCardTransformation(wyrm,now);return;}
+      if(!dragonImage.complete||!dragonImage.naturalWidth)return;
+      const elapsed=now-wyrm.modeStarted,frames=DRAGON_FRAMES[wyrm.mode];
+      let index=0;
+      if(wyrm.mode==="idle")index=Math.floor(elapsed/560)%frames.length;
+      else if(wyrm.mode==="walk")index=Math.floor(elapsed/230)%frames.length;
+      else if(wyrm.mode==="run")index=Math.floor(elapsed/95)%frames.length;
+      else if(wyrm.mode==="fly")index=Math.floor(elapsed/120)%frames.length;
+      else if(wyrm.mode==="sleep")index=Math.min(frames.length-1,Math.floor(elapsed/420));
+      else index=Math.min(frames.length-1,Math.floor(elapsed/220));
+      const frame=frames[index],spriteScale=WYRM_RENDER_SIZE/DRAGON_CELL;
+      const hurtActive=wyrm.hurtUntil>now,hurtProgress=hurtActive?clamp((now-wyrm.hurtStarted)/520,0,1):1;
+      const hurtPulse=hurtActive?Math.sin(hurtProgress*Math.PI):0,recoilX=hurtPulse*13*wyrm.hitDirection;
+      const airHeight=clamp((wyrm.groundY-wyrm.y)/125,0,1);
+      ctx.save();ctx.fillStyle="rgba(6,1,8,"+(.58-airHeight*.22)+")";ctx.beginPath();ctx.ellipse(wyrm.x,wyrm.groundY+3,40*(1-airHeight*.46),8*(1-airHeight*.46),0,0,Math.PI*2);ctx.fill();ctx.restore();
+      ctx.save();ctx.translate(wyrm.x+recoilX,wyrm.y);ctx.scale(wyrm.facing,1);ctx.imageSmoothingEnabled=true;
+      ctx.filter="hue-rotate(300deg) saturate(1.3) brightness(0.97)";
+      ctx.globalAlpha=hurtActive&&Math.floor(now/48)%2===0?.52:1;
+      ctx.shadowColor=hurtActive?"rgba(255,200,220,.95)":wyrm.mode==="attack"?"rgba(212,90,106,.6)":wyrm.angry?"rgba(212,90,106,.55)":"rgba(212,90,106,.24)";ctx.shadowBlur=hurtActive?24:wyrm.mode==="attack"?18:wyrm.angry?14:8;
+      ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);
+      ctx.filter="none";ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();
+      const barW=132,barH=11,barX=wyrm.x+recoilX-barW/2,barY=wyrm.y-frame.anchorY*spriteScale-26;
+      const healthRatio=clamp(wyrm.health/wyrm.maxHealth,0,1);
+      const healthLabel=(wyrm.angry?"ANGRY  ":"")+"HEART WYRM  "+wyrm.health+" / "+wyrm.maxHealth;
+      ctx.save();ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="700 10px ui-monospace, SFMono-Regular, Menlo, monospace";
+      ctx.lineWidth=3;ctx.strokeStyle="rgba(10,2,10,.9)";ctx.strokeText(healthLabel,wyrm.x+recoilX,barY-3);
+      ctx.fillStyle=wyrm.angry?"#ffb3c4":"#ffd8e4";ctx.fillText(healthLabel,wyrm.x+recoilX,barY-3);
+      ctx.fillStyle="rgba(10,2,10,.9)";ctx.fillRect(barX-2,barY-2,barW+4,barH+4);
+      ctx.fillStyle="#3a1424";ctx.fillRect(barX,barY,barW,barH);
+      const healthGradient=ctx.createLinearGradient(barX,barY,barX+barW,barY);
+      healthGradient.addColorStop(0,"#ff7a92");healthGradient.addColorStop(1,"#d45a6a");
+      ctx.fillStyle=healthGradient;ctx.fillRect(barX,barY,barW*healthRatio,barH);
+      ctx.strokeStyle="rgba(255,200,216,.72)";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barW+1,barH+1);
+      if(hurtActive){ctx.globalAlpha=1-hurtProgress;ctx.font="900 15px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillStyle="#ffdfe8";ctx.fillText("-"+wyrm.lastDamage,wyrm.x+recoilX,barY-18-hurtProgress*18);}
+      ctx.restore();
+    };
+    const drawGroundBeastCardTransformation=(beast:Jackal,now:number,card:InventoryItem,renderSize:number,tint?:BeastTint,antlers?:boolean,tufts?:boolean)=>{
+      const elapsed=now-beast.modeStarted;
+      const absorb=clamp((elapsed-120)/720,0,1);
+      if(absorb<1){
+        const pull=1-Math.pow(1-absorb,2);
+        ctx.save();ctx.globalAlpha=1-pull;ctx.translate(0,-pull*24);
+        drawPixelJackal(beast.x,beast.y,beast.groundY,beast.facing,"sleep",elapsed,now,renderSize*(1-pull*.7),false,{tint,antlers,tufts});
+        ctx.restore();
+      }
+      if(!otherWildCollected.has(card.id))drawMagicalAnimalCard(card.name,beast.x,beast.groundY,now,beast.modeStarted+340,dragonImage,{x:0,y:25,w:256,h:260},card.palette);
+    };
+    const drawOtherWildlife=(now:number)=>{
+      const map=mapRef.current;
+      if(map===6){for(const wyrm of wyrmPack)drawWyrm(wyrm,now);return;}
+      const pack=wildPackFor(map),card=wildCardFor(map);
+      if(!pack||!card||map===2)return;
+      const tint=beastTintFor(card.id),antlers=beastAntlersFor(card.id),tufts=beastTuftsFor(card.id);
+      const renderSize=card.id===CINDER_FOX_CARD.id?FOX_RENDER_SIZE:card.id===PALE_STAG_CARD.id?STAG_RENDER_SIZE:card.id===EMBER_LYNX_CARD.id?LYNX_RENDER_SIZE:JACKAL_RENDER_SIZE;
+      for(const beast of pack){
+        if(beast.health<=0){drawGroundBeastCardTransformation(beast,now,card,renderSize,tint,antlers,tufts);continue;}
+        const elapsed=now-beast.modeStarted;
+        const hurtActive=beast.hurtUntil>now;
+        const hurtProgress=hurtActive?clamp((now-beast.hurtStarted)/480,0,1):1;
+        const hurtPulse=hurtActive?Math.sin(hurtProgress*Math.PI):0;
+        const recoilX=hurtPulse*10*beast.hitDirection;
+        ctx.save();ctx.shadowColor=hurtActive?"rgba(255,220,140,.9)":beast.mode==="attack"?"rgba(255,170,70,.55)":beast.angry?"rgba(255,90,40,.5)":"rgba(240,138,58,.2)";ctx.shadowBlur=hurtActive?18:beast.angry?12:6;
+        drawPixelJackal(beast.x+recoilX,beast.y,beast.groundY,beast.facing,beast.mode,elapsed,now,renderSize,hurtActive,{tint,antlers,tufts});
+        ctx.restore();
+        const barW=78,barH=8,barX=beast.x+recoilX-barW/2,barY=beast.y-renderSize*.74;
+        const healthRatio=clamp(beast.health/beast.maxHealth,0,1);
+        const healthLabel=(beast.angry?"ANGRY  ":"")+card.name.toUpperCase()+"  "+beast.health+" / "+beast.maxHealth;
+        ctx.save();
+        ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="700 8px ui-monospace, SFMono-Regular, Menlo, monospace";
+        ctx.lineWidth=3;ctx.strokeStyle="rgba(20,8,4,.9)";ctx.strokeText(healthLabel,beast.x+recoilX,barY-3);
+        ctx.fillStyle=beast.angry?"#ffb19d":"#ffe7c2";ctx.fillText(healthLabel,beast.x+recoilX,barY-3);
+        ctx.fillStyle="rgba(20,8,4,.9)";ctx.fillRect(barX-2,barY-2,barW+4,barH+4);
+        ctx.fillStyle="#4a1c14";ctx.fillRect(barX,barY,barW,barH);
+        const healthGradient=ctx.createLinearGradient(barX,barY,barX+barW,barY);
+        healthGradient.addColorStop(0,"#ffb347");healthGradient.addColorStop(1,"#e05a22");
+        ctx.fillStyle=healthGradient;ctx.fillRect(barX,barY,barW*healthRatio,barH);
+        ctx.strokeStyle="rgba(255,210,140,.7)";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barW+1,barH+1);
+        if(hurtActive){
+          ctx.globalAlpha=1-hurtProgress;
+          ctx.font="900 14px ui-monospace, SFMono-Regular, Menlo, monospace";
+          ctx.fillStyle="#ffe7a8";ctx.fillText("-"+beast.lastDamage,beast.x+recoilX,barY-16-hurtProgress*18);
+        }
+        ctx.restore();
+      }
+    };
+    const drawNpcs=(now:number)=>{
+      const map=mapRef.current,pl=player.current;
+      for(const npc of NPCS){
+        if(npc.map!==map)continue;
+        const bob=Math.sin(now*.0026+npc.x*.01)*2.2,groundY=590,x=npc.x,y=groundY-2+bob;
+        const near=Math.abs(pl.x-npc.x)<npc.talkRadius;
+        ctx.save();
+        ctx.fillStyle="rgba(2,4,5,.5)";ctx.beginPath();ctx.ellipse(x,groundY+2,17,4.5,0,0,Math.PI*2);ctx.fill();
+        const glow=ctx.createRadialGradient(x,y-30,4,x,y-30,58);
+        glow.addColorStop(0,rgbaFromHex(npc.palette.accent,.22));glow.addColorStop(1,rgbaFromHex(npc.palette.accent,0));
+        ctx.fillStyle=glow;ctx.fillRect(x-58,y-88,116,110);
+        ctx.translate(x,y);
+        ctx.fillStyle=npc.palette.cloak;ctx.beginPath();ctx.moveTo(-13,0);ctx.quadraticCurveTo(-17,-40,-10,-56);ctx.lineTo(10,-56);ctx.quadraticCurveTo(17,-40,13,0);ctx.closePath();ctx.fill();
+        ctx.fillStyle=npc.palette.trim;ctx.fillRect(-13,-8,26,4);
+        ctx.fillStyle=npc.palette.accent;ctx.beginPath();ctx.ellipse(0,-50,3.6,3.6,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=npc.palette.skin;ctx.beginPath();ctx.ellipse(0,-64,10,11,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=npc.palette.cloak;ctx.beginPath();ctx.ellipse(0,-71,11,7,0,0,Math.PI);ctx.fill();
+        ctx.fillStyle="#160e0a";ctx.beginPath();ctx.ellipse(-4,-65,1.4,1.8,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(4,-65,1.4,1.8,0,0,Math.PI*2);ctx.fill();
+        ctx.restore();
+        if(near){
+          ctx.save();ctx.globalAlpha=.55+Math.sin(now*.005)*.18;ctx.fillStyle=npc.palette.accent;ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText(npc.name.toUpperCase(),x,y-100);ctx.restore();
+        }
+      }
+    };
+    const drawAshfallHeartAltar=(now:number)=>{
+      if(mapRef.current!==6)return;
+      const x=MAP6_HEART_X+40,groundY=590,pulse=.5+Math.sin(now*.0022)*.28;
+      ctx.save();
+      const glow=ctx.createRadialGradient(x,groundY-70,6,x,groundY-70,190);
+      glow.addColorStop(0,"rgba(212,90,106,"+(.24+pulse*.14)+")");glow.addColorStop(1,"rgba(212,90,106,0)");
+      ctx.fillStyle=glow;ctx.fillRect(x-220,groundY-260,440,280);
+      ctx.fillStyle="#1c0c14";ctx.fillRect(x-26,groundY-38,52,38);
+      ctx.fillStyle="#3a1824";ctx.fillRect(x-20,groundY-46,40,10);
+      ctx.save();ctx.translate(x,groundY-66);ctx.scale(1+pulse*.05,1+pulse*.05);
+      ctx.fillStyle="rgba(255,150,170,"+(.55+pulse*.35)+")";ctx.shadowColor="#ffb0c0";ctx.shadowBlur=22;
+      ctx.beginPath();ctx.moveTo(0,-13);ctx.bezierCurveTo(9,-24,20,-6,0,10);ctx.bezierCurveTo(-20,-6,-9,-24,0,-13);ctx.fill();
+      ctx.restore();
+      ctx.restore();
+    };
     const drawPixelPlatform=(p:Platform,now:number,map:MapId)=>{
       const ledge=p.h<=24;
       const depth=Math.min(p.h,ledge?24:150);
+      const embery=map===5||map===6;
       const body=ctx.createLinearGradient(0,p.y,0,p.y+depth);
       if(map===1){body.addColorStop(0,"#3c485a");body.addColorStop(.1,"#263244");body.addColorStop(.5,"#151d2a");body.addColorStop(1,"#080c13");}
+      else if(embery){
+        if(map===5){body.addColorStop(0,"#4a2418");body.addColorStop(.14,"#341810");body.addColorStop(.58,"#1e0f0c");body.addColorStop(1,"#0e0808");}
+        else{body.addColorStop(0,"#3a2030");body.addColorStop(.14,"#281422");body.addColorStop(.58,"#180c18");body.addColorStop(1,"#0c0610");}
+      }
       else{body.addColorStop(0,"#d89a59");body.addColorStop(.14,"#b77346");body.addColorStop(.58,"#764937");body.addColorStop(1,"#342b2d");}
       ctx.fillStyle=body;ctx.fillRect(p.x,p.y,p.w,p.h);
 
-      ctx.fillStyle=map===1?"#71869e":"#ffd18a";ctx.fillRect(p.x,p.y,p.w,3);
-      ctx.fillStyle=map===1?"#46566b":"#e6a866";ctx.fillRect(p.x,p.y+3,p.w,5);
+      const capTop=map===1?"#71869e":embery?(map===5?"#ff8a4a":"#e06888"):"#ffd18a";
+      const capMid=map===1?"#46566b":embery?(map===5?"#c8541e":"#a83a5a"):"#e6a866";
+      ctx.fillStyle=capTop;ctx.fillRect(p.x,p.y,p.w,3);
+      ctx.fillStyle=capMid;ctx.fillRect(p.x,p.y+3,p.w,5);
       for(let tx=p.x+8;tx<p.x+p.w;tx+=32){
         const seed=Math.floor(tx/8)+Math.floor(p.y);
         const capW=10+(seed%4)*4;
-        ctx.fillStyle=map===1?(seed%3===0?"#92a5ba":seed%3===1?"#61758c":"#52657b"):(seed%3===0?"#ffe1a3":seed%3===1?"#eebb75":"#d99758");
+        ctx.fillStyle=map===1?(seed%3===0?"#92a5ba":seed%3===1?"#61758c":"#52657b"):embery?(map===5?(seed%3===0?"#ff9c5a":seed%3===1?"#e0703a":"#c05828"):(seed%3===0?"#e888a8":seed%3===1?"#c86888":"#a84c70")):(seed%3===0?"#ffe1a3":seed%3===1?"#eebb75":"#d99758");
         ctx.fillRect(tx,p.y-2-(seed%3),capW,3+(seed%2));
       }
 
@@ -1452,22 +1745,22 @@ export default function AshfallGame() {
           const row=(seed%3)*22;
           const rockY=p.y+14+row;
           const rockW=20+(seed%5)*5;
-          ctx.fillStyle=map===1?(seed%4===0?"#33445a":seed%4===1?"#243247":"#1c2839"):(seed%4===0?"#c68350":seed%4===1?"#a86642":"#8e563d");
+          ctx.fillStyle=map===1?(seed%4===0?"#33445a":seed%4===1?"#243247":"#1c2839"):embery?(map===5?(seed%4===0?"#5a2c18":seed%4===1?"#3e1c10":"#2a140c"):(seed%4===0?"#4a2038":seed%4===1?"#341828":"#20101c")):(seed%4===0?"#c68350":seed%4===1?"#a86642":"#8e563d");
           ctx.fillRect(tx,rockY,Math.min(rockW,p.x+p.w-tx),9+(seed%3)*3);
-          ctx.fillStyle=map===1?"rgba(139,163,188,.16)":"rgba(255,223,164,.18)";ctx.fillRect(tx,rockY,Math.min(rockW-5,p.x+p.w-tx),2);
+          ctx.fillStyle=map===1?"rgba(139,163,188,.16)":embery?(map===5?"rgba(255,140,80,.22)":"rgba(224,120,160,.2)"):"rgba(255,223,164,.18)";ctx.fillRect(tx,rockY,Math.min(rockW-5,p.x+p.w-tx),2);
         }
         for(let tx=p.x+27;tx<p.x+p.w;tx+=79){
           const crack=13+(Math.floor(tx/11)%4)*5;
-          ctx.fillStyle=map===1?"rgba(3,7,13,.76)":"rgba(91,51,42,.46)";ctx.fillRect(tx,p.y+35,3,crack);
+          ctx.fillStyle=map===1?"rgba(3,7,13,.76)":embery?(map===5?"rgba(255,110,40,"+(.32+Math.max(0,Math.sin(now*.002+tx*.02))*.22)+")":"rgba(212,90,106,"+(.28+Math.max(0,Math.sin(now*.002+tx*.02))*.2)+")"):"rgba(91,51,42,.46)";ctx.fillRect(tx,p.y+35,3,crack);
           ctx.fillRect(tx+3,p.y+35+crack-3,7,3);
         }
         const shimmer=.1+Math.max(0,Math.sin(now*.0014+p.x*.01))*.08;
-        ctx.fillStyle=map===1?"rgba(113,139,165,"+shimmer+")":"rgba(255,218,145,"+(shimmer+.05)+")";ctx.fillRect(p.x,p.y+9,p.w,3);
+        ctx.fillStyle=map===1?"rgba(113,139,165,"+shimmer+")":embery?(map===5?"rgba(255,150,90,"+(shimmer+.08)+")":"rgba(224,120,150,"+(shimmer+.06)+")"):"rgba(255,218,145,"+(shimmer+.05)+")";ctx.fillRect(p.x,p.y+9,p.w,3);
       }
     };
-    const drawPortal=(x:number,groundY:number,now:number,map:MapId)=>{
+    const drawPortal=(x:number,groundY:number,now:number,map:MapId,colorOverride?:string)=>{
       const cx=x+55,cy=groundY-91,pulse=.34+Math.sin(now*.0022)*.1;
-      const portalColor=map===1?"116,230,226":"255,185,104";
+      const portalColor=colorOverride??(map===1?"116,230,226":"255,185,104");
       const glow=ctx.createRadialGradient(cx,cy,4,cx,cy,185);glow.addColorStop(0,"rgba("+portalColor+","+pulse+")");glow.addColorStop(1,"rgba("+portalColor+",0)");ctx.fillStyle=glow;ctx.fillRect(cx-205,cy-205,410,410);
       ctx.fillStyle=map===1?"#061214":"#241521";ctx.fillRect(x,groundY-180,110,180);
       ctx.strokeStyle="rgba("+portalColor+",.86)";ctx.lineWidth=4;ctx.strokeRect(x+10,groundY-168,90,168);
@@ -1504,6 +1797,34 @@ export default function AshfallGame() {
         }
         ctx.globalAlpha=1;
         for(const m of motes){const a=.25+.35*Math.sin(now*.0015+m.p);ctx.fillStyle="rgba(116,230,226,"+a+")";ctx.beginPath();ctx.arc(m.x,m.y+Math.sin(m.p+now*.001)*14,2.2,0,Math.PI*2);ctx.fill();}
+      }else if(map===5){
+        drawPortal(MAP5_ENTRY_X,590,now,map,"255,140,80");
+        drawPortal(MAP5_EXIT_X,590,now,map,"255,140,80");
+        for(let i=0;i<26;i++){
+          const ex=((i*211+now*.04*(1+(i%3)))%(MAP5_W+220))-110;
+          const ey=590-((now*.03*(1+i%4)+i*97)%520);
+          const alpha=.18+Math.max(0,Math.sin(now*.0018+i))*.32;
+          ctx.fillStyle="rgba(255,138,74,"+alpha+")";ctx.fillRect(ex,ey,2+(i%3),2+(i%2));
+        }
+        for(let sx=430;sx<MAP5_W;sx+=173){
+          const twinkle=.14+Math.max(0,Math.sin(now*.002+sx*.012))*.28;
+          ctx.fillStyle="rgba(255,150,90,"+twinkle+")";ctx.fillRect(sx,586-(sx%3),4+(sx%3),2);
+        }
+      }else if(map===6){
+        drawPortal(MAP6_ENTRY_X,590,now,map,"212,90,106");
+        drawAshfallHeartAltar(now);
+        const heartPulse=.28+Math.sin(now*.0016)*.16;
+        ctx.save();ctx.globalCompositeOperation="screen";
+        const hglow=ctx.createRadialGradient(cameraX+viewW*.5,220,20,cameraX+viewW*.5,220,viewW*.7);
+        hglow.addColorStop(0,"rgba(212,90,106,"+heartPulse+")");hglow.addColorStop(1,"rgba(212,90,106,0)");
+        ctx.fillStyle=hglow;ctx.fillRect(cameraX,0,viewW,WORLD_H);
+        ctx.restore();
+        for(let i=0;i<26;i++){
+          const ex=((i*233+now*.035*(1+(i%3)))%(MAP6_W+220))-110;
+          const ey=590-((now*.028*(1+i%4)+i*101)%520);
+          const alpha=.16+Math.max(0,Math.sin(now*.002+i))*.3;
+          ctx.fillStyle="rgba(224,120,150,"+alpha+")";ctx.fillRect(ex,ey,2+(i%3),2+(i%2));
+        }
       }else{
         drawPortal(MAP2_PORTAL_X,590,now,map);
         for(let sx=430;sx<MAP2_W;sx+=173){
@@ -1513,7 +1834,7 @@ export default function AshfallGame() {
       }
       ctx.globalAlpha=1;
       if(portalFlashUntil.current>now){ctx.fillStyle="rgba(255,244,214,"+((portalFlashUntil.current-now)/430*.18)+")";ctx.fillRect(cameraX,0,viewW,WORLD_H);}
-      drawDragon(now);drawJackals(now);drawCompanion(now);
+      drawDragon(now);drawJackals(now);drawOtherWildlife(now);drawNpcs(now);drawCompanion(now);
       drawPlayer(player.current,now);ctx.restore();
     };
     const frame=(now:number)=>{
@@ -1579,6 +1900,8 @@ export default function AshfallGame() {
       const cardReady=map===1&&dragon.health<=0&&!dragonCardCollected&&now-dragon.modeStarted>900;
       const nearDragonCard=cardReady&&Math.abs(pl.x-dragon.x)<105&&Math.abs((pl.y+PH)-dragon.groundY)<85;
       const readyJackal=map===2&&!jackalCardCollected?jackals.find(jackal=>jackal.health<=0&&now-jackal.modeStarted>900&&Math.abs(pl.x-jackal.x)<105&&Math.abs((pl.y+PH)-jackal.groundY)<85):undefined;
+      const otherWildCard=map>=3&&map<=6?wildCardFor(map):null;
+      const readyOtherWild=otherWildCard&&!otherWildCollected.has(otherWildCard.id)?wildPackFor(map)?.find(beast=>beast.health<=0&&now-beast.modeStarted>900&&Math.abs(pl.x-beast.x)<115&&Math.abs((pl.y+PH)-beast.groundY)<95):undefined;
       if(pickupQueued.current){
         if(nearDragonCard&&collectInventoryItem(BABY_DRAGON_CARD)){
           dragonCardCollected=true;toggleEquippedItem(BABY_DRAGON_CARD.id);
@@ -1586,6 +1909,9 @@ export default function AshfallGame() {
         }else if(readyJackal&&collectInventoryItem(SUNSET_JACKAL_CARD)){
           jackalCardCollected=true;toggleEquippedItem(SUNSET_JACKAL_CARD.id);
           tone(640,.16,.024);window.setTimeout(()=>tone(980,.22,.018),90);
+        }else if(readyOtherWild&&otherWildCard&&collectInventoryItem(otherWildCard)){
+          otherWildCollected.add(otherWildCard.id);toggleEquippedItem(otherWildCard.id);
+          tone(660,.16,.024);window.setTimeout(()=>tone(1000,.22,.018),90);
         }
         pickupQueued.current=false;
       }
@@ -1598,15 +1924,22 @@ export default function AshfallGame() {
       }
       let action="";
       if(!dialogueRef.current){
+        const nearNpc=NPCS.find(n=>n.map===map&&Math.abs(pl.x-n.x)<n.talkRadius);
         if(nearDragonCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Baby Dragon card";
         else if(readyJackal)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Sunset Jackal card";
-else if(map===1&&Math.abs(pl.x-(MAP1_PORTAL_X+55))<145)action="Enter Map 2";
-    else if(map===2&&Math.abs(pl.x-(MAP2_PORTAL_X+55))<145)action="Return to Map 1";
-    else if(map===2&&Math.abs(pl.x-(MAP2_EXIT_X+55))<145)action="Enter Ash Hollow";
-    else if(map===3&&Math.abs(pl.x-(MAP3_ENTRY_X+55))<145)action="Return to Sunset Shore";
-    else if(map===3&&Math.abs(pl.x-(MAP3_EXIT_X+55))<145)action="Enter Moonwell Cliffs";
-    else if(map===4&&Math.abs(pl.x-(MAP4_ENTRY_X+55))<145)action="Return to Ash Hollow";
-    else if(map===4&&Math.abs(pl.x-(MAP4_EXIT_X+55))<145)action="The path ahead is sealed";
+        else if(readyOtherWild&&otherWildCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up "+otherWildCard.name+" card";
+        else if(nearNpc)action="Talk to "+nearNpc.name;
+        else if(map===1&&Math.abs(pl.x-(MAP1_PORTAL_X+55))<145)action="Enter Map 2";
+        else if(map===2&&Math.abs(pl.x-(MAP2_PORTAL_X+55))<145)action="Return to Map 1";
+        else if(map===2&&Math.abs(pl.x-(MAP2_EXIT_X+55))<145)action="Enter Ash Hollow";
+        else if(map===3&&Math.abs(pl.x-(MAP3_ENTRY_X+55))<145)action="Return to Sunset Shore";
+        else if(map===3&&Math.abs(pl.x-(MAP3_EXIT_X+55))<145)action="Enter Moonwell Cliffs";
+        else if(map===4&&Math.abs(pl.x-(MAP4_ENTRY_X+55))<145)action="Return to Ash Hollow";
+        else if(map===4&&Math.abs(pl.x-(MAP4_EXIT_X+55))<145)action="Enter The Quiet Ember";
+        else if(map===5&&Math.abs(pl.x-(MAP5_ENTRY_X+55))<145)action="Return to Moonwell Cliffs";
+        else if(map===5&&Math.abs(pl.x-(MAP5_EXIT_X+55))<145)action="Enter Ashfall's Heart";
+        else if(map===6&&Math.abs(pl.x-(MAP6_ENTRY_X+55))<145)action="Return to The Quiet Ember";
+        else if(map===6&&Math.abs(pl.x-MAP6_HEART_X)<160)action=campaignEndedRef.current?"Rest at Ashfall's Heart":"Approach Ashfall's Heart";
       }
       if(action!==lastAction){lastAction=action;setNearAction(action||null);}
       ctx.clearRect(0,0,w,h);drawBackdrop(w,h,now,map);drawWorld(w,h,scale,now);
@@ -1690,6 +2023,7 @@ else if(map===1&&Math.abs(pl.x-(MAP1_PORTAL_X+55))<145)action="Enter Map 2";
       </div>
     </section>}
     {dialogue&&<div className="dialogue-wrap"><div className="dialogue-box" onClick={advanceDialogue}><p className="speaker">{dialogue[dialogueIndex]?.speaker}</p><p className="dialogue-text">{dialogue[dialogueIndex]?.text}</p><p className="continue-hint">Click or press E to continue</p></div></div>}
+    {campaignEnded&&!dialogue&&<section className="title-screen" aria-live="polite"><div className="title-card"><p className="title-kicker">The road ends here</p><h1 className="game-title">Echoes<br/>of Ashfall<span>Chapter Six — Ashfall&apos;s Heart</span></h1><p className="start-hint">Moon Night&apos;s road through Ashfall is walked. Thank you for playing.</p></div></section>}
     {nearAction&&<div className="interaction"><span className="keycap">E</span>{nearAction}</div>}
     <div className="controls"><span><b>A D</b> Move</span><span><b>W / Space ×2</b> Double jump</span><span><b>S</b> Crouch / slide</span><span><b>Shift</b> Run</span><span><b>Mouse 1</b> Attack</span><span><b>E</b> Interact</span><span><b>1–5 + Q</b> Select / deploy</span><span><b>Tab</b> Inventory</span></div>
     <button className="sound-button" onClick={toggleSound} aria-label={soundOn?"Mute sound":"Turn sound on"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}</button>
