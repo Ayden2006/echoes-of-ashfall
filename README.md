@@ -30,7 +30,10 @@ npm run build
 - `S` or down arrow: crouch
 - Tap `S` while moving: slide; faster entry speed creates a longer, faster slide
 - Left mouse button: sword attack toward the cursor
-- `E`: interact with portals and other interactive objects
+- `E`: interact with portals and pick up animal cards
+- `Tab`: inventory
+- `1`–`5`: select a usable card slot
+- `Q`: deploy or recall the equipped animal companion
 
 ## Current game content
 
