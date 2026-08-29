@@ -1,0 +1,1 @@
+if(pl.y>WORLD_H+80){pl.x=map===1?Math.max(120,pl.x-180):340;
