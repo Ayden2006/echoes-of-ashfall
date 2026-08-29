@@ -1,0 +1,11 @@
+  const enterMap = useCallback((map:MapId) => {
+    mapRef.current=map;setMapNumber(map);
+    dialogueRef.current=null;setDialogue(null);
+    const pl=player.current;
+    if(map===2){
+      pl.x=340;pl.y=498;pl.facing=1;
+      setObjective("Track the three Sunset Jackals on the shore, or return through the portal");
+    }else{
+      pl.x=4860;pl.y=483;pl.facing=-1;
+      setObjective("Explore Map 1 or return to the far-right portal");
+    }
