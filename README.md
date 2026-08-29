@@ -5,9 +5,8 @@ A 2D story-action game starring Moon Night, built as a React canvas game with a 
 ## Play / download
 
 - **Play from source (this branch):** download the zip, then run locally:
-  - Zip: https://github.com/Ayden2006/echoes-of-ashfall/archive/refs/heads/expand-story-campaign.zip
+  - Zip: https://github.com/Ayden2006/echoes-of-ashfall/archive/refs/heads/cursor/finish-story-campaign-maps-5-6-26b0.zip
   - `npm ci` then `npm run dev`
-- **GitHub Pages (after the Pages workflow publishes):** https://ayden2006.github.io/echoes-of-ashfall/
 - **Repo:** https://github.com/Ayden2006/echoes-of-ashfall
 
 Requirements for a local run:
@@ -29,27 +28,28 @@ npm run build
 - `S` or down arrow: crouch
 - Tap `S` while moving: slide; faster entry speed creates a longer, faster slide
 - Left mouse button: sword attack toward the cursor
-- `E`: interact with portals and pick up animal cards
+- `E`: interact with portals, talk to people, study landmarks, and pick up animal cards
 - `Tab`: inventory
 - `1`–`5`: select a usable card slot
 - `Q`: deploy or recall the equipped animal companion
 
-## Campaign (maps 1–4 playable)
+## Campaign (maps 1–6 playable)
 
-Moon Night follows a fading signal through Ashfall. Maps 5–6 and the ending are reserved for Game Builder 2; Map 4's far gate is sealed.
+Moon Night follows a fading signal through Ashfall. The road runs castle → beach → hollow → cliffs → quiet ember → heart.
 
 - Map 1 — The Signal in the Rain (moonlit castle): Baby Dragon
-- Map 2 — Sunset Shore (sunset beach): Sunset Jackals, east gate to Ash Hollow
+- Map 2 — Sunset Shore (sunset beach): Sunset Jackals
 - Map 3 — Ash Hollow (ember wood): Cinder Foxes
-- Map 4 — Moonwell Cliffs: Pale Stag; path to maps 5–6 sealed
-- Maps 5–6 — reserved (`lib/campaign.ts` MapId 5|6)
+- Map 4 — Moonwell Cliffs: Pale Stag; far gate opens into The Quiet Ember
+- Map 5 — The Quiet Ember (kiln terrace): Ember Lynx; Reed talks if you press `E`
+- Map 6 — Ashfall's Heart (inner chamber): Heart Wyrm; Kest talks if you press `E`; the Ashfall Heart Altar ends the campaign
 
-Moon Night has 100 health and 15 sword damage. Defeat an animal to form its magical card, press `E` to collect it, equip it, then press `Q` to deploy or recall the companion. The dragon and jackals keep chasing and attacking whoever hurt them until that target is defeated or escapes sight range. New animals use that same card + Q pattern.
+Moon Night has 100 health and 15 sword damage. Defeat an animal to form its magical card, press `E` to collect it, equip it, then press `Q` to deploy or recall the companion. Animals keep chasing and attacking whoever hurt them until that target is defeated or escapes sight range. Every unique animal uses that same card + Q pattern.
 
 ## Main project files
 
 - `app/game.tsx`: gameplay, physics, combat, maps, animation, and canvas rendering
-- `lib/campaign.ts`: extensible story framework, objectives, dialogue, and map metadata
+- `lib/campaign.ts`: story framework, objectives, dialogue, and map metadata
 - `app/globals.css`: game page layout and interface styling
 - `app/page.tsx`: page entry point
 - `public/`: character, dragon, and backdrop artwork
