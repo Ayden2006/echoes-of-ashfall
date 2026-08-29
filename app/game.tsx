@@ -49,6 +49,16 @@ const BABY_DRAGON_CARD:InventoryItem = {
   id:"baby-dragon-card",name:"Baby Dragon",type:"animal-card",description:"A magical card holding the spirit of a young ash dragon.",image:"/baby-dragon-sprite-sheet.png",
   palette:{dark:"#090d0c",mid:"#202a24",accent:"#71d92f",glow:"#b2ff55"}
 };
+const JACKAL_MAX_HEALTH = 70;
+const JACKAL_ATTACK_DAMAGE = 8;
+const JACKAL_SIGHT_RANGE = 620;
+const JACKAL_ATTACK_RANGE = 118;
+const JACKAL_RENDER_SIZE = 92;
+const SUNSET_JACKAL_CARD:InventoryItem = {
+  id:"sunset-jackal-card",name:"Sunset Jackal",type:"animal-card",description:"A magical card holding the spirit of a dusk-born jackal from the sunset shore.",image:"/baby-dragon-sprite-sheet.png",
+  palette:{dark:"#2a120c",mid:"#7a3118",accent:"#f08a3a",glow:"#ffd27a"}
+};
+type Jackal = Dragon & {id:string; patrolMin:number; patrolMax:number};
 const DRAGON_FRAMES:Record<DragonMode,DragonFrame[]> = {
   idle:[
     {x:256,y:25,w:256,h:260,anchorX:128,anchorY:260},{x:512,y:25,w:256,h:258,anchorX:128,anchorY:258},
@@ -215,7 +225,7 @@ export default function AshfallGame() {
     const pl=player.current;
     if(map===2){
       pl.x=340;pl.y=498;pl.facing=1;
-      setObjective("Explore the sunset shore or return through the portal");
+      setObjective("Track the three Sunset Jackals on the shore, or return through the portal");
     }else{
       pl.x=4860;pl.y=483;pl.facing=-1;
       setObjective("Explore Map 1 or return to the far-right portal");
@@ -301,7 +311,18 @@ export default function AshfallGame() {
     const knight=new Image(); knight.src="/knight-sprite-sheet.png";
     const dragonImage=new Image(); dragonImage.src="/baby-dragon-sprite-sheet.png";
     const dragon:Dragon={x:1710,y:570,groundY:570,vx:0,facing:1,mode:"idle",modeStarted:last,modeUntil:last+2800,health:DRAGON_MAX_HEALTH,maxHealth:DRAGON_MAX_HEALTH,attackDamage:DRAGON_ATTACK_DAMAGE,lastPlayerAttack:-1,attackLanded:false,hurtStarted:0,hurtUntil:0,hitDirection:1,lastDamage:0,angry:false,landing:false,targetX:1840,awarenessUntil:0};
+    const createJackal=(id:string,x:number,patrolMin:number,patrolMax:number):Jackal=>({
+      id,x,y:590,groundY:590,vx:0,facing:1,mode:"idle",modeStarted:last,modeUntil:last+2200+Math.random()*1800,
+      health:JACKAL_MAX_HEALTH,maxHealth:JACKAL_MAX_HEALTH,attackDamage:JACKAL_ATTACK_DAMAGE,lastPlayerAttack:-1,attackLanded:false,
+      hurtStarted:0,hurtUntil:0,hitDirection:1,lastDamage:0,angry:false,landing:false,targetX:x+80,awarenessUntil:0,patrolMin,patrolMax
+    });
+    const jackals:Jackal[]=[
+      createJackal("sunset-jackal-a",980,720,1280),
+      createJackal("sunset-jackal-b",1880,1580,2280),
+      createJackal("sunset-jackal-c",2860,2520,3320)
+    ];
     let playerHurtUntil=0,playerRespawnAt=0,dragonCardCollected=inventoryRef.current.some(item=>item.id===BABY_DRAGON_CARD.id);
+    let jackalCardCollected=inventoryRef.current.some(item=>item.id===SUNSET_JACKAL_CARD.id);
     const eyeLayer=document.createElement("canvas"),eyeLayerCtx=eyeLayer.getContext("2d");
     const eyeCoverLayer=document.createElement("canvas"),eyeCoverCtx=eyeCoverLayer.getContext("2d");
     const attackBodyLayer=document.createElement("canvas"),attackBodyCtx=attackBodyLayer.getContext("2d");
@@ -737,6 +758,168 @@ export default function AshfallGame() {
         playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
       }
     };
+    const beginJackalMode=(jackal:Jackal,mode:DragonMode,now:number,duration:number)=>{
+      jackal.mode=mode;jackal.modeStarted=now;jackal.modeUntil=now+duration;jackal.landing=false;
+      if(mode==="fly")jackal.y=Math.min(jackal.y,jackal.groundY-36);
+      if(mode==="attack")jackal.y=Math.min(jackal.y,jackal.groundY-10);
+      if(mode==="idle"||mode==="walk"||mode==="run"||mode==="sleep")jackal.y=jackal.groundY;
+      if(mode==="idle"||mode==="sleep")jackal.vx*=.5;
+      if(mode==="attack")jackal.vx*=.22;
+    };
+    const beginJackalTravel=(jackal:Jackal,mode:"walk"|"run"|"fly",now:number,duration:number,targetX:number)=>{
+      jackal.targetX=clamp(targetX,jackal.patrolMin,jackal.patrolMax);
+      beginJackalMode(jackal,mode,now,duration);
+      jackal.facing=jackal.targetX>=jackal.x?1:-1;
+    };
+    const chooseJackalMode=(jackal:Jackal,now:number)=>{
+      const pl=player.current,distance=Math.abs(pl.x-jackal.x),approaching=(pl.x-jackal.x)*pl.vx<0;
+      const runAwayTarget=pl.x<jackal.x?jackal.patrolMax:jackal.patrolMin;
+      const randomTarget=jackal.patrolMin+20+Math.random()*(jackal.patrolMax-jackal.patrolMin-40);
+      const roll=Math.random();
+      if(distance<120&&approaching&&Math.abs(pl.vx)>150){
+        jackal.awarenessUntil=now+2200;
+        beginJackalTravel(jackal,"run",now,900+Math.random()*500,runAwayTarget);
+      }else if(distance<240&&roll<.5){
+        jackal.awarenessUntil=now+1600;
+        beginJackalMode(jackal,"idle",now,1100+Math.random()*1200);
+        jackal.facing=pl.x>=jackal.x?1:-1;
+      }else if(roll<.32)beginJackalMode(jackal,"idle",now,1600+Math.random()*1800);
+      else if(roll<.62)beginJackalTravel(jackal,"walk",now,1800+Math.random()*1400,randomTarget);
+      else if(roll<.8)beginJackalTravel(jackal,"run",now,900+Math.random()*700,randomTarget);
+      else if(roll<.9)beginJackalTravel(jackal,"fly",now,780+Math.random()*420,randomTarget);
+      else if(distance>220)beginJackalMode(jackal,"sleep",now,4200+Math.random()*3200);
+      else{beginJackalMode(jackal,"idle",now,1400);jackal.facing=pl.x>=jackal.x?1:-1;}
+    };
+    const jackalCounterAttack=(jackal:Jackal,now:number)=>{
+      jackal.facing=player.current.x>=jackal.x?1:-1;
+      jackal.attackLanded=false;
+      beginJackalMode(jackal,"attack",now,920);
+      tone(280,.1,.02);window.setTimeout(()=>tone(160,.16,.022),150);
+    };
+    const nearestLiveJackal=(x:number)=>{
+      let best:Jackal|null=null,bestDist=Infinity;
+      for(const jackal of jackals){
+        if(jackal.health<=0)continue;
+        const dist=Math.abs(jackal.x-x);
+        if(dist<bestDist){best=jackal;bestDist=dist;}
+      }
+      return best;
+    };
+    const hitJackalWithSword=(jackal:Jackal,now:number)=>{
+      const pl=player.current;
+      const swingProgress=(now-actionStartedAt.current)/360;
+      if(!(activeAttackDamage.current>0&&actionUntil.current>now&&swingProgress>.14&&swingProgress<.9&&jackal.lastPlayerAttack!==actionStartedAt.current))return;
+      const centerY=jackal.mode==="fly"?jackal.y-18:jackal.y-28;
+      const targetAngle=Math.atan2(centerY-(pl.y+38),jackal.x-pl.x);
+      const angleDifference=Math.atan2(Math.sin(targetAngle-attackAngle.current),Math.cos(targetAngle-attackAngle.current));
+      const distance=Math.hypot(jackal.x-pl.x,centerY-(pl.y+38));
+      if(distance<160&&Math.abs(angleDifference)<.9){
+        jackal.lastPlayerAttack=actionStartedAt.current;
+        companionRef.current.lastPlayerAttack=actionStartedAt.current;
+        commandCompanionAttack(jackal.x,now);
+        jackal.health=Math.max(0,jackal.health-activeAttackDamage.current);
+        jackal.hurtStarted=now;jackal.hurtUntil=now+480;jackal.hitDirection=jackal.x>=pl.x?1:-1;jackal.lastDamage=activeAttackDamage.current;
+        if(jackal.health===0){
+          jackal.angry=false;jackal.awarenessUntil=0;jackal.attackLanded=true;jackal.vx*=.25;
+          beginJackalMode(jackal,"sleep",now,999999999);
+          tone(80,.24,.036);window.setTimeout(()=>tone(52,.3,.026),110);
+          return;
+        }
+        jackal.angry=true;jackal.awarenessUntil=now+7000;
+        if(jackal.mode!=="attack")jackalCounterAttack(jackal,now);
+        tone(110,.08,.03);
+      }
+    };
+    const updateJackals=(dt:number,now:number)=>{
+      if(!startedRef.current||mapRef.current!==2)return;
+      const pl=player.current;
+      for(const jackal of jackals){
+        if(jackal.health<=0){
+          jackal.angry=false;jackal.vx+=(0-jackal.vx)*(1-Math.exp(-7*dt));jackal.x+=jackal.vx*dt;
+          jackal.y+=(jackal.groundY-jackal.y)*(1-Math.exp(-8*dt));
+          continue;
+        }
+        hitJackalWithSword(jackal,now);
+        if(jackal.health<=0)continue;
+        const playerDistance=Math.abs(pl.x-jackal.x);
+        const sightDistance=Math.hypot(pl.x-jackal.x,(pl.y+PH*.45)-(jackal.y-24));
+        const startled=playerDistance<110&&(pl.x-jackal.x)*pl.vx<0&&Math.abs(pl.vx)>140;
+        if(jackal.angry&&(pl.health<=0||sightDistance>JACKAL_SIGHT_RANGE)){
+          jackal.angry=false;
+          if(jackal.mode!=="attack")beginJackalMode(jackal,"idle",now,1400);
+        }
+        if(!jackal.angry&&jackal.mode==="sleep"&&(playerDistance<150||playerDistance<220&&Math.abs(pl.vx)>90)){
+          beginJackalMode(jackal,"idle",now,1100);jackal.facing=pl.x>=jackal.x?1:-1;jackal.awarenessUntil=now+2200;
+        }else if(!jackal.angry&&startled&&jackal.mode!=="attack"&&jackal.mode!=="run"){
+          jackal.awarenessUntil=now+2200;
+          beginJackalTravel(jackal,"run",now,900,pl.x<jackal.x?jackal.patrolMax:jackal.patrolMin);
+        }else if(!jackal.angry&&jackal.mode==="idle"&&(playerDistance<240||now<jackal.awarenessUntil)){
+          jackal.facing=pl.x>=jackal.x?1:-1;
+        }
+        if(jackal.mode==="attack"){
+          if(playerDistance>16)jackal.facing=pl.x>=jackal.x?1:-1;
+          jackal.vx+=(0-jackal.vx)*(1-Math.exp(-9*dt));
+          const lunge=clamp((now-jackal.modeStarted-280)/220,0,1);
+          jackal.x+=jackal.facing*lunge*92*dt*3.2;
+          jackal.y+=(jackal.groundY-8-Math.sin(lunge*Math.PI)*16-jackal.y)*(1-Math.exp(-10*dt));
+          if(!jackal.attackLanded&&now-jackal.modeStarted>420){
+            const forward=(pl.x-jackal.x)*jackal.facing;
+            const vertical=Math.abs((pl.y+42)-jackal.y);
+            if(forward>-10&&forward<120&&vertical<100&&playerRespawnAt===0){
+              pl.health=Math.max(0,pl.health-jackal.attackDamage);
+              playerHurtUntil=now+340;
+              commandCompanionAttack(jackal.x,now);
+              if(pl.health===0){jackal.angry=false;playerRespawnAt=now+950;}
+              tone(74,.18,.032);
+            }
+            jackal.attackLanded=true;
+          }
+          if(now>=jackal.modeUntil){
+            if(jackal.angry&&pl.health>0&&sightDistance<=JACKAL_SIGHT_RANGE){
+              if(playerDistance<=JACKAL_ATTACK_RANGE+12)jackalCounterAttack(jackal,now);
+              else{jackal.targetX=clamp(pl.x,jackal.patrolMin,jackal.patrolMax);beginJackalMode(jackal,"run",now,800);jackal.facing=pl.x>=jackal.x?1:-1;}
+            }else{jackal.angry=false;beginJackalMode(jackal,"idle",now,1200);jackal.facing=pl.x>=jackal.x?1:-1;}
+          }
+          continue;
+        }
+        if(jackal.angry){
+          if(playerDistance>16)jackal.facing=pl.x>=jackal.x?1:-1;
+          if(playerDistance<=JACKAL_ATTACK_RANGE){jackalCounterAttack(jackal,now);continue;}
+          jackal.targetX=clamp(pl.x,jackal.patrolMin,jackal.patrolMax);
+          if(jackal.mode!=="run"&&jackal.mode!=="fly")beginJackalMode(jackal,"run",now,800);
+          else jackal.modeUntil=now+800;
+        }else if(jackal.mode==="fly"&&now>=jackal.modeUntil){
+          if(!jackal.landing){jackal.landing=true;jackal.modeUntil=now+420;}
+          else beginJackalMode(jackal,"idle",now,1200+Math.random()*800);
+        }else if(now>=jackal.modeUntil)chooseJackalMode(jackal,now);
+        if(jackal.mode==="walk"||jackal.mode==="run"||jackal.mode==="fly"){
+          const distanceToTarget=jackal.targetX-jackal.x;
+          if(Math.abs(distanceToTarget)>14)jackal.facing=distanceToTarget>=0?1:-1;
+          if(jackal.mode!=="fly"&&Math.abs(distanceToTarget)<12){
+            if(jackal.angry)jackal.vx+=(0-jackal.vx)*(1-Math.exp(-7*dt));
+            else beginJackalMode(jackal,"idle",now,1100+Math.random()*900);
+          }else{
+            const speed=jackal.mode==="walk"?48:jackal.mode==="run"?(jackal.angry?168:128):96;
+            const targetSpeed=jackal.facing*(jackal.mode==="fly"&&jackal.landing?speed*.4:speed);
+            jackal.vx+=(targetSpeed-jackal.vx)*(1-Math.exp(-(jackal.mode==="run"?6:4)*dt));
+            jackal.x+=jackal.vx*dt;
+            if(jackal.x<=jackal.patrolMin){jackal.x=jackal.patrolMin;jackal.targetX=jackal.patrolMax;jackal.facing=1;}
+            if(jackal.x>=jackal.patrolMax){jackal.x=jackal.patrolMax;jackal.targetX=jackal.patrolMin;jackal.facing=-1;}
+            const leap=jackal.mode==="fly"?Math.sin(clamp((now-jackal.modeStarted)/(jackal.modeUntil-jackal.modeStarted||1),0,1)*Math.PI)*54:0;
+            const targetY=jackal.groundY-leap;
+            jackal.y+=(targetY-jackal.y)*(1-Math.exp(-10*dt));
+          }
+        }else{
+          jackal.vx+=(0-jackal.vx)*(1-Math.exp(-8*dt));
+          jackal.y+=(jackal.groundY-jackal.y)*(1-Math.exp(-12*dt));
+        }
+      }
+      if(playerRespawnAt&&now>=playerRespawnAt){
+        pl.health=pl.maxHealth;pl.x=mapRef.current===2?340:230;pl.y=498;pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
+        staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;
+        playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
+      }
+    };
     const companionSurfaceAt=(x:number,currentY:number,map:MapId)=>{
       const surfaces=platformsFor(map).filter(p=>p.h>80&&x>=p.x&&x<=p.x+p.w);
       if(!surfaces.length)return null;
@@ -757,31 +940,39 @@ export default function AshfallGame() {
         if(now-ally.recallStarted>=COMPANION_RECALL_DURATION){ally.active=false;ally.itemId=null;ally.recallStarted=0;setDeployedItemId(null);}
         return;
       }
-      if(ally.map!==map){ally.map=map;ally.x=pl.x-pl.facing*96;ally.groundY=pl.y+PH;ally.y=ally.groundY-52;ally.vx=0;ally.mode="fly";ally.modeStarted=now;ally.teleportAt=now;}
+      const jackalAlly=ally.itemId===SUNSET_JACKAL_CARD.id;
+      if(ally.map!==map){ally.map=map;ally.x=pl.x-pl.facing*96;ally.groundY=pl.y+PH;ally.y=jackalAlly?ally.groundY:ally.groundY-52;ally.vx=0;ally.mode=jackalAlly?"run":"fly";ally.modeStarted=now;ally.teleportAt=now;}
 
-      const hostileActive=map===1&&dragon.health>0&&now<ally.attackUntil;
+      const huntedJackal=map===2?nearestLiveJackal(ally.targetX||ally.x):null;
+      const hostileActive=(map===1&&dragon.health>0&&now<ally.attackUntil)||(map===2&&Boolean(huntedJackal)&&now<ally.attackUntil);
       const followX=clamp(pl.x-pl.facing*104,28,worldWidthFor(map)-28);
       const playerGround=pl.y+PH;
       if(Math.abs(pl.x-ally.x)>COMPANION_TELEPORT_DISTANCE){
         const arrivalGround=companionSurfaceAt(followX,playerGround,map)??playerGround;
-        ally.x=followX;ally.groundY=arrivalGround;ally.y=arrivalGround-58;ally.vx=0;ally.attackUntil=0;ally.teleportAt=now;ally.facing=pl.facing;setCompanionMode("fly",now);
+        ally.x=followX;ally.groundY=arrivalGround;ally.y=jackalAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.attackUntil=0;ally.teleportAt=now;ally.facing=pl.facing;setCompanionMode(jackalAlly?"run":"fly",now);
       }
       const targetX=now<ally.attackUntil?ally.targetX:followX;
       const delta=targetX-ally.x,distance=Math.abs(delta);
       if(distance>18)ally.facing=delta>=0?1:-1;
 
-      if(now<ally.attackUntil&&distance<138){
+      if(now<ally.attackUntil&&distance<(jackalAlly?118:138)){
         setCompanionMode("attack",now);
         ally.vx+=(0-ally.vx)*(1-Math.exp(-10*dt));ally.x+=ally.vx*dt;
-        ally.y+=(ally.groundY-50-ally.y)*(1-Math.exp(-10*dt));
+        const pounceHeight=jackalAlly?8+Math.sin(clamp((now-ally.modeStarted)/720,0,1)*Math.PI)*22:50;
+        ally.y+=(ally.groundY-pounceHeight-ally.y)*(1-Math.exp(-10*dt));
         const attackElapsed=now-ally.modeStarted;
         if(!ally.attackLanded&&attackElapsed>390){
           ally.attackLanded=true;
-          if(hostileActive&&Math.abs(dragon.x-ally.x)<155){
+          if(map===1&&hostileActive&&Math.abs(dragon.x-ally.x)<155){
             dragon.health=Math.max(0,dragon.health-8);dragon.hurtStarted=now;dragon.hurtUntil=now+420;dragon.lastDamage=8;dragon.hitDirection=dragon.x>=ally.x?1:-1;
             if(dragon.health===0){dragon.angry=false;dragon.awarenessUntil=0;dragon.vx*=.3;beginDragonMode("sleep",now,999999999);}
             else{dragon.angry=true;dragon.awarenessUntil=now+8000;}
             tone(112,.1,.022);
+          }else if(map===2&&huntedJackal&&Math.abs(huntedJackal.x-ally.x)<150){
+            huntedJackal.health=Math.max(0,huntedJackal.health-8);huntedJackal.hurtStarted=now;huntedJackal.hurtUntil=now+400;huntedJackal.lastDamage=8;huntedJackal.hitDirection=huntedJackal.x>=ally.x?1:-1;
+            if(huntedJackal.health===0){huntedJackal.angry=false;huntedJackal.awarenessUntil=0;huntedJackal.vx*=.25;beginJackalMode(huntedJackal,"sleep",now,999999999);}
+            else{huntedJackal.angry=true;huntedJackal.awarenessUntil=now+7000;}
+            tone(118,.1,.02);
           }
         }
         if(attackElapsed>720){
@@ -794,27 +985,87 @@ export default function AshfallGame() {
       const currentSurface=companionSurfaceAt(ally.x,ally.groundY,map);
       if(currentSurface!==null)ally.groundY+=(currentSurface-ally.groundY)*(1-Math.exp(-11*dt));
       const noGroundAhead=companionSurfaceAt(ally.x+ally.facing*48,ally.groundY,map)===null;
-      const needsFlight=Math.abs(playerGround-ally.groundY)>34||noGroundAhead;
+      const needsFlight=!jackalAlly&&(Math.abs(playerGround-ally.groundY)>34||noGroundAhead);
       if(distance>46){
-        const followMode:DragonMode=needsFlight?"fly":distance>170?"run":"walk";
+        const followMode:DragonMode=needsFlight?"fly":jackalAlly&&distance>220?"fly":distance>170?"run":"walk";
         setCompanionMode(followMode,now);
-        const speed=followMode==="fly"?128:followMode==="run"?158:64;
+        const speed=followMode==="fly"?(jackalAlly?148:128):followMode==="run"?(jackalAlly?176:158):64;
         const response=followMode==="walk"?4.2:followMode==="fly"?4.8:6.6;
         ally.vx+=(ally.facing*speed-ally.vx)*(1-Math.exp(-response*dt));ally.x+=ally.vx*dt;
         ally.x=clamp(ally.x,28,worldWidthFor(map)-28);
         const nextSurface=companionSurfaceAt(ally.x,ally.groundY,map);
         if(nextSurface!==null)ally.groundY+=(nextSurface-ally.groundY)*(1-Math.exp(-10*dt));
-        const targetY=followMode==="fly"?Math.min(playerGround-68,ally.groundY-76):ally.groundY;
+        const leapArc=jackalAlly&&followMode==="fly"?Math.sin(clamp((now-ally.modeStarted)/720,0,1)*Math.PI)*46:0;
+        const targetY=followMode==="fly"&&!jackalAlly?Math.min(playerGround-68,ally.groundY-76):ally.groundY-leapArc;
         ally.y+=(targetY-ally.y)*(1-Math.exp(-(followMode==="fly"?5:12)*dt));
       }else{
         setCompanionMode("idle",now);ally.vx+=(0-ally.vx)*(1-Math.exp(-9*dt));ally.x+=ally.vx*dt;ally.y+=(ally.groundY-ally.y)*(1-Math.exp(-12*dt));
         ally.facing=pl.x>=ally.x?1:-1;
       }
     };
+    const drawPixelJackal=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean)=>{
+      const scale=size/90;
+      const runCycle=(elapsed/(mode==="run"?90:160))%1;
+      const gait=Math.sin(runCycle*Math.PI*2);
+      const leap=mode==="fly"?Math.sin(clamp(elapsed/700,0,1)*Math.PI):0;
+      const attack=mode==="attack"?clamp(elapsed/920,0,1):0;
+      const sleep=mode==="sleep";
+      const bob=mode==="idle"?Math.sin(now*.005)*1.4:mode==="walk"||mode==="run"?Math.abs(gait)*2:0;
+      const lunge=attack>0.32&&attack<.72?(attack-.32)/.4:0;
+      const tail = sleep ? 0.9 : mode==="attack" ? -0.55 : 0.35+Math.sin(now*.008+elapsed*.01)*0.55;
+      const earFlick = Math.sin(now*.012+elapsed*.004)>0.82?0.35:0;
+      ctx.save();
+      ctx.fillStyle="rgba(48,18,10,"+(0.45-leap*0.25)+")";
+      ctx.beginPath();ctx.ellipse(x,groundY+3,22*(1-leap*.4)*scale,5*(1-leap*.35)*scale,0,0,Math.PI*2);ctx.fill();
+      ctx.translate(x+facing*lunge*18,y-bob-leap*8);
+      ctx.rotate(facing*(sleep?0.15:mode==="fly"?-0.28:mode==="attack"?-0.12+lunge*0.35:gait*0.04));
+      ctx.scale(facing*scale,scale);
+      const fur="#c45a28",furDark="#6b2e18",furLight="#f0a056",chest="#ffd2a0",outline="#2a1410",eye="#ffe27a";
+      if(hurt&&Math.floor(now/45)%2===0)ctx.globalAlpha=.55;
+      const drawLimb=(lx:number,ly:number,lw:number,lh:number,rot:number)=>{
+        ctx.save();ctx.translate(lx,ly);ctx.rotate(rot);ctx.fillStyle=outline;ctx.fillRect(-lw/2-1,-1,lw+2,lh+2);ctx.fillStyle=furDark;ctx.fillRect(-lw/2,0,lw,lh);ctx.restore();
+      };
+      if(sleep){
+        ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(0,-10,23,16,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=fur;ctx.beginPath();ctx.ellipse(0,-10,21,14,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=chest;ctx.beginPath();ctx.ellipse(6,-8,10,8,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=furDark;ctx.beginPath();ctx.ellipse(-16,-6,8,6,.6,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(12,-22);ctx.lineTo(16,-34);ctx.lineTo(8,-24);ctx.fill();
+        ctx.fillStyle=furLight;ctx.beginPath();ctx.moveTo(12,-22);ctx.lineTo(15,-31);ctx.lineTo(9,-23);ctx.fill();
+        ctx.fillStyle=eye;ctx.globalAlpha=hurt?ctx.globalAlpha:0.35;ctx.beginPath();ctx.ellipse(14,-14,2.2,1.2,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=hurt&&Math.floor(now/45)%2===0?.55:1;
+        ctx.restore();return;
+      }
+      const frontSwing=mode==="idle"?0.08:mode==="fly"?0.7:gait*0.7;
+      const backSwing=mode==="idle"?-0.08:mode==="fly"?-0.55:-gait*0.7;
+      drawLimb(-12,8,6,18,backSwing);drawLimb(-6,8,6,17,backSwing*0.7+0.15);
+      ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(0,-6,20,13,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=fur;ctx.beginPath();ctx.ellipse(0,-6,18,11.5,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=furLight;ctx.beginPath();ctx.ellipse(3,-8,12,7,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=chest;ctx.beginPath();ctx.ellipse(8,-2,8,7,0,0,Math.PI*2);ctx.fill();
+      ctx.save();ctx.translate(-16,-6);ctx.rotate(tail);ctx.fillStyle=outline;ctx.fillRect(-3,-3,20,8);ctx.fillStyle=furDark;ctx.fillRect(-2,-2,18,6);ctx.fillStyle=furLight;ctx.fillRect(10,-1,7,4);ctx.restore();
+      ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(16,-14,11,9,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=fur;ctx.beginPath();ctx.ellipse(16,-14,9.5,7.5,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=furLight;ctx.fillRect(20,-16,7,5);
+      ctx.fillStyle=outline;ctx.fillRect(26,-15,4,3);
+      ctx.fillStyle="#1a0c08";ctx.fillRect(27,-14,3,2);
+      ctx.save();ctx.translate(12,-22);ctx.rotate(-0.2-earFlick);ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(4,-14);ctx.lineTo(8,1);ctx.fill();ctx.fillStyle=furLight;ctx.beginPath();ctx.moveTo(1,0);ctx.lineTo(4,-12);ctx.lineTo(7,1);ctx.fill();ctx.fillStyle="#e8784a";ctx.beginPath();ctx.moveTo(3,-1);ctx.lineTo(4,-8);ctx.lineTo(6,0);ctx.fill();ctx.restore();
+      ctx.save();ctx.translate(18,-21);ctx.rotate(0.15+earFlick*0.6);ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(3,-12);ctx.lineTo(7,1);ctx.fill();ctx.fillStyle=fur;ctx.beginPath();ctx.moveTo(1,0);ctx.lineTo(3,-10);ctx.lineTo(6,1);ctx.fill();ctx.restore();
+      ctx.fillStyle=eye;ctx.beginPath();ctx.ellipse(20,-16,2.4,2.1,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#2a1410";ctx.beginPath();ctx.ellipse(20.7,-16,1.1,1.4,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#fff6c8";ctx.fillRect(19.2,-16.8,1,1);
+      drawLimb(8,9,6,17,frontSwing);drawLimb(14,9,5,16,frontSwing*0.75-0.1);
+      if(mode==="attack"&&attack>.4){
+        ctx.fillStyle="#fff1c8";ctx.globalAlpha=.8;ctx.fillRect(27,-13,6,2);ctx.fillRect(27,-10,5,2);
+      }
+      ctx.restore();
+    };
     const drawCompanion=(now:number)=>{
       const ally=companionRef.current;
-      if(!ally.active||ally.map!==mapRef.current||!dragonImage.complete||!dragonImage.naturalWidth)return;
-      const palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??BABY_DRAGON_CARD.palette;
+      if(!ally.active||ally.map!==mapRef.current)return;
+      const isJackal=ally.itemId===SUNSET_JACKAL_CARD.id;
+      if(!isJackal&&(!dragonImage.complete||!dragonImage.naturalWidth))return;
+      const palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??(isJackal?SUNSET_JACKAL_CARD.palette:BABY_DRAGON_CARD.palette);
+      const companionName=isJackal?"SUNSET JACKAL":"BABY DRAGON";
       const frames=DRAGON_FRAMES[ally.mode],elapsed=now-ally.modeStarted;
       let index=0;
       if(ally.mode==="idle")index=Math.floor(elapsed/520)%2;
@@ -884,8 +1135,10 @@ export default function AshfallGame() {
         ctx.save();ctx.translate(ally.x,ally.groundY-66-cardRise);ctx.rotate((recalling?1:-1)*(1-arrive)*1.4+(recalling?progress:-progress)*.18);ctx.scale(cardScale,cardScale);ctx.globalAlpha=cardAlpha;ctx.shadowColor=palette.glow;ctx.shadowBlur=24;
         const cardGradient=ctx.createLinearGradient(-22,-34,22,34);cardGradient.addColorStop(0,palette.accent);cardGradient.addColorStop(.22,palette.mid);cardGradient.addColorStop(.72,palette.dark);cardGradient.addColorStop(1,palette.glow);ctx.fillStyle=cardGradient;ctx.beginPath();ctx.roundRect(-22,-34,44,68,6);ctx.fill();
         ctx.shadowBlur=0;ctx.strokeStyle=palette.glow;ctx.lineWidth=2;ctx.stroke();ctx.strokeStyle=palette.dark;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(-18,-30,36,60,4);ctx.stroke();
-        ctx.save();ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.clip();ctx.fillStyle="#101a13";ctx.fillRect(-14,-24,28,34);ctx.drawImage(dragonImage,cardFrame.x,cardFrame.y,cardFrame.w,cardFrame.h,-15,-25,30,36);ctx.restore();
-        ctx.strokeStyle=palette.glow;ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.stroke();ctx.fillStyle="#eaffcf";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="900 4.5px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("BABY DRAGON",0,17);ctx.fillStyle=palette.glow;ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("✦",0,26);ctx.restore();
+        ctx.save();ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.clip();ctx.fillStyle=isJackal?"#2a120c":"#101a13";ctx.fillRect(-14,-24,28,34);
+        if(isJackal){ctx.save();ctx.translate(0,8);ctx.scale(0.42,0.42);drawPixelJackal(0,0,18,1,"idle",elapsed,now,70,false);ctx.restore();}
+        else ctx.drawImage(dragonImage,cardFrame.x,cardFrame.y,cardFrame.w,cardFrame.h,-15,-25,30,36);ctx.restore();
+        ctx.strokeStyle=palette.glow;ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.stroke();ctx.fillStyle="#eaffcf";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="900 4.5px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText(companionName,0,17);ctx.fillStyle=palette.glow;ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("✦",0,26);ctx.restore();
       };
       if(recall===0)drawSpiritCard(summon,false);
 
@@ -901,13 +1154,19 @@ export default function AshfallGame() {
       }
 
       const summonLift=(1-summonCreature)*34,recallPull=(1-recallCreature)*30;
-      ctx.save();ctx.translate(ally.x,ally.y+summonLift-recallPull);ctx.rotate(ally.facing*(1-recallCreature)*.72);ctx.scale(ally.facing*spriteGrow,spriteGrow);
-      ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?"rgba(179,255,71,.8)":"rgba(95,224,48,.42)";ctx.shadowBlur=ally.mode==="attack"?17:9;
-      ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);ctx.restore();
+      if(isJackal){
+        ctx.save();ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?"rgba(255,186,82,.85)":"rgba(240,138,58,.45)";ctx.shadowBlur=ally.mode==="attack"?16:8;
+        drawPixelJackal(ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,96*spriteGrow,false);
+        ctx.restore();
+      }else{
+        ctx.save();ctx.translate(ally.x,ally.y+summonLift-recallPull);ctx.rotate(ally.facing*(1-recallCreature)*.72);ctx.scale(ally.facing*spriteGrow,spriteGrow);
+        ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?"rgba(179,255,71,.8)":"rgba(95,224,48,.42)";ctx.shadowBlur=ally.mode==="attack"?17:9;
+        ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);ctx.restore();
+      }
 
       if(summon>.72&&recall<.46){
         const healthRatio=clamp(ally.health/ally.maxHealth,0,1),barY=ally.y-112;
-        ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.92)";ctx.strokeText(`ALLY · BABY DRAGON  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle="#d9ffb0";ctx.fillText(`ALLY · BABY DRAGON  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);
+        ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.92)";ctx.strokeText(`ALLY · ${companionName}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle=isJackal?"#ffe1b0":"#d9ffb0";ctx.fillText(`ALLY · ${companionName}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);
         ctx.fillStyle="rgba(2,7,8,.84)";ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.fill();
         const healthGradient=ctx.createLinearGradient(ally.x-46,0,ally.x+46,0);healthGradient.addColorStop(0,"#5ed52d");healthGradient.addColorStop(1,"#b7ff57");ctx.fillStyle=healthGradient;ctx.beginPath();ctx.roundRect(ally.x-46,barY+2,92*healthRatio,3,1.5);ctx.fill();ctx.strokeStyle="rgba(190,255,132,.72)";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.stroke();ctx.restore();
       }
@@ -945,8 +1204,12 @@ export default function AshfallGame() {
       const portraitGlow=ctx.createRadialGradient(0,-16,3,0,-16,43);
       portraitGlow.addColorStop(0,palette.mid);portraitGlow.addColorStop(1,palette.dark);
       ctx.fillStyle=portraitGlow;ctx.fillRect(-29,-44,58,62);
-      ctx.imageSmoothingEnabled=true;
-      ctx.drawImage(image,portrait.x,portrait.y,portrait.w,portrait.h,-30,-45,60,64);
+      if(name.toLowerCase().includes("jackal")){
+        ctx.save();ctx.translate(0,18);drawPixelJackal(0,0,16,1,"idle",now,now,78,false);ctx.restore();
+      }else{
+        ctx.imageSmoothingEnabled=true;
+        ctx.drawImage(image,portrait.x,portrait.y,portrait.w,portrait.h,-30,-45,60,64);
+      }
       ctx.restore();
       ctx.strokeStyle=palette.glow;ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(-29,-44,58,62,5);ctx.stroke();
 
@@ -1066,6 +1329,50 @@ export default function AshfallGame() {
       }
       ctx.restore();
     };
+    const drawJackalCardTransformation=(jackal:Jackal,now:number)=>{
+      const elapsed=now-jackal.modeStarted;
+      const absorb=clamp((elapsed-120)/760,0,1);
+      if(absorb<1){
+        const pull=1-Math.pow(1-absorb,2);
+        ctx.save();ctx.globalAlpha=1-pull;ctx.translate(0,-pull*28);
+        drawPixelJackal(jackal.x,jackal.y,jackal.groundY,jackal.facing,"sleep",elapsed,now,JACKAL_RENDER_SIZE*(1-pull*.7),false);
+        ctx.restore();
+      }
+      if(!jackalCardCollected)drawMagicalAnimalCard("Sunset Jackal",jackal.x,jackal.groundY,now,jackal.modeStarted+350,dragonImage,{x:0,y:25,w:256,h:260},SUNSET_JACKAL_CARD.palette);
+    };
+    const drawJackals=(now:number)=>{
+      if(mapRef.current!==2)return;
+      for(const jackal of jackals){
+        if(jackal.health<=0){drawJackalCardTransformation(jackal,now);continue;}
+        const elapsed=now-jackal.modeStarted;
+        const hurtActive=jackal.hurtUntil>now;
+        const hurtProgress=hurtActive?clamp((now-jackal.hurtStarted)/480,0,1):1;
+        const hurtPulse=hurtActive?Math.sin(hurtProgress*Math.PI):0;
+        const recoilX=hurtPulse*10*jackal.hitDirection;
+        ctx.save();ctx.shadowColor=hurtActive?"rgba(255,220,140,.9)":jackal.mode==="attack"?"rgba(255,170,70,.55)":jackal.angry?"rgba(255,90,40,.5)":"rgba(240,138,58,.2)";ctx.shadowBlur=hurtActive?18:jackal.angry?12:6;
+        drawPixelJackal(jackal.x+recoilX,jackal.y,jackal.groundY,jackal.facing,jackal.mode,elapsed,now,JACKAL_RENDER_SIZE,hurtActive);
+        ctx.restore();
+        const barW=78,barH=8,barX=jackal.x+recoilX-barW/2,barY=jackal.y-68;
+        const healthRatio=clamp(jackal.health/jackal.maxHealth,0,1);
+        const healthLabel=(jackal.angry?"ANGRY  ":"")+"SUNSET JACKAL  "+jackal.health+" / "+jackal.maxHealth;
+        ctx.save();
+        ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="700 8px ui-monospace, SFMono-Regular, Menlo, monospace";
+        ctx.lineWidth=3;ctx.strokeStyle="rgba(20,8,4,.9)";ctx.strokeText(healthLabel,jackal.x+recoilX,barY-3);
+        ctx.fillStyle=jackal.angry?"#ffb19d":"#ffe7c2";ctx.fillText(healthLabel,jackal.x+recoilX,barY-3);
+        ctx.fillStyle="rgba(20,8,4,.9)";ctx.fillRect(barX-2,barY-2,barW+4,barH+4);
+        ctx.fillStyle="#4a1c14";ctx.fillRect(barX,barY,barW,barH);
+        const healthGradient=ctx.createLinearGradient(barX,barY,barX+barW,barY);
+        healthGradient.addColorStop(0,"#ffb347");healthGradient.addColorStop(1,"#e05a22");
+        ctx.fillStyle=healthGradient;ctx.fillRect(barX,barY,barW*healthRatio,barH);
+        ctx.strokeStyle="rgba(255,210,140,.7)";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barW+1,barH+1);
+        if(hurtActive){
+          ctx.globalAlpha=1-hurtProgress;
+          ctx.font="900 14px ui-monospace, SFMono-Regular, Menlo, monospace";
+          ctx.fillStyle="#ffe7a8";ctx.fillText("-"+jackal.lastDamage,jackal.x+recoilX,barY-16-hurtProgress*18);
+        }
+        ctx.restore();
+      }
+    };
     const drawPixelPlatform=(p:Platform,now:number,map:MapId)=>{
       const ledge=p.h<=24;
       const depth=Math.min(p.h,ledge?24:150);
@@ -1150,7 +1457,7 @@ export default function AshfallGame() {
       }
       ctx.globalAlpha=1;
       if(portalFlashUntil.current>now){ctx.fillStyle="rgba(255,244,214,"+((portalFlashUntil.current-now)/430*.18)+")";ctx.fillRect(cameraX,0,viewW,WORLD_H);}
-      drawDragon(now);drawCompanion(now);
+      drawDragon(now);drawJackals(now);drawCompanion(now);
       drawPlayer(player.current,now);ctx.restore();
     };
     const frame=(now:number)=>{
@@ -1194,7 +1501,7 @@ export default function AshfallGame() {
       const castState=companionCastRef.current;
       const castDuration=castState.kind==="recall"?COMPANION_RECALL_DURATION:780;
       if(castState.kind&&now-castState.started<castDuration)pl.facing=castState.direction;
-      updateDragon(dt,now);
+      updateDragon(dt,now);updateJackals(dt,now);
       if(deployQueued.current){
         const itemId=equippedRef.current[selectedSlotRef.current];
         const item=itemId?inventoryRef.current.find(entry=>entry.id===itemId):null;
@@ -1205,7 +1512,8 @@ export default function AshfallGame() {
           }else{
             const summonX=clamp(pl.x+pl.facing*COMPANION_DEPLOY_DISTANCE,30,activeWorldW-30);
             const summonGround=companionSurfaceAt(summonX,pl.y+PH,map)??pl.y+PH;
-            ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=summonX;ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.recallStarted=0;ally.teleportAt=0;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;ally.health=ally.maxHealth;
+            ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=summonX;ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.recallStarted=0;ally.teleportAt=0;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;
+            ally.maxHealth=item.id===SUNSET_JACKAL_CARD.id?JACKAL_MAX_HEALTH:DRAGON_MAX_HEALTH;ally.health=ally.maxHealth;
             const direction:1|-1=summonX>=pl.x?1:-1;companionCastRef.current={started:now,kind:"summon",direction};pl.facing=direction;setDeployedItemId(item.id);tone(330,.18,.024);window.setTimeout(()=>tone(620,.22,.022),170);window.setTimeout(()=>tone(940,.28,.02),420);
           }
         }
@@ -1214,10 +1522,14 @@ export default function AshfallGame() {
       updateCompanion(dt,now);
       const cardReady=map===1&&dragon.health<=0&&!dragonCardCollected&&now-dragon.modeStarted>900;
       const nearDragonCard=cardReady&&Math.abs(pl.x-dragon.x)<105&&Math.abs((pl.y+PH)-dragon.groundY)<85;
+      const readyJackal=map===2&&!jackalCardCollected?jackals.find(jackal=>jackal.health<=0&&now-jackal.modeStarted>900&&Math.abs(pl.x-jackal.x)<105&&Math.abs((pl.y+PH)-jackal.groundY)<85):undefined;
       if(pickupQueued.current){
         if(nearDragonCard&&collectInventoryItem(BABY_DRAGON_CARD)){
           dragonCardCollected=true;toggleEquippedItem(BABY_DRAGON_CARD.id);
           tone(760,.16,.025);window.setTimeout(()=>tone(1040,.22,.018),90);
+        }else if(readyJackal&&collectInventoryItem(SUNSET_JACKAL_CARD)){
+          jackalCardCollected=true;toggleEquippedItem(SUNSET_JACKAL_CARD.id);
+          tone(640,.16,.024);window.setTimeout(()=>tone(980,.22,.018),90);
         }
         pickupQueued.current=false;
       }
@@ -1231,6 +1543,7 @@ export default function AshfallGame() {
       let action="";
       if(!dialogueRef.current){
         if(nearDragonCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Baby Dragon card";
+        else if(readyJackal)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Sunset Jackal card";
         else if(map===1&&Math.abs(pl.x-(MAP1_PORTAL_X+55))<145)action="Enter Map 2";
         else if(map===2&&Math.abs(pl.x-(MAP2_PORTAL_X+55))<145)action="Return to Map 1";
       }
