@@ -1,0 +1,14 @@
+  palette:{dark:"#2a120c",mid:"#7a3118",accent:"#f08a3a",glow:"#ffd27a"}
+};
+const FOX_MAX_HEALTH = 55;
+const FOX_ATTACK_DAMAGE = 7;
+const FOX_RENDER_SIZE = 78;
+const CINDER_FOX_CARD:InventoryItem = {id:"cinder-fox-card",name:"Cinder Fox",type:"animal-card",description:"An ember fox spirit from Ash Hollow.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#1a0a08",mid:"#6a2414",accent:"#ff7a3a",glow:"#ffc08a"}};
+const STAG_MAX_HEALTH = 95;
+const STAG_ATTACK_DAMAGE = 10;
+const STAG_RENDER_SIZE = 118;
+const PALE_STAG_CARD:InventoryItem = {id:"pale-stag-card",name:"Pale Stag",type:"animal-card",description:"A moonwell stag spirit from the cliffs.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#0b1418",mid:"#2a4a55",accent:"#8ee7ff",glow:"#d7fbff"}};
+const CAMPAIGN_OPENING:Line[] = [{speaker:"Moon Night",text:"The rain carries a signal. Something in Ashfall is still calling."},{speaker:"Moon Night",text:"Follow the echo through castle, shore, ash, and moonwell. Press E for cards, Q to deploy."}];
+const MAP_STORY:Record<MapId,{name:string;objective:string;intro:Line[]}> = {1:{name:"The Signal in the Rain",objective:"Find the baby dragon in the rain, then take the far-right portal.",intro:[{speaker:"Moon Night",text:"Moonlit stone. A young ash dragon hunts these ruins."}]},2:{name:"Sunset Shore",objective:"Track the Sunset Jackals, then take the eastern portal to Ash Hollow.",intro:[{speaker:"Moon Night",text:"The shore burns gold. Bind a jackal, then push east."}]},3:{name:"Ash Hollow",objective:"Bind a Cinder Fox, then reach the moonwell gate.",intro:[{speaker:"Moon Night",text:"Foxfire moves through the ash."}]},4:{name:"Moonwell Cliffs",objective:"Face the Pale Stag. Maps 5 and 6 are still sealed.",intro:[{speaker:"Moon Night",text:"The far gate is sealed. Maps 5 and 6 still wait."}]},5:{name:"The Quiet Ember",objective:"Reserved for Game Builder 2.",intro:[{speaker:"Moon Night",text:"Not open yet."}]},6:{name:"Ashfall's Heart",objective:"Reserved for Game Builder 2.",intro:[{speaker:"Moon Night",text:"The last echo is still unwritten."}]}};
+const SEALED_GATE_LINES:Line[] = [{speaker:"Moon Night",text:"The gate answers, but Maps 5 and 6 are not open yet."}];
+const cardStats = (id:string|null) => id===SUNSET_JACKAL_CARD.id?{hp:JACKAL_MAX_HEALTH,ground:true as const,kind:"jackal"}:id===CINDER_FOX_CARD.id?{hp:FOX_MAX_HEALTH,ground:true as const,kind:"fox"}:id===PALE_STAG_CARD.id?{hp:STAG_MAX_HEALTH,ground:true as const,kind:"stag"}:{hp:DRAGON_MAX_HEALTH,ground:false as const,kind:"dragon"};
