@@ -1,0 +1,12 @@
+    const jackals:Jackal[]=[
+      createJackal("sunset-jackal-a",980,720,1280),
+      createJackal("sunset-jackal-b",1880,1580,2280),
+      createJackal("sunset-jackal-c",2860,2520,3320)
+    ];
+    const ashWargs=createAshWargs(last);
+    const emberWyrmling=createEmberWyrmling(last);
+    let playerHurtUntil=0,playerRespawnAt=0,dragonCardCollected=inventoryRef.current.some(item=>item.id===BABY_DRAGON_CARD.id);
+    let jackalCardCollected=inventoryRef.current.some(item=>item.id===SUNSET_JACKAL_CARD.id);
+    let wargCardCollected=inventoryRef.current.some(item=>item.id===ASH_WARG_CARD.id);
+    let wyrmCardCollected=inventoryRef.current.some(item=>item.id===EMBER_WYRLING_CARD.id);
+    let laterEndingShown=false;

@@ -1,0 +1,4 @@
+      }else if(readyJackal&&collectInventoryItem(SUNSET_JACKAL_CARD)){
+        jackalCardCollected=true;toggleEquippedItem(SUNSET_JACKAL_CARD.id);
+        tone(640,.16,.024);window.setTimeout(()=>tone(980,.22,.018),90);
+      }

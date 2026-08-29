@@ -1,0 +1,7 @@
+    const jackals:Jackal[]=[
+      createJackal("sunset-jackal-a",980,720,1280),
+      createJackal("sunset-jackal-b",1880,1580,2280),
+      createJackal("sunset-jackal-c",2860,2520,3320)
+    ];
+    let playerHurtUntil=0,playerRespawnAt=0,dragonCardCollected=inventoryRef.current.some(item=>item.id===BABY_DRAGON_CARD.id);
+    let jackalCardCollected=inventoryRef.current.some(item=>item.id===SUNSET_JACKAL_CARD.id);

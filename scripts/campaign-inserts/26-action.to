@@ -1,0 +1,5 @@
+    else if(map===4&&Math.abs(pl.x-(MAP4_ENTRY_X+55))<145)action="Return to Ash Hollow";
+    else if(map===4&&Math.abs(pl.x-(MAP4_EXIT_X+55))<145)action="Enter Ashfall Crater";
+    else if(map===5&&Math.abs(pl.x-(MAP5_ENTRY_X+55))<145)action="Return to Moonwell Cliffs";
+    else if(map===5&&Math.abs(pl.x-(MAP5_EXIT_X+55))<145)action="Enter the Heart of Ash";
+    else if(map===6&&Math.abs(pl.x-(MAP6_ENTRY_X+55))<145)action="Return to Ashfall Crater";

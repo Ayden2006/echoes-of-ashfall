@@ -1,0 +1,4 @@
+      else if(readyJackal)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Sunset Jackal card";
+      else if(map===5&&!wargCardCollected&&ashWargs.some(w=>w.health<=0&&now-w.modeStarted>900&&Math.abs(pl.x-w.x)<105&&Math.abs((pl.y+PH)-w.groundY)<85))action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Ash Warg card";
+      else if(map===6&&!wyrmCardCollected&&emberWyrmling.health<=0&&now-emberWyrmling.modeStarted>900&&Math.abs(pl.x-emberWyrmling.x)<105&&Math.abs((pl.y+PH)-emberWyrmling.groundY)<85)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Ember Wyrmling card";
+      else if(map===1&&Math.abs(pl.x-(MAP1_PORTAL_X+55))<145)action="Enter Map 2";

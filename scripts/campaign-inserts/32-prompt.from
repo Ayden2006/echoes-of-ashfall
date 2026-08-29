@@ -1,0 +1,2 @@
+      else if(readyJackal)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Sunset Jackal card";
+      else if(map===1&&Math.abs(pl.x-(MAP1_PORTAL_X+55))<145)action="Enter Map 2";

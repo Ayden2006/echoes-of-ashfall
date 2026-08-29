@@ -1,0 +1,6 @@
+    updateDragon(dt,now);updateJackals(dt,now);
+    const laterHooks={dt,now,map,started:startedRef.current,player:pl,PH,swingStarted:actionStartedAt.current,swingUntil:actionUntil.current,swingDamage:activeAttackDamage.current,swingAngle:attackAngle.current,playerRespawnAt,setPlayerHealth:(hp:number)=>{pl.health=hp;},setPlayerHurtUntil:(n:number)=>{playerHurtUntil=n;},setPlayerRespawnAt:(n:number)=>{playerRespawnAt=n;},companionAttack:(tx:number,t:number)=>commandCompanionAttack(tx,t),tone};
+    updateAshWargs(ashWargs,laterHooks);
+    updateEmberWyrmling(emberWyrmling,laterHooks);
+    playerRespawnAt=laterHooks.playerRespawnAt;
+    if(map===6&&emberWyrmling.health<=0&&!laterEndingShown&&now-emberWyrmling.modeStarted>1100){laterEndingShown=true;dialogueRef.current=MAP6_ENDING;dialogueIndexRef.current=0;setDialogue(MAP6_ENDING);setDialogueIndex(0);setObjective("Moon Night still has a road home. Return west when you are ready.");}

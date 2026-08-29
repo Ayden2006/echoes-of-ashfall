@@ -1,0 +1,1 @@
+      const jackalAlly=ally.itemId===SUNSET_JACKAL_CARD.id;

@@ -1,0 +1,2 @@
+    const drawBackdrop=(w:number,h:number,now:number,map:MapId)=>{
+      if(map===5||map===6){drawLaterActBackdrop(ctx,w,h,now,map,cameraX,worldWidthFor(map));return;}

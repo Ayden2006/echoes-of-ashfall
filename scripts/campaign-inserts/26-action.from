@@ -1,0 +1,2 @@
+    else if(map===4&&Math.abs(pl.x-(MAP4_ENTRY_X+55))<145)action="Return to Ash Hollow";
+    else if(map===4&&Math.abs(pl.x-(MAP4_EXIT_X+55))<145)action="The path ahead is sealed";
