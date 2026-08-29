@@ -1,0 +1,15 @@
+    const jackals:Jackal[]=[
+      createJackal("sunset-jackal-a",980,720,1280),
+      createJackal("sunset-jackal-b",1880,1580,2280),
+      createJackal("sunset-jackal-c",2860,2520,3320)
+    ];
+    const createBeast=(id:string,x:number,patrolMin:number,patrolMax:number,health:number,damage:number):Jackal=>({...createJackal(id,x,patrolMin,patrolMax),health,maxHealth:health,attackDamage:damage,y:590,groundY:590});
+    const foxes:Jackal[]=[
+      createBeast("cinder-fox-a",920,620,1480,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE),
+      createBeast("cinder-fox-b",2480,2100,3300,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE)
+    ];
+    const stags:Jackal[]=[
+      createBeast("pale-stag-a",1760,1180,2680,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE)
+    ];
+    const wildPackFor=(map:MapId)=>map===2?jackals:map===3?foxes:map===4?stags:null;
+    const wildCardFor=(map:MapId)=>map===2?SUNSET_JACKAL_CARD:map===3?CINDER_FOX_CARD:map===4?PALE_STAG_CARD:null;
