@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/apply-sunset-jackals.mjs'
+      - 'scripts/jackal-patch/**'
       - 'scripts/jackal-payload/**'
       - '.github/workflows/apply-sunset-jackals.yml'
   workflow_dispatch:
