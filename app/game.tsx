@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Heart, Volume2, VolumeX } from "lucide-react";
+import { Heart, LockKeyhole, Map as MapIcon, Volume2, VolumeX, X } from "lucide-react";
 
 type Line = { speaker: string; text: string };
 type MapId = 1|2;
@@ -110,11 +110,18 @@ const map1Platforms: Platform[] = [
   {x:3648,y:535,w:534,h:235},{x:4158,y:575,w:1042,h:195},
   {x:1020,y:475,w:170,h:18},{x:2260,y:470,w:160,h:18},{x:3320,y:455,w:180,h:18}
 ];
-const map2Platforms: Platform[] = [{x:0,y:590,w:MAP2_W,h:180}];
+const map2Platforms: Platform[] = [
+  {x:0,y:590,w:535,h:180},{x:500,y:568,w:470,h:202},{x:940,y:588,w:410,h:182},
+  {x:1320,y:562,w:455,h:208},{x:1740,y:538,w:430,h:232},{x:2140,y:560,w:430,h:210},
+  {x:2540,y:585,w:420,h:185},{x:2925,y:558,w:405,h:212},{x:3295,y:578,w:305,h:192},
+  {x:610,y:466,w:150,h:18},{x:1140,y:472,w:180,h:18},{x:1515,y:430,w:155,h:18},
+  {x:2245,y:445,w:200,h:18},{x:2750,y:468,w:165,h:18},{x:3140,y:438,w:150,h:18}
+];
 const clamp = (n:number,a:number,b:number) => Math.max(a,Math.min(b,n));
 const rgbaFromHex = (hex:string,alpha:number) => {const value=parseInt(hex.replace("#",""),16);return `rgba(${value>>16},${value>>8&255},${value&255},${alpha})`;};
 const worldWidthFor = (map:MapId) => map===1?MAP1_W:MAP2_W;
 const platformsFor = (map:MapId) => map===1?map1Platforms:map2Platforms;
+const surfaceYAt=(map:MapId,x:number,currentY:number)=>{const surfaces=platformsFor(map).filter(p=>p.h>80&&x>=p.x&&x<=p.x+p.w);if(!surfaces.length)return null;return surfaces.reduce((best,p)=>Math.abs(p.y-currentY)<Math.abs(best.y-currentY)?p:best).y;};
 
 export default function AshfallGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -143,6 +150,8 @@ export default function AshfallGame() {
   const deployQueued = useRef(false);
   const companionCastRef = useRef<{started:number;kind:"summon"|"recall"|null;direction:1|-1}>({started:0,kind:null,direction:1});
   const inventoryOpenRef = useRef(false);
+  const worldMapOpenRef = useRef(false);
+  const unlockedMapsRef = useRef<Set<MapId>>(new Set<MapId>([1]));
   const inventoryRef = useRef<InventoryItem[]>([]);
   const equippedRef = useRef<(string|null)[]>(Array(ACTIVE_SLOT_COUNT).fill(null));
   const selectedSlotRef = useRef(0);
@@ -159,6 +168,9 @@ export default function AshfallGame() {
   const [health,setHealth] = useState(MAX_HEALTH);
   const [stamina,setStamina] = useState(MAX_STAMINA);
   const [inventoryOpen,setInventoryOpen] = useState(false);
+  const [worldMapOpen,setWorldMapOpen] = useState(false);
+  const [unlockedMaps,setUnlockedMaps] = useState<MapId[]>([1]);
+  const [mapProgress,setMapProgress] = useState(4);
   const [inventory,setInventory] = useState<InventoryItem[]>([]);
   const [equipped,setEquipped] = useState<(string|null)[]>(Array(ACTIVE_SLOT_COUNT).fill(null));
   const [selectedSlot,setSelectedSlot] = useState(0);
@@ -172,10 +184,13 @@ export default function AshfallGame() {
     if(!startedRef.current)return;
     setInventoryOpen(open=>{
       const next=!open;inventoryOpenRef.current=next;
+      if(next&&worldMapOpenRef.current){worldMapOpenRef.current=false;setWorldMapOpen(false);}
       keys.current={};jumpQueued.current=false;slideQueued.current=false;
       return next;
     });
   },[]);
+
+  const toggleWorldMap=useCallback(()=>{if(!startedRef.current)return;setWorldMapOpen(open=>{const next=!open;worldMapOpenRef.current=next;if(next&&inventoryOpenRef.current){inventoryOpenRef.current=false;setInventoryOpen(false);}keys.current={};jumpQueued.current=false;slideQueued.current=false;return next;});},[]);
 
   const collectInventoryItem = useCallback((item:InventoryItem)=>{
     if(inventoryRef.current.some(existing=>existing.id===item.id))return true;
@@ -220,6 +235,7 @@ export default function AshfallGame() {
   },[tone]);
 
   const enterMap = useCallback((map:MapId) => {
+    if(!unlockedMapsRef.current.has(map)){unlockedMapsRef.current.add(map);setUnlockedMaps(Array.from(unlockedMapsRef.current).sort((a,b)=>a-b));}
     mapRef.current=map;setMapNumber(map);
     dialogueRef.current=null;setDialogue(null);
     const pl=player.current;
@@ -267,7 +283,7 @@ export default function AshfallGame() {
   },[]);
 
   const attack = useCallback(() => {
-    if (!startedRef.current||dialogueRef.current||inventoryOpenRef.current) return;
+    if (!startedRef.current||dialogueRef.current||inventoryOpenRef.current||worldMapOpenRef.current) return;
     const now=performance.now();
     if(staminaRef.current<SWORD_STAMINA_COST){tone(72,.12,.018);return;}
     staminaRef.current=Math.max(0,staminaRef.current-SWORD_STAMINA_COST);
@@ -284,7 +300,8 @@ export default function AshfallGame() {
       const k=e.key.toLowerCase(); keys.current[k]=true;
       if (["arrowleft","arrowright","arrowup","arrowdown"," ","tab"].includes(k)) e.preventDefault();
       if(k==="tab"&&!e.repeat){toggleInventory();return;}
-      if(inventoryOpenRef.current){keys.current[k]=false;return;}
+      if(k==="m"&&!e.repeat){toggleWorldMap();return;}
+      if(inventoryOpenRef.current||worldMapOpenRef.current){keys.current[k]=false;return;}
       if(startedRef.current&&/^[1-5]$/.test(k)&&!e.repeat){selectUsableSlot(Number(k)-1);return;}
       if(startedRef.current&&k==="q"&&!e.repeat){deployQueued.current=true;return;}
       if (!startedRef.current && (k==="enter"||k===" ")) startGame();
@@ -300,12 +317,12 @@ export default function AshfallGame() {
     window.addEventListener("keydown",down,{passive:false}); window.addEventListener("keyup",up);
     window.addEventListener("pointermove",aim,{passive:true});
     return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up);window.removeEventListener("pointermove",aim);};
-  },[advanceDialogue,interact,selectUsableSlot,startGame,toggleInventory,updateAim]);
+  },[advanceDialogue,interact,selectUsableSlot,startGame,toggleInventory,toggleWorldMap,updateAim]);
 
   useEffect(()=>{
     const canvas=canvasRef.current, ctx=canvas?.getContext("2d");
     if (!canvas||!ctx) return;
-    let raf=0,last=performance.now(),cameraX=0,lastAction="",lastHealth=player.current.health,lastStamina=Math.round(staminaRef.current);
+    let raf=0,last=performance.now(),cameraX=0,lastAction="",lastHealth=player.current.health,lastStamina=Math.round(staminaRef.current),lastMapProgress=-1,lastHudMap:MapId=1;
     const backdrop=new Image(); backdrop.src="/pixel-castle-night.png";
     const beachBackdrop=new Image(); beachBackdrop.src="/map2-sunset-beach.png";
     const knight=new Image(); knight.src="/knight-sprite-sheet.png";
@@ -321,6 +338,7 @@ export default function AshfallGame() {
       createJackal("sunset-jackal-b",1880,1580,2280),
       createJackal("sunset-jackal-c",2860,2520,3320)
     ];
+    for(const jackal of jackals){const ground=surfaceYAt(2,jackal.x,jackal.groundY);if(ground!==null){jackal.groundY=ground;jackal.y=ground;}}
     let playerHurtUntil=0,playerRespawnAt=0,dragonCardCollected=inventoryRef.current.some(item=>item.id===BABY_DRAGON_CARD.id);
     let jackalCardCollected=inventoryRef.current.some(item=>item.id===SUNSET_JACKAL_CARD.id);
     const eyeLayer=document.createElement("canvas"),eyeLayerCtx=eyeLayer.getContext("2d");
@@ -421,14 +439,12 @@ export default function AshfallGame() {
         const storm=(now%17000);
         if(storm>15600&&storm<15830){const flash=Math.sin((storm-15600)/230*Math.PI)*.055;ctx.fillStyle="rgba(190,204,226,"+flash+")";ctx.fillRect(0,0,w,h);}
       }else{
-        for(let i=0;i<18;i++){
-          const waveY=h*(.55+(i%4)*.037),waveX=((i*173+now*.015*(1+i%3))%(w+180))-90;
-          const sparkle=.16+Math.max(0,Math.sin(now*.003+i))* .38;
-          ctx.fillStyle="rgba(255,226,154,"+sparkle+")";ctx.fillRect(waveX,waveY,8+(i%4)*5,2);
-        }
-        const warmth=ctx.createLinearGradient(0,h*.58,0,h);
-        warmth.addColorStop(0,"rgba(255,190,102,0)");warmth.addColorStop(1,"rgba(153,75,47,.14)");
-        ctx.fillStyle=warmth;ctx.fillRect(0,h*.58,w,h*.42);
+        const sunX=w*.72-cameraX*.022,sunY=h*.22;
+        const sunGlow=ctx.createRadialGradient(sunX,sunY,8,sunX,sunY,185);sunGlow.addColorStop(0,"rgba(255,239,184,.24)");sunGlow.addColorStop(.34,"rgba(255,173,99,.11)");sunGlow.addColorStop(1,"rgba(255,150,83,0)");ctx.fillStyle=sunGlow;ctx.fillRect(sunX-210,sunY-210,420,420);
+        for(let i=0;i<5;i++){const cloudX=((i*310-now*(.006+i*.001))%(w+520))-260,cloudY=h*(.13+i*.055);const cloud=ctx.createRadialGradient(cloudX,cloudY,16,cloudX,cloudY,150+i*22);cloud.addColorStop(0,"rgba(91,61,91,"+(.11+i*.008)+")");cloud.addColorStop(1,"rgba(91,61,91,0)");ctx.fillStyle=cloud;ctx.fillRect(cloudX-220,cloudY-90,440,180);}
+        for(let i=0;i<24;i++){const waveY=h*(.51+(i%5)*.031),waveX=((i*173+now*.015*(1+i%3))%(w+180))-90,sparkle=.14+Math.max(0,Math.sin(now*.003+i))*.42;ctx.fillStyle="rgba(255,229,166,"+sparkle+")";ctx.fillRect(waveX,waveY,8+(i%4)*6,2);}
+        const seaMist=ctx.createLinearGradient(0,h*.43,0,h*.68);seaMist.addColorStop(0,"rgba(255,214,173,0)");seaMist.addColorStop(.55,"rgba(255,214,173,.065)");seaMist.addColorStop(1,"rgba(255,214,173,0)");ctx.fillStyle=seaMist;ctx.fillRect(0,h*.42,w,h*.28);
+        const warmth=ctx.createLinearGradient(0,h*.58,0,h);warmth.addColorStop(0,"rgba(255,190,102,0)");warmth.addColorStop(1,"rgba(120,54,46,.22)");ctx.fillStyle=warmth;ctx.fillRect(0,h*.58,w,h*.42);
       }
     };
     const findActualEyeBand=(f:{x:number;y:number;w:number;h:number})=>{
@@ -834,6 +850,7 @@ export default function AshfallGame() {
       if(!startedRef.current||mapRef.current!==2)return;
       const pl=player.current;
       for(const jackal of jackals){
+        const terrainY=surfaceYAt(2,jackal.x,jackal.groundY);if(terrainY!==null)jackal.groundY+=(terrainY-jackal.groundY)*(1-Math.exp(-13*dt));
         if(jackal.health<=0){
           jackal.angry=false;jackal.vx+=(0-jackal.vx)*(1-Math.exp(-7*dt));jackal.x+=jackal.vx*dt;
           jackal.y+=(jackal.groundY-jackal.y)*(1-Math.exp(-8*dt));
@@ -1014,10 +1031,11 @@ export default function AshfallGame() {
       const lunge=attack>0.32&&attack<.72?(attack-.32)/.4:0;
       const tail = sleep ? 0.9 : mode==="attack" ? -0.55 : 0.35+Math.sin(now*.008+elapsed*.01)*0.55;
       const earFlick = Math.sin(now*.012+elapsed*.004)>0.82?0.35:0;
+      const footLift=(sleep?15:27)*scale;
+      ctx.save();ctx.translate(x,groundY+3);ctx.scale(1,.32);
+      const shadow=ctx.createRadialGradient(0,0,2,0,0,30*scale);shadow.addColorStop(0,"rgba(38,15,10,"+(0.48-leap*.22)+")");shadow.addColorStop(1,"rgba(38,15,10,0)");ctx.fillStyle=shadow;ctx.beginPath();ctx.arc(0,0,30*scale,0,Math.PI*2);ctx.fill();ctx.restore();
       ctx.save();
-      ctx.fillStyle="rgba(48,18,10,"+(0.45-leap*0.25)+")";
-      ctx.beginPath();ctx.ellipse(x,groundY+3,22*(1-leap*.4)*scale,5*(1-leap*.35)*scale,0,0,Math.PI*2);ctx.fill();
-      ctx.translate(x+facing*lunge*18,y-bob-leap*8);
+      ctx.translate(x+facing*lunge*18,y-bob-leap*8-footLift);
       ctx.rotate(facing*(sleep?0.15:mode==="fly"?-0.28:mode==="attack"?-0.12+lunge*0.35:gait*0.04));
       ctx.scale(facing*scale,scale);
       const fur="#c45a28",furDark="#6b2e18",furLight="#f0a056",chest="#ffd2a0",outline="#2a1410",eye="#ffe27a";
@@ -1037,14 +1055,15 @@ export default function AshfallGame() {
       }
       const frontSwing=mode==="idle"?0.08:mode==="fly"?0.7:gait*0.7;
       const backSwing=mode==="idle"?-0.08:mode==="fly"?-0.55:-gait*0.7;
-      drawLimb(-12,8,6,18,backSwing);drawLimb(-6,8,6,17,backSwing*0.7+0.15);
+      ctx.save();ctx.globalAlpha=.7;ctx.translate(-1,1.5);drawLimb(-12,8,6,18,backSwing);drawLimb(-6,8,6,17,backSwing*0.7+0.15);ctx.restore();
       ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(0,-6,20,13,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle=fur;ctx.beginPath();ctx.ellipse(0,-6,18,11.5,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle=furLight;ctx.beginPath();ctx.ellipse(3,-8,12,7,0,0,Math.PI*2);ctx.fill();
+      const bodyShade=ctx.createLinearGradient(-8,-20,9,13);bodyShade.addColorStop(0,furLight);bodyShade.addColorStop(.28,fur);bodyShade.addColorStop(.76,"#a74623");bodyShade.addColorStop(1,furDark);ctx.fillStyle=bodyShade;ctx.beginPath();ctx.ellipse(0,-6,18,11.5,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="rgba(255,207,128,.36)";ctx.beginPath();ctx.ellipse(2,-11,10,3.4,-.08,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=chest;ctx.beginPath();ctx.ellipse(8,-2,8,7,0,0,Math.PI*2);ctx.fill();
       ctx.save();ctx.translate(-16,-6);ctx.rotate(tail);ctx.fillStyle=outline;ctx.fillRect(-3,-3,20,8);ctx.fillStyle=furDark;ctx.fillRect(-2,-2,18,6);ctx.fillStyle=furLight;ctx.fillRect(10,-1,7,4);ctx.restore();
       ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(16,-14,11,9,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle=fur;ctx.beginPath();ctx.ellipse(16,-14,9.5,7.5,0,0,Math.PI*2);ctx.fill();
+      const headShade=ctx.createLinearGradient(11,-22,23,-7);headShade.addColorStop(0,furLight);headShade.addColorStop(.4,fur);headShade.addColorStop(1,furDark);ctx.fillStyle=headShade;ctx.beginPath();ctx.ellipse(16,-14,9.5,7.5,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#f6ad62";ctx.beginPath();ctx.ellipse(15,-18,5.8,2.1,-.12,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=furLight;ctx.fillRect(20,-16,7,5);
       ctx.fillStyle=outline;ctx.fillRect(26,-15,4,3);
       ctx.fillStyle="#1a0c08";ctx.fillRect(27,-14,3,2);
@@ -1352,7 +1371,7 @@ export default function AshfallGame() {
         ctx.save();ctx.shadowColor=hurtActive?"rgba(255,220,140,.9)":jackal.mode==="attack"?"rgba(255,170,70,.55)":jackal.angry?"rgba(255,90,40,.5)":"rgba(240,138,58,.2)";ctx.shadowBlur=hurtActive?18:jackal.angry?12:6;
         drawPixelJackal(jackal.x+recoilX,jackal.y,jackal.groundY,jackal.facing,jackal.mode,elapsed,now,JACKAL_RENDER_SIZE,hurtActive);
         ctx.restore();
-        const barW=78,barH=8,barX=jackal.x+recoilX-barW/2,barY=jackal.y-68;
+        const barW=78,barH=8,barX=jackal.x+recoilX-barW/2,barY=jackal.groundY-112;
         const healthRatio=clamp(jackal.health/jackal.maxHealth,0,1);
         const healthLabel=(jackal.angry?"ANGRY  ":"")+"SUNSET JACKAL  "+jackal.health+" / "+jackal.maxHealth;
         ctx.save();
@@ -1409,6 +1428,17 @@ export default function AshfallGame() {
         ctx.fillStyle=map===1?"rgba(113,139,165,"+shimmer+")":"rgba(255,218,145,"+(shimmer+.05)+")";ctx.fillRect(p.x,p.y+9,p.w,3);
       }
     };
+    const drawShoreScenery=(now:number,viewW:number)=>{
+      const props=[{x:420,t:0,s:1},{x:760,t:1,s:1.15},{x:1080,t:0,s:.8},{x:1375,t:2,s:1},{x:1690,t:1,s:.9},{x:2060,t:0,s:1.15},{x:2380,t:3,s:1},{x:2710,t:1,s:1.25},{x:3030,t:0,s:.9},{x:3360,t:1,s:.8}];
+      for(const p of props){if(p.x<cameraX-160||p.x>cameraX+viewW+160)continue;const ground=surfaceYAt(2,p.x,590)??590;ctx.save();ctx.translate(p.x,ground);ctx.scale(p.s,p.s);
+        if(p.t===0){ctx.strokeStyle="rgba(91,76,51,.82)";ctx.lineWidth=3;for(let b=-3;b<=3;b++){const sway=Math.sin(now*.0028+p.x*.01+b)*4;ctx.beginPath();ctx.moveTo(b*5,0);ctx.quadraticCurveTo(b*5+sway*.3,-18,b*5+sway,-34-Math.abs(b)*2);ctx.stroke();}}
+        else if(p.t===1){const rock=ctx.createLinearGradient(-30,-55,26,2);rock.addColorStop(0,"#c88b61");rock.addColorStop(.44,"#8a5c4f");rock.addColorStop(1,"#3f3438");ctx.fillStyle=rock;ctx.beginPath();ctx.moveTo(-34,0);ctx.lineTo(-27,-30);ctx.lineTo(-10,-48);ctx.lineTo(17,-40);ctx.lineTo(32,-16);ctx.lineTo(27,0);ctx.closePath();ctx.fill();ctx.fillStyle="rgba(255,211,142,.24)";ctx.beginPath();ctx.moveTo(-22,-29);ctx.lineTo(-9,-43);ctx.lineTo(10,-36);ctx.lineTo(-2,-30);ctx.closePath();ctx.fill();}
+        else if(p.t===2){ctx.fillStyle="#665253";ctx.fillRect(-44,-84,18,84);ctx.fillRect(27,-84,18,84);ctx.fillRect(-44,-84,89,16);ctx.fillStyle="#8b6c61";ctx.fillRect(-39,-79,10,72);ctx.fillRect(31,-79,9,72);ctx.fillStyle="rgba(255,196,119,.2)";ctx.fillRect(-38,-79,76,4);}
+        else{ctx.rotate(-.08);ctx.fillStyle="#493638";ctx.fillRect(-58,-12,116,13);ctx.fillRect(-32,-28,74,9);ctx.fillStyle="#6d4b42";ctx.fillRect(-48,-16,82,5);ctx.strokeStyle="#37292e";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(27,-20);ctx.lineTo(45,-63);ctx.stroke();ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(44,-60);ctx.lineTo(69,-26);ctx.stroke();}
+        ctx.restore();
+      }
+      ctx.fillStyle="rgba(42,28,31,.16)";ctx.beginPath();ctx.moveTo(cameraX-80,640);for(let x=cameraX-80;x<cameraX+viewW+120;x+=90)ctx.lineTo(x,622-Math.sin(x*.007+now*.00015)*12);ctx.lineTo(cameraX+viewW+120,WORLD_H);ctx.lineTo(cameraX-80,WORLD_H);ctx.closePath();ctx.fill();
+    };
     const drawPortal=(x:number,groundY:number,now:number,map:MapId)=>{
       const cx=x+55,cy=groundY-91,pulse=.34+Math.sin(now*.0022)*.1;
       const portalColor=map===1?"116,230,226":"255,185,104";
@@ -1449,11 +1479,8 @@ export default function AshfallGame() {
         ctx.globalAlpha=1;
         for(const m of motes){const a=.25+.35*Math.sin(now*.0015+m.p);ctx.fillStyle="rgba(116,230,226,"+a+")";ctx.beginPath();ctx.arc(m.x,m.y+Math.sin(m.p+now*.001)*14,2.2,0,Math.PI*2);ctx.fill();}
       }else{
-        drawPortal(MAP2_PORTAL_X,590,now,map);
-        for(let sx=430;sx<MAP2_W;sx+=173){
-          const twinkle=.18+Math.max(0,Math.sin(now*.0021+sx*.01))*.4;
-          ctx.fillStyle="rgba(255,226,165,"+twinkle+")";ctx.fillRect(sx,582-(sx%3),5+(sx%4),2);
-        }
+        drawPortal(MAP2_PORTAL_X,590,now,map);drawShoreScenery(now,viewW);
+        for(let sx=430;sx<MAP2_W;sx+=173){const surface=surfaceYAt(2,sx,590)??590,twinkle=.18+Math.max(0,Math.sin(now*.0021+sx*.01))*.4;ctx.fillStyle="rgba(255,226,165,"+twinkle+")";ctx.fillRect(sx,surface-8-(sx%3),5+(sx%4),2);}
       }
       ctx.globalAlpha=1;
       if(portalFlashUntil.current>now){ctx.fillStyle="rgba(255,244,214,"+((portalFlashUntil.current-now)/430*.18)+")";ctx.fillRect(cameraX,0,viewW,WORLD_H);}
@@ -1462,12 +1489,13 @@ export default function AshfallGame() {
     };
     const frame=(now:number)=>{
       const dt=Math.min((now-last)/1000,.032);last=now;const w=canvas.clientWidth,h=canvas.clientHeight,scale=Math.max(w/1280,h/WORLD_H),pl=player.current,map=mapRef.current,activeWorldW=worldWidthFor(map);
+      const hudProgress=Math.round(clamp(pl.x/activeWorldW*100,0,100));if(map!==lastHudMap||lastMapProgress<0||Math.abs(hudProgress-lastMapProgress)>=2){lastHudMap=map;lastMapProgress=hudProgress;setMapProgress(hudProgress);}
       if(actionUntil.current<=now)activeAttackDamage.current=0;
       if(pl.health!==lastHealth){lastHealth=pl.health;setHealth(pl.health);}
       if(startedRef.current&&staminaRef.current<MAX_STAMINA&&now-staminaUsedAt.current>=STAMINA_REGEN_DELAY){staminaRef.current=Math.min(MAX_STAMINA,staminaRef.current+STAMINA_REGEN_PER_SECOND*dt);}
       const displayedStamina=Math.round(staminaRef.current);
       if(displayedStamina!==lastStamina){lastStamina=displayedStamina;setStamina(displayedStamina);}
-      if(startedRef.current&&!dialogueRef.current&&!inventoryOpenRef.current&&playerRespawnAt===0){
+      if(startedRef.current&&!dialogueRef.current&&!inventoryOpenRef.current&&!worldMapOpenRef.current&&playerRespawnAt===0){
         const left=keys.current.a||keys.current.arrowleft,right=keys.current.d||keys.current.arrowright,target=(right?1:0)-(left?1:0),down=keys.current.s||keys.current.arrowdown;
         const wasGrounded=pl.grounded;
         const wantsSlide=slideQueued.current;slideQueued.current=false;
@@ -1597,6 +1625,16 @@ export default function AshfallGame() {
       </div>
       {started&&<div className="objective"><p className="objective-label">Current objective</p><p className="objective-copy">{objective}</p></div>}
     </div>
+    {started&&<button className="world-map-button" onClick={toggleWorldMap} aria-label="Open world map"><MapIcon size={16}/><span>World Map</span><kbd>M</kbd></button>}
+    {worldMapOpen&&<section className="world-map-screen" role="dialog" aria-modal="true" aria-label="Ashfall world map"><div className="world-map-panel">
+      <header className="world-map-header"><div><p>Exploration map</p><h2>Ashfall</h2><small>Only places you have reached are revealed.</small></div><button onClick={toggleWorldMap} aria-label="Close world map"><X size={18}/><span>Close</span></button></header>
+      <div className="world-map-route">
+        <article className={"world-map-region map-one "+(mapNumber===1?"current":"")}><span className="world-map-number">01</span><div className="world-map-region-copy"><p>Map 1</p><h3>The Signal in the Rain</h3><small>Storm ruins · castle road</small></div>{mapNumber===1&&<span className="world-map-player" style={{left:clamp(mapProgress,5,95)+"%"}}><i/><b>You</b></span>}</article>
+        <div className={"world-map-link "+(unlockedMaps.includes(2)?"open":"locked")}><span/><b>{unlockedMaps.includes(2)?"Route discovered":"Fog"}</b></div>
+        {unlockedMaps.includes(2)?<article className={"world-map-region map-two "+(mapNumber===2?"current":"")}><span className="world-map-number">02</span><div className="world-map-region-copy"><p>Map 2</p><h3>Sunset Shore</h3><small>Dunes · tide ruins · jackal territory</small></div>{mapNumber===2&&<span className="world-map-player" style={{left:clamp(mapProgress,5,95)+"%"}}><i/><b>You</b></span>}</article>:<article className="world-map-region world-map-fog"><LockKeyhole size={28}/><strong>Unknown region</strong><small>Reach the far portal to reveal what lies beyond.</small></article>}
+      </div>
+      <footer className="world-map-footer"><span>Current location</span><strong>Map {mapNumber} · {mapProgress}% across this route</strong><small>Press M to close</small></footer>
+    </div></section>}
     <section className={"title-screen "+(started?"hidden":"")} aria-hidden={started}>
       <div className="title-card"><p className="title-kicker">A story begins</p><h1 className="game-title">Echoes<br/>of Ashfall<span>Chapter Zero</span></h1><button className="start-button" onClick={startGame}>Enter Ashfall</button><p className="start-hint">Headphones recommended · Best played fullscreen</p></div>
     </section>
@@ -1632,7 +1670,7 @@ export default function AshfallGame() {
     </section>}
     {dialogue&&<div className="dialogue-wrap"><div className="dialogue-box" onClick={advanceDialogue}><p className="speaker">{dialogue[dialogueIndex]?.speaker}</p><p className="dialogue-text">{dialogue[dialogueIndex]?.text}</p><p className="continue-hint">Click or press E to continue</p></div></div>}
     {nearAction&&<div className="interaction"><span className="keycap">E</span>{nearAction}</div>}
-    <div className="controls"><span><b>A D</b> Move</span><span><b>W / Space ×2</b> Double jump</span><span><b>S</b> Crouch / slide</span><span><b>Shift</b> Run</span><span><b>Mouse 1</b> Attack</span><span><b>E</b> Interact</span><span><b>1–5 + Q</b> Select / deploy</span><span><b>Tab</b> Inventory</span></div>
+    <div className="controls"><span><b>A D</b> Move</span><span><b>W / Space ×2</b> Double jump</span><span><b>S</b> Crouch / slide</span><span><b>Shift</b> Run</span><span><b>Mouse 1</b> Attack</span><span><b>E</b> Interact</span><span><b>1–5 + Q</b> Select / deploy</span><span><b>Tab</b> Inventory</span><span><b>M</b> World map</span></div>
     <button className="sound-button" onClick={toggleSound} aria-label={soundOn?"Mute sound":"Turn sound on"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}</button>
     <div className="touch-controls" aria-label="Touch controls">
       <div className="touch-group"><button className="touch-btn" aria-label="Move left" onPointerDown={(e)=>touch("a",true,e)} onPointerUp={(e)=>touch("a",false,e)} onPointerCancel={(e)=>touch("a",false,e)}>←</button><button className="touch-btn" aria-label="Move right" onPointerDown={(e)=>touch("d",true,e)} onPointerUp={(e)=>touch("d",false,e)} onPointerCancel={(e)=>touch("d",false,e)}>→</button></div>
