@@ -39,7 +39,26 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
       - name: Type-check game
-        run: npx tsc --noEmit
+        shell: bash
+        run: |
+          set +e
+          npx tsc --noEmit --pretty false 2>&1 | tee /tmp/world-map-tsc.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            cp /tmp/world-map-tsc.log scripts/world-map-typecheck.log
+            exit "$status"
+          fi
+      - name: Commit type-check diagnostics
+        if: failure()
+        run: |
+          if [ ! -f scripts/world-map-typecheck.log ]; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add scripts/world-map-typecheck.log
+          git commit -m 'Record world map typecheck diagnostics'
+          git push origin main
       - name: Commit verified game source
         run: |
           if git diff --quiet -- app/game.tsx app/globals.css; then
