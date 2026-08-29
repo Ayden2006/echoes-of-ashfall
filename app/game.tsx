@@ -1589,13 +1589,29 @@ export default function AshfallGame() {
             const item=inventory.find(entry=>entry.id===itemId),selected=index===selectedSlot,deployed=Boolean(item&&deployedItemId===item.id);
             return <button key={index} className={"quick-slot "+(item?"filled ":"")+(selected?"selected ":"")+(deployed?"deployed":"")} onClick={()=>selectUsableSlot(index)} aria-pressed={selected} aria-label={`Slot ${index+1}${item?`, ${item.name}${deployed?", deployed":""}`:", empty"}`}>
               <span>{index+1}</span>{item?<i className="quick-card-thumb" style={{backgroundImage:`url(${item.image})`,borderColor:item.palette.accent}}/>:<i className="quick-empty"/>}
+              {item?.type==="animal-card"&&<i className="bond-badge" style={{color:item.palette.accent}}>{Math.round(companionBonds[item.id]??0)}</i>}
             </button>;
           })}
           <small><b>1–5</b> Select · <b>Q</b> Deploy</small>
         </div>
-        <div className="chapter-mark"><span className="chapter-line"/><div><p className="eyebrow">Map {mapNumber}</p><p className="chapter-name">{mapNumber===1?"The Signal in the Rain":"Sunset Shore"}</p></div></div>
+        <div className="chapter-mark"><span className="chapter-line"/><div><p className="eyebrow">Map {mapNumber}</p><p className="chapter-name">{mapName}</p></div></div>
+        {started&&deployedItemId&&<div className="bond-meter" role="meter" aria-label={`${companionDisplayName(deployedItemId)} bond: ${Math.round(companionBonds[deployedItemId]??0)} out of ${BOND_MAX}`} aria-valuemin={0} aria-valuemax={BOND_MAX} aria-valuenow={Math.round(companionBonds[deployedItemId]??0)}>
+          <p className="bond-label"><span>{companionDisplayName(deployedItemId)}</span><span className="bond-tier">{BOND_TIER_LABEL[bondTierFor(companionBonds[deployedItemId]??0)]}</span></p>
+          <div className="bond-track"><span style={{width:`${companionBonds[deployedItemId]??0}%`}}/></div>
+        </div>}
       </div>
-      {started&&<div className="objective"><p className="objective-label">Current objective</p><p className="objective-copy">{objective}</p></div>}
+      {started&&<div className="objective-tracker">
+        <p className="objective-label">Chapter {activeChapter.id} · {activeChapter.name}</p>
+        <p className="objective-copy">{objective}</p>
+        <ul className="objective-list">
+          {activeChapter.objectives.map(o=>(
+            <li key={o.id} className={objectivesDone[o.id]?"done":"pending"}>
+              <span className="objective-check" aria-hidden="true">{objectivesDone[o.id]?"✓":""}</span>
+              <span>{o.label}</span>
+            </li>
+          ))}
+        </ul>
+      </div>}
     </div>
     <section className={"title-screen "+(started?"hidden":"")} aria-hidden={started}>
       <div className="title-card"><p className="title-kicker">A story begins</p><h1 className="game-title">Echoes<br/>of Ashfall<span>Chapter Zero</span></h1><button className="start-button" onClick={startGame}>Enter Ashfall</button><p className="start-hint">Headphones recommended · Best played fullscreen</p></div>
@@ -1613,7 +1629,7 @@ export default function AshfallGame() {
             const item=inventory.find(entry=>entry.id===itemId);
             return <button key={index} className={"active-slot "+(item?"filled ":"")+(index===selectedSlot?"selected":"")} onClick={()=>selectUsableSlot(index)} aria-pressed={index===selectedSlot} aria-label={item?`Select slot ${index+1}, ${item.name}`:`Select empty usable slot ${index+1}`}>
               <span className="slot-number">{index+1}</span>
-              {item?<><span className="inventory-card-thumb" style={{backgroundImage:`url(${item.image})`,borderColor:item.palette.accent,boxShadow:`0 0 16px ${item.palette.accent}55`}}/><strong>{item.name}</strong></>:<span className="empty-mark">+</span>}
+              {item?<><span className="inventory-card-thumb" style={{backgroundImage:`url(${item.image})`,borderColor:item.palette.accent,boxShadow:`0 0 16px ${item.palette.accent}55`}}/><strong>{item.name}</strong>{item.type==="animal-card"&&<span className="inventory-bond"><span className="bond-tier-tag">{BOND_TIER_LABEL[bondTierFor(companionBonds[item.id]??0)]}</span><span className="inventory-bond-track"><span style={{width:`${companionBonds[item.id]??0}%`}}/></span></span>}</>:<span className="empty-mark">+</span>}
             </button>;
           })}
         </div>
@@ -1623,14 +1639,66 @@ export default function AshfallGame() {
             const item=inventory[index],isEquipped=item?equipped.includes(item.id):false;
             return <button key={index} className={"inventory-slot "+(item?"filled ":"")+(isEquipped?"equipped":"")} onClick={()=>item&&toggleEquippedItem(item.id)} aria-pressed={isEquipped} aria-label={item?`${item.name}, ${isEquipped?"equipped":"stored"}`:`Empty inventory slot ${index+1}`}>
               <span className="slot-number">{index+1}</span>
-              {item&&<><span className="inventory-card-thumb" style={{backgroundImage:`url(${item.image})`,borderColor:item.palette.accent,boxShadow:`0 0 16px ${item.palette.accent}55`}}/><strong>{item.name}</strong><small>{isEquipped?"Usable":"Stored"}</small></>}
+              {item&&<><span className="inventory-card-thumb" style={{backgroundImage:`url(${item.image})`,borderColor:item.palette.accent,boxShadow:`0 0 16px ${item.palette.accent}55`}}/><strong>{item.name}</strong><small>{item.type==="animal-card"?BOND_TIER_LABEL[bondTierFor(companionBonds[item.id]??0)]:isEquipped?"Usable":"Stored"}</small></>}
             </button>;
           })}
         </div>
-        <p className="inventory-help">Press <b>1–5</b> to select a usable slot, then <b>Q</b> to deploy or recall it. Defeated animals become cards; press <b>E</b> nearby to collect them.</p>
+        <p className="inventory-help">Press <b>1–5</b> to select a usable slot, then <b>Q</b> to deploy or recall it. Defeated animals become cards; press <b>E</b> nearby to collect them. Fight alongside a companion, or press <b>E</b> while it stands idle nearby, to grow your bond and unlock passive perks.</p>
       </div>
     </section>}
-    {dialogue&&<div className="dialogue-wrap"><div className="dialogue-box" onClick={advanceDialogue}><p className="speaker">{dialogue[dialogueIndex]?.speaker}</p><p className="dialogue-text">{dialogue[dialogueIndex]?.text}</p><p className="continue-hint">Click or press E to continue</p></div></div>}
+    {dialogueLine&&<div className="dialogue-wrap">
+      <div className={"dialogue-box "+(dialogueChoices?"has-choices":"")} style={activeNpc?{borderTopColor:npcById(activeNpc).palette.accent}:undefined} onClick={dialogueChoices?undefined:advanceDialogue}>
+        <p className="speaker">{dialogueLine.speaker}</p>
+        <p className="dialogue-text">{dialogueLine.text}</p>
+        {dialogueChoices?<div className="dialogue-choices">
+          {dialogueChoices.map((choice,index)=><button key={index} className="dialogue-choice" onClick={(e)=>{e.stopPropagation();chooseDialogueOption(choice);}}>{choice.label}</button>)}
+        </div>:<p className="continue-hint">Click or press E to continue</p>}
+      </div>
+    </div>}
+    {pauseOpen&&<section className="pause-screen" role="dialog" aria-modal="true" aria-label="Paused">
+      <div className="pause-panel">
+        <p className="title-kicker">Ashfall holds still</p>
+        <h2 className="pause-title">Paused</h2>
+        <div className="pause-section">
+          <h3>Companion bonds</h3>
+          <ul className="pause-list">
+            {companionCards.map(card=>{
+              const bond=companionBonds[card.id]??0,tier=bondTierFor(bond);
+              return <li key={card.id}><span className="pause-list-name">{card.name}</span><span className="pause-list-tier" style={{color:card.palette.accent}}>{BOND_TIER_LABEL[tier]}</span><span className="pause-list-track"><span style={{width:`${bond}%`,background:card.palette.accent}}/></span></li>;
+            })}
+          </ul>
+        </div>
+        <div className="pause-section">
+          <h3>Reputation</h3>
+          <ul className="pause-list">
+            {NPCS.map(npc=>{
+              const rep=npcReputation[npc.id]??0;
+              return <li key={npc.id}><span className="pause-list-name">{npc.name}</span><span className="pause-list-tier" style={{color:npc.palette.accent}}>{REPUTATION_TIER_LABEL(rep)}</span><span className="pause-list-track"><span style={{width:`${rep}%`,background:npc.palette.accent}}/></span></li>;
+            })}
+          </ul>
+        </div>
+        <div className="pause-actions">
+          <button className="start-button" onClick={togglePause}>Resume</button>
+          <button className="pause-sound-btn" onClick={toggleSound}>{soundOn?<Volume2 size={15}/>:<VolumeX size={15}/>}{soundOn?"Mute sound":"Enable sound"}</button>
+          {endingReached&&<button className="pause-sound-btn" onClick={()=>setEndingOverlayOpen(true)}>Revisit the ending</button>}
+        </div>
+        <p className="start-hint">Press Esc to resume</p>
+      </div>
+    </section>}
+    {endingOverlayOpen&&<section className="ending-screen" role="dialog" aria-modal="true" aria-label="Ending">
+      <div className="ending-panel">
+        <p className="title-kicker">Ashfall&apos;s dawn</p>
+        <h1 className="ending-title">The Signal<br/>Goes Quiet</h1>
+        <p className="ending-copy">{endingEpilogue}</p>
+        <div className="ending-credits">
+          <p className="ending-credits-title">Echoes of Ashfall</p>
+          <p>Starring Moon Knight</p>
+          <p>With the Baby Dragon, the Sunset Jackals, and the Ember Fox</p>
+          <p>Old Tomas · Wren · Sela</p>
+        </div>
+        <button className="start-button" onClick={dismissEndingOverlay}>Continue Exploring</button>
+      </div>
+    </section>}
     {nearAction&&<div className="interaction"><span className="keycap">E</span>{nearAction}</div>}
     <div className="controls"><span><b>A D</b> Move</span><span><b>W / Space ×2</b> Double jump</span><span><b>S</b> Crouch / slide</span><span><b>Shift</b> Run</span><span><b>Mouse 1</b> Attack</span><span><b>E</b> Interact</span><span><b>1–5 + Q</b> Select / deploy</span><span><b>Tab</b> Inventory</span></div>
     <button className="sound-button" onClick={toggleSound} aria-label={soundOn?"Mute sound":"Turn sound on"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}</button>
