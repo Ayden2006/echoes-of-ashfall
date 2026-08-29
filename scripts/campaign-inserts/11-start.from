@@ -1,0 +1,2 @@
+    startedRef.current=true; setStarted(true);
+  },[]);
