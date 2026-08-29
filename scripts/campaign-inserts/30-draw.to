@@ -5,12 +5,12 @@
           const elapsed=now-warg.modeStarted,hurtActive=warg.hurtUntil>now;
           if(warg.health<=0){
             const absorb=Math.min(1,Math.max(0,(elapsed-120)/760));
-            if(absorb<1){const pull=1-Math.pow(1-absorb,2);ctx.save();ctx.globalAlpha=1-pull;ctx.translate(0,-pull*28);drawAshWarg(warg.x,warg.y,warg.groundY,warg.facing,"sleep",elapsed,now,WARG_RENDER_SIZE*(1-pull*.7),false,false);ctx.restore();}
+            if(absorb<1){const pull=1-Math.pow(1-absorb,2);ctx.save();ctx.globalAlpha=1-pull;ctx.translate(0,-pull*28);drawAshWarg(ctx,warg.x,warg.y,warg.groundY,warg.facing,"sleep",elapsed,now,WARG_RENDER_SIZE*(1-pull*.7),false,false);ctx.restore();}
             if(!wargCardCollected)drawMagicalAnimalCard("Ash Warg",warg.x,warg.groundY,now,warg.modeStarted+350,dragonImage,{x:0,y:25,w:256,h:260},ASH_WARG_CARD.palette);
             continue;
           }
           ctx.save();ctx.shadowColor=hurtActive?"rgba(232,220,200,.9)":warg.howlUntil>now?"rgba(232,220,200,.55)":warg.angry?"rgba(138,58,50,.5)":"rgba(138,134,128,.25)";ctx.shadowBlur=hurtActive?18:warg.angry?12:6;
-          drawAshWarg(warg.x,warg.y,warg.groundY,warg.facing,warg.mode,elapsed,now,WARG_RENDER_SIZE,hurtActive,warg.howlUntil>now);
+          drawAshWarg(ctx,warg.x,warg.y,warg.groundY,warg.facing,warg.mode,elapsed,now,WARG_RENDER_SIZE,hurtActive,warg.howlUntil>now);
           ctx.restore();
           const barW=82,barH=8,barX=warg.x-barW/2,barY=warg.y-72,ratio=Math.max(0,Math.min(1,warg.health/warg.maxHealth));
           ctx.save();ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="700 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(16,14,12,.9)";ctx.strokeText((warg.howlUntil>now?"HOWLING ":warg.angry?"ANGRY ":"")+"ASH WARG "+warg.health+" / "+warg.maxHealth,warg.x,barY-3);ctx.fillStyle=warg.angry?"#ffb19d":"#e8dcc8";ctx.fillText((warg.howlUntil>now?"HOWLING ":warg.angry?"ANGRY ":"")+"ASH WARG "+warg.health+" / "+warg.maxHealth,warg.x,barY-3);

@@ -1,0 +1,2 @@
+    ctx.fillStyle=map===5?"#d4ceba":map===6?"#ffc080":map===1?"#71869e":"#ffd18a";ctx.fillRect(p.x,p.y,p.w,3);
+    ctx.fillStyle=map===5?"#9a9484":map===6?"#c07040":map===1?"#46566b":"#e6a866";ctx.fillRect(p.x,p.y+3,p.w,5);

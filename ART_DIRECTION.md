@@ -13,3 +13,7 @@ Map 2 is a natural sunset beach rendered with the same dimensional pixel-art lan
 Map 3, Ash Hollow, is a smoldering ember wood. The sky is charcoal and rust, with falling ash, burnt-tree silhouettes, and a low orange glow on the horizon. The playable ground is layered umber, soot, and dull ember caps so Moon Night's feet still read as planted. Foxfire accents stay small; do not flood the scene in neon orange.
 
 Map 4, Moonwell Cliffs, is a cool moonlit escarpment. The sky is deep teal-indigo with a pale moon, thin mist, and tiny cyan motes. The playable stone uses slate, cool gray-blue, and bioluminescent moss caps so the cliff edge stays readable. Keep the moonwell's glow local; do not wash the whole cliff in turquoise.
+
+Map 5, Ashfall Crater, is pale ash and ruined stone under sickly moonlight. The sky is slate and bone, not violet. Ground caps are pale ash-gray over darker ruined stone; dull-red accents stay on the wargs, not the sky. Falling ash and broken pillars should stay readable against the crater rim.
+
+Map 6, Heart of Ash, is the deeper crater. Ember light lives in the basin—charcoal walls, warm-brown ash, local orange glow—without washing the scene in violet or flooding it in neon fire. Platform tops keep a crisp ember cap so Moon Night's feet still plant.

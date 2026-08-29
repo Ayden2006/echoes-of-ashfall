@@ -1,0 +1,4 @@
+    if(map===5){body.addColorStop(0,"#c8c2b0");body.addColorStop(.1,"#8a8478");body.addColorStop(.5,"#5a564c");body.addColorStop(1,"#1e1c18");}
+    else if(map===6){body.addColorStop(0,"#e8a060");body.addColorStop(.1,"#a85830");body.addColorStop(.5,"#7a3a22");body.addColorStop(1,"#241410");}
+    else if(map===1){body.addColorStop(0,"#3c485a");body.addColorStop(.1,"#263244");body.addColorStop(.5,"#151d2a");body.addColorStop(1,"#080c13");}
+    else{body.addColorStop(0,"#d89a59");body.addColorStop(.14,"#b77346");body.addColorStop(.58,"#764937");body.addColorStop(1,"#342b2d");}

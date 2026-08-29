@@ -1,6 +1,6 @@
       if(ally.itemId===ASH_WARG_CARD.id){
         ctx.save();ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?"rgba(232,220,200,.8)":"rgba(138,58,50,.4)";ctx.shadowBlur=ally.mode==="attack"?16:8;
-        drawAshWarg(ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,96*spriteGrow,false,false);
+        drawAshWarg(ctx,ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,96*spriteGrow,false,false);
         ctx.restore();
       }else if(isJackal){
         ctx.save();ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?"rgba(255,186,82,.85)":"rgba(240,138,58,.45)";ctx.shadowBlur=ally.mode==="attack"?16:8;

@@ -1,0 +1,1 @@
+      const companionName=ally.itemId===ASH_WARG_CARD.id?"ASH WARG":ally.itemId===EMBER_WYRLING_CARD.id?"EMBER WYRLING":isJackal?"SUNSET JACKAL":"BABY DRAGON";
