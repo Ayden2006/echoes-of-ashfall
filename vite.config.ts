@@ -46,7 +46,9 @@ export default defineConfig(async () => {
   return {
     server: {
       host: "0.0.0.0",
-      allowedHosts: ["terminal.local"],
+      // Allow browser-based GitHub previews such as StackBlitz to reach the
+      // development server. This affects dev previews only, not production.
+      allowedHosts: true,
       ...(isCodexSeatbeltSandbox
         ? { watch: { useFsEvents: false, usePolling: true } }
         : {}),
