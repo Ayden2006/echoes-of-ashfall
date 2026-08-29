@@ -1,0 +1,7 @@
+const MAP1_PORTAL_X = 5070;
+const MAP2_PORTAL_X = 105;
+const MAP2_EXIT_X = 3470;
+const MAP3_ENTRY_X = 105;
+const MAP3_EXIT_X = 3870;
+const MAP4_ENTRY_X = 105;
+const MAP4_EXIT_X = 4070;

@@ -1,0 +1,4 @@
+const MAP1_W = 5200;
+const MAP2_W = 3600;
+const MAP3_W = 4000;
+const MAP4_W = 4200;
