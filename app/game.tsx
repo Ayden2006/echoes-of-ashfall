@@ -365,6 +365,16 @@ export default function AshfallGame() {
       createJackal("sunset-jackal-b",1880,1580,2280),
       createJackal("sunset-jackal-c",2860,2520,3320)
     ];
+    const createBeast=(id:string,x:number,patrolMin:number,patrolMax:number,health:number,damage:number):Jackal=>({...createJackal(id,x,patrolMin,patrolMax),health,maxHealth:health,attackDamage:damage,y:590,groundY:590});
+    const foxes:Jackal[]=[
+      createBeast("cinder-fox-a",920,620,1480,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE),
+      createBeast("cinder-fox-b",2480,2100,3300,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE)
+    ];
+    const stags:Jackal[]=[
+      createBeast("pale-stag-a",1760,1180,2680,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE)
+    ];
+    const wildPackFor=(map:MapId)=>map===2?jackals:map===3?foxes:map===4?stags:null;
+    const wildCardFor=(map:MapId)=>map===2?SUNSET_JACKAL_CARD:map===3?CINDER_FOX_CARD:map===4?PALE_STAG_CARD:null;
     let playerHurtUntil=0,playerRespawnAt=0,dragonCardCollected=inventoryRef.current.some(item=>item.id===BABY_DRAGON_CARD.id);
     let jackalCardCollected=inventoryRef.current.some(item=>item.id===SUNSET_JACKAL_CARD.id);
     const eyeLayer=document.createElement("canvas"),eyeLayerCtx=eyeLayer.getContext("2d");
@@ -875,7 +885,9 @@ export default function AshfallGame() {
       }
     };
     const updateJackals=(dt:number,now:number)=>{
-      if(!startedRef.current||mapRef.current!==2)return;
+      if(!startedRef.current)return;
+    const jackals=wildPackFor(mapRef.current);
+    if(!jackals)return;
       const pl=player.current;
       for(const jackal of jackals){
         if(jackal.health<=0){
@@ -1588,8 +1600,13 @@ export default function AshfallGame() {
       if(!dialogueRef.current){
         if(nearDragonCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Baby Dragon card";
         else if(readyJackal)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Sunset Jackal card";
-        else if(map===1&&Math.abs(pl.x-(MAP1_PORTAL_X+55))<145)action="Enter Map 2";
-        else if(map===2&&Math.abs(pl.x-(MAP2_PORTAL_X+55))<145)action="Return to Map 1";
+else if(map===1&&Math.abs(pl.x-(MAP1_PORTAL_X+55))<145)action="Enter Map 2";
+    else if(map===2&&Math.abs(pl.x-(MAP2_PORTAL_X+55))<145)action="Return to Map 1";
+    else if(map===2&&Math.abs(pl.x-(MAP2_EXIT_X+55))<145)action="Enter Ash Hollow";
+    else if(map===3&&Math.abs(pl.x-(MAP3_ENTRY_X+55))<145)action="Return to Sunset Shore";
+    else if(map===3&&Math.abs(pl.x-(MAP3_EXIT_X+55))<145)action="Enter Moonwell Cliffs";
+    else if(map===4&&Math.abs(pl.x-(MAP4_ENTRY_X+55))<145)action="Return to Ash Hollow";
+    else if(map===4&&Math.abs(pl.x-(MAP4_EXIT_X+55))<145)action="The path ahead is sealed";
       }
       if(action!==lastAction){lastAction=action;setNearAction(action||null);}
       ctx.clearRect(0,0,w,h);drawBackdrop(w,h,now,map);drawWorld(w,h,scale,now);
