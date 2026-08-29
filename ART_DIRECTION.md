@@ -13,3 +13,7 @@ Map 2 is a natural sunset beach rendered with the same dimensional pixel-art lan
 Map 3, Ash Hollow, is a smoldering ember wood. The sky is charcoal and rust, with falling ash, burnt-tree silhouettes, and a low orange glow on the horizon. The playable ground is layered umber, soot, and dull ember caps so Moon Night's feet still read as planted. Foxfire accents stay small; do not flood the scene in neon orange.
 
 Map 4, Moonwell Cliffs, is a cool moonlit escarpment. The sky is deep teal-indigo with a pale moon, thin mist, and tiny cyan motes. The playable stone uses slate, cool gray-blue, and bioluminescent moss caps so the cliff edge stays readable. Keep the moonwell's glow local; do not wash the whole cliff in turquoise.
+
+Map 5, The Quiet Ember, is a banked kiln terrace. The sky is coal-brown and held ember, with slow rising sparks, kiln-smoke, and a low orange glow that never becomes a wildfire. The playable stone is soot-dark with dull orange caps so Moon Night's feet still read as planted. Keep the heat local to coals, kiln mouths, and lynx-eye accents; do not flood the terrace in neon orange.
+
+Map 6, Ashfall's Heart, is a cracked inner chamber. The sky is rose-ash over deep plum shadow, with a slow pulse of light from the heart and drifting ash motes. The playable ground is layered clinker, cooled magma, and pale rose caps so the altar edge stays readable. Keep the heart's glow local; do not wash the whole chamber in magenta.
