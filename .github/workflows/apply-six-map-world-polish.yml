@@ -1,0 +1,52 @@
+name: Apply six-map world polish
+
+on:
+  push:
+    branches:
+      - cursor/finish-story-campaign-maps-5-6-26b0
+    paths:
+      - 'scripts/apply-six-map-world-polish.mjs'
+      - 'scripts/apply-six-map-world-map-css.mjs'
+      - '.github/workflows/apply-six-map-world-polish.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: six-map-world-polish
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out campaign branch
+        uses: actions/checkout@v4
+        with:
+          ref: cursor/finish-story-campaign-maps-5-6-26b0
+          fetch-depth: 0
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.13.0'
+          cache: npm
+      - name: Apply six-map terrain, creatures, backdrops and world map
+        run: |
+          node scripts/apply-six-map-world-polish.mjs
+          node scripts/apply-six-map-world-map-css.mjs
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Type-check game client
+        run: npx tsc --noEmit --pretty false --skipLibCheck --jsx react-jsx --module preserve --moduleResolution bundler --target es2022 --lib dom,dom.iterable,es2022 --allowSyntheticDefaultImports --esModuleInterop app/game.tsx
+      - name: Commit verified source
+        run: |
+          if git diff --quiet -- app/game.tsx app/globals.css; then
+            echo 'No source change needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/game.tsx app/globals.css
+          git commit -m 'Polish full Ashfall world and exploration map'
+          git push origin cursor/finish-story-campaign-maps-5-6-26b0
