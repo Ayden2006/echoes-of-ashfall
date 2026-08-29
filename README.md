@@ -28,7 +28,7 @@ npm run build
 - `S` or down arrow: crouch
 - Tap `S` while moving: slide; faster entry speed creates a longer, faster slide
 - Left mouse button: sword attack toward the cursor
-- `E`: interact with portals, talk to people, study landmarks, and pick up animal cards
+- `E`: interact with portals, talk to people, study landmarks (kiln, vein, altar), and pick up animal cards
 - `Tab`: inventory
 - `1`–`5`: select a usable card slot
 - `Q`: deploy or recall the equipped animal companion
@@ -41,8 +41,8 @@ Moon Night follows a fading signal through Ashfall. The road runs castle → bea
 - Map 2 — Sunset Shore (sunset beach): Sunset Jackals
 - Map 3 — Ash Hollow (ember wood): Cinder Foxes
 - Map 4 — Moonwell Cliffs: Pale Stag; far gate opens into The Quiet Ember
-- Map 5 — The Quiet Ember (kiln terrace): Ember Lynx; Reed talks if you press `E`
-- Map 6 — Ashfall's Heart (inner chamber): Heart Wyrm; Kest talks if you press `E`; the Ashfall Heart Altar ends the campaign
+- Map 5 — The Quiet Ember (kiln terrace): Ember Lynx; Reed talks if you press `E`; the quiet kiln can be studied with `E`
+- Map 6 — Ashfall's Heart (inner chamber): Heart Wyrm; Kest talks if you press `E`; a cooled vein and the Ashfall Heart Altar both use `E` (the altar ends the campaign)
 
 Moon Night has 100 health and 15 sword damage. Defeat an animal to form its magical card, press `E` to collect it, equip it, then press `Q` to deploy or recall the companion. Animals keep chasing and attacking whoever hurt them until that target is defeated or escapes sight range. Every unique animal uses that same card + Q pattern.
 

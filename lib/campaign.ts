@@ -124,7 +124,8 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     objective: "Speak with Kest, face the Heart Wyrm, and let the signal rest at the altar.",
     intro: [
       { speaker: "Moon Night", text: "This is the last echo. The heart of Ashfall still beats." },
-      { speaker: "Moon Night", text: "Someone walked here ahead of me. I am not the only one who followed." }
+      { speaker: "Moon Night", text: "Kest walked this road ahead of me. The Heart Wyrm is the pulse we came to still." },
+      { speaker: "Moon Night", text: "Speak with Kest, bind the wyrm, study the cooled vein, then rest the signal at the altar." }
     ],
     entryPortalX: 105,
     exitPortalX: null,

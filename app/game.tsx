@@ -35,6 +35,7 @@ const MAP5_ENTRY_X = 105;
 const MAP5_EXIT_X = 4270;
 const MAP5_KILN_X = 2080;
 const MAP6_ENTRY_X = 105;
+const MAP6_VEIN_X = 3820;
 const MAP6_HEART_X = 4670;
 const MAP4_MOONWELL_X = 2360;
 const MAX_HEALTH = 100;
@@ -96,10 +97,11 @@ const MAP_STORY:Record<MapId,{name:string;objective:string;intro:Line[]}> = {
   3:{name:"Ash Hollow",objective:"Bind a Cinder Fox, then reach the moonwell gate.",intro:[{speaker:"Moon Night",text:"The first fall still smolders here. Foxfire moves between the trunks."},{speaker:"Moon Night",text:"A Cinder Fox can walk the ash with me if I earn its card."}]},
   4:{name:"Moonwell Cliffs",objective:"Face the Pale Stag, then take the far gate into The Quiet Ember.",intro:[{speaker:"Moon Night",text:"The moonwell pools the signal. The far gate is open now."},{speaker:"Moon Night",text:"A Pale Stag keeps this cliff. East is The Quiet Ember."}]},
   5:{name:"The Quiet Ember",objective:"Talk to Reed, bind an Ember Lynx, then follow the coals to Ashfall's Heart.",intro:[{speaker:"Moon Night",text:"The fire here does not roar. It waits."},{speaker:"Moon Night",text:"Lynx-shaped coals hunt the dark. Reed keeps the kiln; press E to hear him."},{speaker:"Moon Night",text:"Bind an Ember Lynx, then walk the coals east."}]},
-  6:{name:"Ashfall's Heart",objective:"Speak with Kest, face the Heart Wyrm, then rest the signal at the altar.",intro:[{speaker:"Moon Night",text:"This is the last echo. The heart of Ashfall still beats."},{speaker:"Moon Night",text:"Kest walked this road ahead of me. The Heart Wyrm is the pulse we came to still."},{speaker:"Moon Night",text:"Speak with Kest, bind the wyrm, then rest the signal at the altar."}]}
+  6:{name:"Ashfall's Heart",objective:"Speak with Kest, face the Heart Wyrm, then rest the signal at the altar.",intro:[{speaker:"Moon Night",text:"This is the last echo. The heart of Ashfall still beats."},{speaker:"Moon Night",text:"Kest walked this road ahead of me. The Heart Wyrm is the pulse we came to still."},{speaker:"Moon Night",text:"Speak with Kest, bind the wyrm, study the cooled vein, then rest the signal at the altar."}]}
 };
 const ENDING_LINES:Line[] = [{speaker:"Moon Night",text:"The echo is still. Ashfall keeps its heart, and I keep the road."},{speaker:"Kest",text:"Come on. Reed will want to know the kiln can rest."}];
 const KILN_LINES:Line[] = [{speaker:"Moon Night",text:"Reed's kiln holds a quiet coal. It does not ask to be fed."},{speaker:"Moon Night",text:"The lynx walk this heat like a path. East of here the heart is louder."}];
+const VEIN_LINES:Line[] = [{speaker:"Moon Night",text:"A cooled vein in the clinker. The pulse is louder past this crack."},{speaker:"Moon Night",text:"The altar is still east. I will not rush the last step."}];
 const cardStats = (id:string|null) => id===SUNSET_JACKAL_CARD.id?{hp:JACKAL_MAX_HEALTH,ground:true as const,kind:"jackal"}:id===CINDER_FOX_CARD.id?{hp:FOX_MAX_HEALTH,ground:true as const,kind:"fox"}:id===PALE_STAG_CARD.id?{hp:STAG_MAX_HEALTH,ground:true as const,kind:"stag"}:id===EMBER_LYNX_CARD.id?{hp:LYNX_MAX_HEALTH,ground:true as const,kind:"lynx"}:id===HEART_WYRM_CARD.id?{hp:WYRM_MAX_HEALTH,ground:false as const,kind:"wyrm"}:{hp:DRAGON_MAX_HEALTH,ground:false as const,kind:"dragon"};
 const GROUND_BEAST_CARD_IDS = new Set([SUNSET_JACKAL_CARD.id,CINDER_FOX_CARD.id,PALE_STAG_CARD.id,EMBER_LYNX_CARD.id]);
 const CARD_DISPLAY_NAME:Record<string,string> = {
@@ -212,16 +214,16 @@ const map4Platforms: Platform[] = [
   {x:720,y:455,w:160,h:18},{x:1760,y:430,w:180,h:18},{x:2860,y:420,w:190,h:18}
 ];
 const map5Platforms: Platform[] = [
-  {x:0,y:590,w:1080,h:180},{x:1260,y:575,w:580,h:195},{x:1960,y:590,w:640,h:180},
-  {x:2600,y:555,w:520,h:215},{x:3180,y:575,w:500,h:195},{x:3720,y:550,w:680,h:220},
-  {x:720,y:455,w:160,h:18},{x:1100,y:470,w:140,h:18},{x:1480,y:440,w:170,h:18},
+  {x:0,y:590,w:1280,h:180},{x:1180,y:570,w:820,h:200},{x:1900,y:590,w:780,h:180},
+  {x:2560,y:565,w:720,h:205},{x:3160,y:575,w:640,h:195},{x:3700,y:555,w:700,h:215},
+  {x:720,y:455,w:160,h:18},{x:1480,y:440,w:170,h:18},
   {x:2180,y:455,w:180,h:18},{x:2880,y:430,w:160,h:18},{x:3480,y:420,w:150,h:18}
 ];
 const map6Platforms: Platform[] = [
-  {x:0,y:590,w:1180,h:180},{x:1140,y:560,w:780,h:210},{x:1920,y:590,w:1080,h:180},
-  {x:3000,y:555,w:460,h:215},{x:3660,y:545,w:1140,h:225},
+  {x:0,y:590,w:1180,h:180},{x:1140,y:560,w:780,h:210},{x:1920,y:590,w:1160,h:180},
+  {x:2960,y:565,w:840,h:205},{x:3660,y:545,w:1140,h:225},
   {x:720,y:455,w:160,h:18},{x:1680,y:425,w:180,h:18},{x:2680,y:415,w:190,h:18},
-  {x:3380,y:430,w:160,h:18},{x:3480,y:400,w:140,h:18},{x:4120,y:430,w:180,h:18}
+  {x:3380,y:430,w:180,h:18},{x:3480,y:400,w:200,h:18},{x:4120,y:430,w:180,h:18}
 ];
 const clamp = (n:number,a:number,b:number) => Math.max(a,Math.min(b,n));
 const rgbaFromHex = (hex:string,alpha:number) => {const value=parseInt(hex.replace("#",""),16);return `rgba(${value>>16},${value>>8&255},${value&255},${alpha})`;};
@@ -388,6 +390,7 @@ export default function AshfallGame() {
       return;
     }
     if(map===5&&Math.abs(x-MAP5_KILN_X)<140){showDialogue(KILN_LINES);return;}
+    if(map===6&&Math.abs(x-MAP6_VEIN_X)<140){showDialogue(VEIN_LINES);return;}
     if(map===1&&Math.abs(x-(MAP1_PORTAL_X+55))<145) enterMap(2,1);
     else if(map===2&&Math.abs(x-(MAP2_PORTAL_X+55))<145) enterMap(1,2);
     else if(map===2&&Math.abs(x-(MAP2_EXIT_X+55))<145) enterMap(3,2);
@@ -1272,7 +1275,8 @@ export default function AshfallGame() {
         ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(0,-10,23,16,0,0,Math.PI*2);ctx.fill();
         ctx.fillStyle=fur;ctx.beginPath();ctx.ellipse(0,-10,21,14,0,0,Math.PI*2);ctx.fill();
         ctx.fillStyle=chest;ctx.beginPath();ctx.ellipse(6,-8,10,8,0,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle=furDark;ctx.beginPath();ctx.ellipse(-16,-6,8,6,.6,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=furDark;ctx.beginPath();ctx.ellipse(-16,-6,kind==="lynx"?6:8,kind==="lynx"?5:6,.6,0,Math.PI*2);ctx.fill();
+        if(kind==="lynx"){ctx.fillStyle="#1a0c08";ctx.beginPath();ctx.ellipse(-18,-5,3.2,2.6,0,0,Math.PI*2);ctx.fill();}
         ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(12,-22);ctx.lineTo(16,-34);ctx.lineTo(8,-24);ctx.fill();
         ctx.fillStyle=furLight;ctx.beginPath();ctx.moveTo(12,-22);ctx.lineTo(15,-31);ctx.lineTo(9,-23);ctx.fill();
         if(kind==="lynx"){ctx.strokeStyle=furLight;ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(14,-32);ctx.lineTo(12,-40);ctx.stroke();}
@@ -1308,6 +1312,10 @@ export default function AshfallGame() {
       ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(kind==="lynx"?14:-0+16,-14,kind==="fox"?10:11,kind==="lynx"?10:9,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=fur;ctx.beginPath();ctx.ellipse(16,-14,kind==="fox"?8.5:9.5,kind==="lynx"?8.5:7.5,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=furLight;ctx.fillRect(20,-16,kind==="lynx"?5:7,5);
+      if(kind==="lynx"){
+        ctx.fillStyle=furLight;ctx.beginPath();ctx.ellipse(10,-8,7,5.5,.35,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=chest;ctx.beginPath();ctx.ellipse(12,-6,5,4,.2,0,Math.PI*2);ctx.fill();
+      }
       ctx.fillStyle=outline;ctx.fillRect(kind==="lynx"?24:26,-15,4,3);
       ctx.fillStyle="#1a0c08";ctx.fillRect(kind==="lynx"?25:27,-14,3,2);
       ctx.save();ctx.translate(12,-22);ctx.rotate(-0.2-earFlick);ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(4,kind==="lynx"?-16:-14);ctx.lineTo(8,1);ctx.fill();ctx.fillStyle=furLight;ctx.beginPath();ctx.moveTo(1,0);ctx.lineTo(4,kind==="lynx"?-14:-12);ctx.lineTo(7,1);ctx.fill();ctx.fillStyle=kind==="lynx"?furLight:"#e8784a";ctx.beginPath();ctx.moveTo(3,-1);ctx.lineTo(4,-8);ctx.lineTo(6,0);ctx.fill();
@@ -1351,6 +1359,12 @@ export default function AshfallGame() {
         ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(sx,sy,sr+1.6,sr*.62+1.2,0,0,Math.PI*2);ctx.fill();
         ctx.fillStyle=i%2?body:bodyDark;ctx.beginPath();ctx.ellipse(sx,sy,sr,sr*.55,0,0,Math.PI*2);ctx.fill();
         if(i<3){ctx.fillStyle=belly;ctx.beginPath();ctx.ellipse(sx+1,sy+2,sr*.55,sr*.28,0,0,Math.PI*2);ctx.fill();}
+        if(i%2===0){
+          ctx.save();ctx.translate(sx,sy-sr*.4);ctx.rotate(-0.7+Math.sin(wave+i)*.2);
+          ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-4,-18);ctx.lineTo(5,-8);ctx.closePath();ctx.fill();
+          ctx.fillStyle=glow;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-2,-14);ctx.lineTo(3,-7);ctx.closePath();ctx.fill();
+          ctx.restore();
+        }
       }
       ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(2,-14,20,15,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=body;ctx.beginPath();ctx.ellipse(2,-14,18,13,0,0,Math.PI*2);ctx.fill();
@@ -1807,22 +1821,57 @@ export default function AshfallGame() {
         ctx.save();ctx.globalAlpha=near?(.55+Math.sin(now*.005)*.18):.32;ctx.fillStyle=npc.palette.accent;ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText(npc.name.toUpperCase(),x,y-100);ctx.restore();
       }
     };
-    const drawQuietKiln=(now:number)=>{
-      if(mapRef.current!==5)return;
-      const x=MAP5_KILN_X,groundY=590,pulse=.5+Math.sin(now*.0018)*.22;
+    const drawKilnMouth=(x:number,groundY:number,now:number,scale:number,labeled:boolean)=>{
+      const pulse=.5+Math.sin(now*.0018+x*.01)*.22;
       ctx.save();
-      const glow=ctx.createRadialGradient(x,groundY-48,6,x,groundY-48,140);
-      glow.addColorStop(0,"rgba(255,140,80,"+(.18+pulse*.12)+")");glow.addColorStop(1,"rgba(255,140,80,0)");
-      ctx.fillStyle=glow;ctx.fillRect(x-160,groundY-180,320,200);
-      ctx.fillStyle="#2a140e";ctx.fillRect(x-28,groundY-62,56,62);
-      ctx.fillStyle="#4a2418";ctx.fillRect(x-32,groundY-70,64,10);
-      ctx.fillStyle="#1a0c08";ctx.beginPath();ctx.ellipse(x,groundY-28,16,18,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle="rgba(255,150,70,"+(.45+pulse*.4)+")";ctx.beginPath();ctx.ellipse(x,groundY-28,10,12,0,0,Math.PI*2);ctx.fill();
+      const glow=ctx.createRadialGradient(x,groundY-48*scale,6,x,groundY-48*scale,140*scale);
+      glow.addColorStop(0,"rgba(255,140,80,"+(.14+pulse*.12)+")");glow.addColorStop(1,"rgba(255,140,80,0)");
+      ctx.fillStyle=glow;ctx.fillRect(x-160*scale,groundY-180*scale,320*scale,200*scale);
+      ctx.fillStyle="#2a140e";ctx.fillRect(x-28*scale,groundY-62*scale,56*scale,62*scale);
+      ctx.fillStyle="#4a2418";ctx.fillRect(x-32*scale,groundY-70*scale,64*scale,10*scale);
+      ctx.fillStyle="#1a0c08";ctx.beginPath();ctx.ellipse(x,groundY-28*scale,16*scale,18*scale,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="rgba(255,150,70,"+(.4+pulse*.4)+")";ctx.beginPath();ctx.ellipse(x,groundY-28*scale,10*scale,12*scale,0,0,Math.PI*2);ctx.fill();
       for(let i=0;i<6;i++){
-        const sparkY=groundY-40-((now*.04+i*37)%90);
-        ctx.fillStyle="rgba(255,170,90,"+(.2+i*.08)+")";ctx.fillRect(x-6+(i%3)*5,sparkY,2,3);
+        const sparkY=groundY-40*scale-((now*.04+i*37)%(90*scale));
+        ctx.fillStyle="rgba(255,170,90,"+(.2+i*.08)+")";ctx.fillRect(x-6*scale+(i%3)*5*scale,sparkY,2*scale,3*scale);
+      }
+      if(labeled){
+        ctx.globalAlpha=.32+pulse*.18;ctx.fillStyle="#ffb060";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";
+        ctx.fillText("KILN",x,groundY-78*scale);
       }
       ctx.restore();
+    };
+    const drawQuietKiln=(now:number)=>{
+      if(mapRef.current!==5)return;
+      drawKilnMouth(1420,570,now,.72,false);
+      drawKilnMouth(MAP5_KILN_X,590,now,1,true);
+      drawKilnMouth(3340,575,now,.78,false);
+    };
+    const drawCooledVein=(now:number)=>{
+      if(mapRef.current!==6)return;
+      const x=MAP6_VEIN_X,groundY=545,pulse=.5+Math.sin(now*.002)*.24;
+      ctx.save();
+      const glow=ctx.createRadialGradient(x,groundY-8,8,x,groundY-8,130);
+      glow.addColorStop(0,"rgba(212,90,106,"+(.2+pulse*.16)+")");glow.addColorStop(1,"rgba(212,90,106,0)");
+      ctx.fillStyle=glow;ctx.fillRect(x-150,groundY-90,300,120);
+      ctx.fillStyle="#1c0c14";ctx.beginPath();ctx.ellipse(x,groundY-4,58,14,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="rgba(224,120,150,"+(.3+pulse*.28)+")";ctx.beginPath();ctx.ellipse(x,groundY-6,42,8,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#341020";ctx.fillRect(x-3,groundY-18,6,22);
+      ctx.fillStyle="rgba(255,180,196,"+(.4+pulse*.3)+")";ctx.fillRect(x-2,groundY-16,4,18);
+      ctx.globalAlpha=.32+pulse*.18;ctx.fillStyle="#ffc8a0";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";
+      ctx.fillText("VEIN",x,groundY-36);
+      ctx.restore();
+    };
+    const drawHeartColumns=(now:number,viewW:number)=>{
+      if(mapRef.current!==6)return;
+      for(let i=0;i<10;i++){
+        const tx=240+i*430;
+        if(tx<cameraX-80||tx>cameraX+viewW+80)continue;
+        const sway=Math.sin(now*.0007+i)*2;
+        ctx.fillStyle="#1a0c14";ctx.fillRect(tx+sway,210,18,380);
+        ctx.fillStyle="#2a1420";ctx.fillRect(tx-8+sway,200,34,18);
+        ctx.fillStyle="rgba(212,90,106,"+(.08+Math.max(0,Math.sin(now*.0018+i))*.12)+")";ctx.fillRect(tx+6+sway,280,4,90);
+      }
     };
     const drawMoonwell=(now:number)=>{
       if(mapRef.current!==4)return;
@@ -1983,6 +2032,8 @@ export default function AshfallGame() {
           ctx.fillStyle="rgba(255,150,90,"+twinkle+")";ctx.fillRect(sx,586-(sx%3),4+(sx%3),2);
         }
       }else if(map===6){
+        drawHeartColumns(now,viewW);
+        drawCooledVein(now);
         drawPortal(MAP6_ENTRY_X,590,now,map,"212,90,106");
         drawAshfallHeartAltar(now);
         const heartPulse=.2+Math.sin(now*.0016)*.12;
@@ -2039,7 +2090,7 @@ export default function AshfallGame() {
         pl.vy+=1180*dt;pl.x=clamp(pl.x+pl.vx*dt,24,activeWorldW-24);const oldBottom=pl.y+PH;pl.y+=pl.vy*dt;const newBottom=pl.y+PH,ground=groundAt(pl.x,oldBottom);
         if(pl.vy>=0&&ground<Infinity&&oldBottom<=ground+STEP_HEIGHT&&newBottom>=ground){pl.y=ground-PH;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;}else{pl.grounded=false;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
         if(wasGrounded&&!didJump&&!pl.grounded)pl.jumpsLeft=Math.min(pl.jumpsLeft,1);
-        if(pl.y>WORLD_H+80){pl.x=map===1?Math.max(120,pl.x-180):respawnXFor(map);pl.y=240;pl.vy=0;pl.grounded=false;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}pl.step+=Math.abs(pl.vx)*dt*.048;
+        if(pl.y>WORLD_H+80){pl.x=Math.max(120,pl.x-180);pl.y=240;pl.vy=0;pl.grounded=false;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}pl.step+=Math.abs(pl.vx)*dt*.048;
       }else{pl.vx*=.82;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
       const castState=companionCastRef.current;
       const castDuration=castState.kind==="recall"?COMPANION_RECALL_DURATION:780;
@@ -2096,6 +2147,7 @@ export default function AshfallGame() {
         else if(readyOtherWild&&otherWildCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up "+otherWildCard.name+" card";
         else if(nearNpc)action="Talk to "+nearNpc.name;
         else if(map===5&&Math.abs(pl.x-MAP5_KILN_X)<140)action="Study the quiet kiln";
+        else if(map===6&&Math.abs(pl.x-MAP6_VEIN_X)<140)action="Study the cooled vein";
         else if(map===1&&Math.abs(pl.x-(MAP1_PORTAL_X+55))<145)action="Enter Sunset Shore";
         else if(map===2&&Math.abs(pl.x-(MAP2_PORTAL_X+55))<145)action="Return to The Signal in the Rain";
         else if(map===2&&Math.abs(pl.x-(MAP2_EXIT_X+55))<145)action="Enter Ash Hollow";
