@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Heart, Volume2, VolumeX } from "lucide-react";
 
 type Line = { speaker: string; text: string };
-type MapId = 1|2;
+type MapId = 1|2|3|4|5|6;
 type Player = { x:number; y:number; vx:number; vy:number; grounded:boolean; facing:1|-1; step:number; jumpsLeft:number; crouched:boolean; sliding:boolean; health:number; maxHealth:number; swordDamage:number };
 type Platform = { x:number; y:number; w:number; h:number };
 type DragonMode = "idle"|"walk"|"run"|"fly"|"sleep"|"attack";
@@ -16,12 +16,19 @@ type Companion = { active:boolean; itemId:string|null; map:MapId; x:number; y:nu
 
 const MAP1_W = 5200;
 const MAP2_W = 3600;
+const MAP3_W = 4000;
+const MAP4_W = 4200;
 const WORLD_H = 720;
 const PW = 46;
 const PH = 92;
 const STEP_HEIGHT = 32;
 const MAP1_PORTAL_X = 5070;
 const MAP2_PORTAL_X = 105;
+const MAP2_EXIT_X = 3470;
+const MAP3_ENTRY_X = 105;
+const MAP3_EXIT_X = 3870;
+const MAP4_ENTRY_X = 105;
+const MAP4_EXIT_X = 4070;
 const MAX_HEALTH = 100;
 const SWORD_DAMAGE = 15;
 const MAX_STAMINA = 100;
