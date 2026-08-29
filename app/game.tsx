@@ -1118,10 +1118,6 @@ export default function AshfallGame() {
     const drawWorld=(w:number,h:number,scale:number,now:number)=>{
       ctx.save();ctx.scale(scale,scale);ctx.translate(-cameraX,0);
       const viewW=w/scale,map=mapRef.current,activePlatforms=platformsFor(map);
-      if(map===1){
-        ctx.fillStyle="#090f10";ctx.fillRect(3745,205,210,330);ctx.beginPath();ctx.moveTo(3716,214);ctx.lineTo(3850,95);ctx.lineTo(3982,214);ctx.fill();
-        ctx.strokeStyle="#283432";ctx.lineWidth=9;ctx.strokeRect(3768,232,165,302);ctx.fillStyle="#040809";ctx.fillRect(3814,290,74,105);
-      }
       for(const p of activePlatforms){
         if(p.x+p.w<cameraX-100||p.x>cameraX+viewW+100)continue;
         drawPixelPlatform(p,now,map);
