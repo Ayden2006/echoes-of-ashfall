@@ -1,6 +1,6 @@
 /**
  * Echoes of Ashfall campaign framework.
- * Maps 1–4 are playable. Maps 5–6 are reserved for Game Builder 2.
+ * Maps 1–6 are playable. Maps 5–6 are the later-act crater and ending.
  */
 export type MapId = 1 | 2 | 3 | 4 | 5 | 6;
 export type Line = { speaker: string; text: string };
@@ -87,10 +87,10 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     chapter: "Chapter IV",
     width: 4200,
     playable: true,
-    objective: "Face the Pale Stag. The path to Maps 5 and 6 is still sealed.",
+    objective: "Face the Pale Stag, then take the far gate into Ashfall Crater.",
     intro: [
-      { speaker: "Moon Night", text: "The moonwell pools the signal, but the far gate is sealed." },
-      { speaker: "Moon Night", text: "A Pale Stag keeps this cliff. Maps 5 and 6 still wait beyond." }
+      { speaker: "Moon Night", text: "The moonwell still holds. The far gate is open now." },
+      { speaker: "Moon Night", text: "A Pale Stag keeps this cliff. Ashfall Crater waits beyond." }
     ],
     entryPortalX: 105,
     exitPortalX: 4070,
@@ -100,39 +100,42 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
   },
   5: {
     id: 5,
-    name: "The Quiet Ember",
+    name: "Ashfall Crater",
     chapter: "Chapter V",
     width: 4400,
-    playable: false,
-    objective: "Reserved for Game Builder 2.",
-    intro: [{ speaker: "Moon Night", text: "The path continues, but it is not open yet." }],
+    playable: true,
+    objective: "The ash wargs were castle hounds. Bind one, then descend to the heart.",
+    intro: [
+      { speaker: "Moon Night", text: "Pale ash. Ruined stone. Sickly moonlight on the crater rim." },
+      { speaker: "Moon Night", text: "These wargs were castle hounds before the ash. They howl, then they rush." }
+    ],
     entryPortalX: 105,
     exitPortalX: 4270,
     nextMap: 6,
     prevMap: 4,
-    animal: ""
+    animal: "Ash Warg"
   },
   6: {
     id: 6,
-    name: "Ashfall's Heart",
+    name: "Heart of Ash",
     chapter: "Chapter VI",
     width: 4800,
-    playable: false,
-    objective: "Reserved for Game Builder 2 — campaign ending.",
-    intro: [{ speaker: "Moon Night", text: "The last echo is still unwritten." }],
+    playable: true,
+    objective: "Face the Ember Wyrmling. Moon Night still has a road home.",
+    intro: [
+      { speaker: "Moon Night", text: "The heart still burns, but it is not a grave." },
+      { speaker: "Moon Night", text: "When this is done, the road home is still there." }
+    ],
     entryPortalX: 105,
     exitPortalX: null,
     nextMap: null,
     prevMap: 5,
-    animal: ""
+    animal: "Ember Wyrmling"
   }
 };
 
-export const PLAYABLE_MAPS: MapId[] = [1, 2, 3, 4];
-export const SEALED_GATE_LINES: Line[] = [
-  { speaker: "Moon Night", text: "The gate answers, but Maps 5 and 6 are not open yet." },
-  { speaker: "Moon Night", text: "The signal still runs ahead. I will return when the path is ready." }
-];
+export const PLAYABLE_MAPS: MapId[] = [1, 2, 3, 4, 5, 6];
+export const SEALED_GATE_LINES: Line[] = [];
 
 export function isPlayableMap(map: MapId): boolean {
   return CAMPAIGN_MAPS[map].playable;
