@@ -24,12 +24,19 @@ const MAP3_W = 4000;
 const MAP4_W = 4200;
 const MAP3_W = 4000;
 const MAP4_W = 4200;
+const MAP3_W = 4000;
+const MAP4_W = 4200;
 const WORLD_H = 720;
 const PW = 46;
 const PH = 92;
 const STEP_HEIGHT = 32;
 const MAP1_PORTAL_X = 5070;
 const MAP2_PORTAL_X = 105;
+const MAP2_EXIT_X = 3470;
+const MAP3_ENTRY_X = 105;
+const MAP3_EXIT_X = 3870;
+const MAP4_ENTRY_X = 105;
+const MAP4_EXIT_X = 4070;
 const MAP2_EXIT_X = 3470;
 const MAP3_ENTRY_X = 105;
 const MAP3_EXIT_X = 3870;
@@ -86,6 +93,18 @@ const SUNSET_JACKAL_CARD:InventoryItem = {
   id:"sunset-jackal-card",name:"Sunset Jackal",type:"animal-card",description:"A magical card holding the spirit of a dusk-born jackal from the sunset shore.",image:"/baby-dragon-sprite-sheet.png",
   palette:{dark:"#2a120c",mid:"#7a3118",accent:"#f08a3a",glow:"#ffd27a"}
 };
+const FOX_MAX_HEALTH = 55;
+const FOX_ATTACK_DAMAGE = 7;
+const FOX_RENDER_SIZE = 78;
+const CINDER_FOX_CARD:InventoryItem = {id:"cinder-fox-card",name:"Cinder Fox",type:"animal-card",description:"An ember fox spirit from Ash Hollow.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#1a0a08",mid:"#6a2414",accent:"#ff7a3a",glow:"#ffc08a"}};
+const STAG_MAX_HEALTH = 95;
+const STAG_ATTACK_DAMAGE = 10;
+const STAG_RENDER_SIZE = 118;
+const PALE_STAG_CARD:InventoryItem = {id:"pale-stag-card",name:"Pale Stag",type:"animal-card",description:"A moonwell stag spirit from the cliffs.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#0b1418",mid:"#2a4a55",accent:"#8ee7ff",glow:"#d7fbff"}};
+const CAMPAIGN_OPENING:Line[] = [{speaker:"Moon Night",text:"The rain carries a signal. Something in Ashfall is still calling."},{speaker:"Moon Night",text:"Follow the echo through castle, shore, ash, and moonwell. Press E for cards, Q to deploy."}];
+const MAP_STORY:Record<MapId,{name:string;objective:string;intro:Line[]}> = {1:{name:"The Signal in the Rain",objective:"Find the baby dragon in the rain, then take the far-right portal.",intro:[{speaker:"Moon Night",text:"Moonlit stone. A young ash dragon hunts these ruins."}]},2:{name:"Sunset Shore",objective:"Track the Sunset Jackals, then take the eastern portal to Ash Hollow.",intro:[{speaker:"Moon Night",text:"The shore burns gold. Bind a jackal, then push east."}]},3:{name:"Ash Hollow",objective:"Bind a Cinder Fox, then reach the moonwell gate.",intro:[{speaker:"Moon Night",text:"Foxfire moves through the ash."}]},4:{name:"Moonwell Cliffs",objective:"Face the Pale Stag. Maps 5 and 6 are still sealed.",intro:[{speaker:"Moon Night",text:"The far gate is sealed. Maps 5 and 6 still wait."}]},5:{name:"The Quiet Ember",objective:"Reserved for Game Builder 2.",intro:[{speaker:"Moon Night",text:"Not open yet."}]},6:{name:"Ashfall's Heart",objective:"Reserved for Game Builder 2.",intro:[{speaker:"Moon Night",text:"The last echo is still unwritten."}]}};
+const SEALED_GATE_LINES:Line[] = [{speaker:"Moon Night",text:"The gate answers, but Maps 5 and 6 are not open yet."}];
+const cardStats = (id:string|null) => id===SUNSET_JACKAL_CARD.id?{hp:JACKAL_MAX_HEALTH,ground:true as const,kind:"jackal"}:id===CINDER_FOX_CARD.id?{hp:FOX_MAX_HEALTH,ground:true as const,kind:"fox"}:id===PALE_STAG_CARD.id?{hp:STAG_MAX_HEALTH,ground:true as const,kind:"stag"}:{hp:DRAGON_MAX_HEALTH,ground:false as const,kind:"dragon"};
 const FOX_MAX_HEALTH = 55;
 const FOX_ATTACK_DAMAGE = 7;
 const FOX_RENDER_SIZE = 78;
@@ -184,6 +203,13 @@ const map4Platforms: Platform[] = [
   {x:0,y:590,w:1180,h:180},{x:1140,y:560,w:980,h:210},{x:2080,y:575,w:900,h:195},{x:2940,y:545,w:1260,h:225},
   {x:720,y:455,w:160,h:18},{x:1760,y:430,w:180,h:18},{x:2860,y:420,w:190,h:18}
 ];
+const map3Platforms: Platform[] = [
+  {x:0,y:590,w:MAP3_W,h:180},{x:620,y:470,w:180,h:18},{x:1480,y:455,w:200,h:18},{x:2480,y:465,w:190,h:18},{x:3320,y:450,w:170,h:18}
+];
+const map4Platforms: Platform[] = [
+  {x:0,y:590,w:1180,h:180},{x:1140,y:560,w:980,h:210},{x:2080,y:575,w:900,h:195},{x:2940,y:545,w:1260,h:225},
+  {x:720,y:455,w:160,h:18},{x:1760,y:430,w:180,h:18},{x:2860,y:420,w:190,h:18}
+];
 const clamp = (n:number,a:number,b:number) => Math.max(a,Math.min(b,n));
 const rgbaFromHex = (hex:string,alpha:number) => {const value=parseInt(hex.replace("#",""),16);return `rgba(${value>>16},${value>>8&255},${value&255},${alpha})`;};
 const worldWidthFor = (map:MapId) => map===1?MAP1_W:map===2?MAP2_W:map===3?MAP3_W:map===4?MAP4_W:map===5?4400:4800;
@@ -228,6 +254,7 @@ export default function AshfallGame() {
   const equippedRef = useRef<(string|null)[]>(Array(ACTIVE_SLOT_COUNT).fill(null));
   const selectedSlotRef = useRef(0);
   const companionRef = useRef<Companion>({active:false,itemId:null,map:1,x:150,y:590,groundY:590,vx:0,facing:1,mode:"idle",modeStarted:0,summonedAt:0,recallStarted:0,teleportAt:0,attackUntil:0,attackLanded:false,targetX:0,lastPlayerAttack:-1,health:DRAGON_MAX_HEALTH,maxHealth:DRAGON_MAX_HEALTH});
+  const seenIntroRef = useRef<Set<MapId>>(new Set());
   const seenIntroRef = useRef<Set<MapId>>(new Set());
   const audioRef = useRef<AudioContext|null>(null);
   const soundRef = useRef(true);
@@ -301,16 +328,21 @@ export default function AshfallGame() {
     dialogueIndexRef.current=next; setDialogueIndex(next); tone(470+next*35,.12,.016);
   },[tone]);
 
-  const enterMap = useCallback((map:MapId) => {
+  const showDialogue = useCallback((lines:Line[]) => {
+    if(!lines.length) return;
+    dialogueRef.current=lines;dialogueIndexRef.current=0;setDialogue(lines);setDialogueIndex(0);
+  },[]);
+  const enterMap = useCallback((map:MapId, from:MapId|null=mapRef.current) => {
     mapRef.current=map;setMapNumber(map);
-    dialogueRef.current=null;setDialogue(null);
     const pl=player.current;
-    if(map===2){
-      pl.x=340;pl.y=498;pl.facing=1;
-      setObjective("Track the three Sunset Jackals on the shore, or return through the portal");
+    const spawn=spawnFor(map, from);
+    pl.x=spawn.x;pl.y=spawn.y;pl.facing=spawn.facing;
+    setObjective(MAP_STORY[map].objective);
+    if(!seenIntroRef.current.has(map)){
+      seenIntroRef.current.add(map);
+      showDialogue(MAP_STORY[map].intro);
     }else{
-      pl.x=4860;pl.y=483;pl.facing=-1;
-      setObjective("Explore Map 1 or return to the far-right portal");
+      dialogueRef.current=null;setDialogue(null);
     }
     pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
     const ally=companionRef.current;
