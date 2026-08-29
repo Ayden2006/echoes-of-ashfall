@@ -1,0 +1,2 @@
+    tone(610,.25,.028);window.setTimeout(()=>tone(360,.2,.02),100);
+  },[showDialogue,tone]);
