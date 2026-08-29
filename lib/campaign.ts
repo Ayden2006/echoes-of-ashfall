@@ -1,6 +1,6 @@
 /**
  * Echoes of Ashfall campaign framework.
- * Maps 1–4 are playable. Maps 5–6 are reserved for Game Builder 2.
+ * Maps 1–6 are playable. Maps 5–6 (The Quiet Ember, Ashfall's Heart) are Game Builder 2.
  */
 export type MapId = 1 | 2 | 3 | 4 | 5 | 6;
 export type Line = { speaker: string; text: string };
@@ -87,10 +87,10 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     chapter: "Chapter IV",
     width: 4200,
     playable: true,
-    objective: "Face the Pale Stag. The path to Maps 5 and 6 is still sealed.",
+    objective: "Face the Pale Stag, then take the far gate into The Quiet Ember.",
     intro: [
-      { speaker: "Moon Night", text: "The moonwell pools the signal, but the far gate is sealed." },
-      { speaker: "Moon Night", text: "A Pale Stag keeps this cliff. Maps 5 and 6 still wait beyond." }
+      { speaker: "Moon Night", text: "The moonwell pools the signal. The far gate is open now." },
+      { speaker: "Moon Night", text: "A Pale Stag keeps this cliff. East is The Quiet Ember." }
     ],
     entryPortalX: 105,
     exitPortalX: 4070,
@@ -103,36 +103,39 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     name: "The Quiet Ember",
     chapter: "Chapter V",
     width: 4400,
-    playable: false,
-    objective: "Reserved for Game Builder 2.",
-    intro: [{ speaker: "Moon Night", text: "The path continues, but it is not open yet." }],
+    playable: true,
+    objective: "Talk to Reed, bind an Ember Lynx, then follow the coals to Ashfall's Heart.",
+    intro: [
+      { speaker: "Moon Night", text: "The fire here does not roar. It waits." },
+      { speaker: "Moon Night", text: "Lynx-shaped coals hunt the dark. A person is tending the kiln." }
+    ],
     entryPortalX: 105,
     exitPortalX: 4270,
     nextMap: 6,
     prevMap: 4,
-    animal: ""
+    animal: "Ember Lynx"
   },
   6: {
     id: 6,
     name: "Ashfall's Heart",
     chapter: "Chapter VI",
     width: 4800,
-    playable: false,
-    objective: "Reserved for Game Builder 2 — campaign ending.",
-    intro: [{ speaker: "Moon Night", text: "The last echo is still unwritten." }],
+    playable: true,
+    objective: "Speak with Kest, face the Heart Wyrm, and let the signal rest.",
+    intro: [
+      { speaker: "Moon Night", text: "This is the last echo. The heart of Ashfall still beats." },
+      { speaker: "Moon Night", text: "Someone walked here ahead of me. I am not the only one who followed." }
+    ],
     entryPortalX: 105,
     exitPortalX: null,
     nextMap: null,
     prevMap: 5,
-    animal: ""
+    animal: "Heart Wyrm"
   }
 };
 
-export const PLAYABLE_MAPS: MapId[] = [1, 2, 3, 4];
-export const SEALED_GATE_LINES: Line[] = [
-  { speaker: "Moon Night", text: "The gate answers, but Maps 5 and 6 are not open yet." },
-  { speaker: "Moon Night", text: "The signal still runs ahead. I will return when the path is ready." }
-];
+export const PLAYABLE_MAPS: MapId[] = [1, 2, 3, 4, 5, 6];
+export const SEALED_GATE_LINES: Line[] = [];
 
 export function isPlayableMap(map: MapId): boolean {
   return CAMPAIGN_MAPS[map].playable;

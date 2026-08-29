@@ -1,0 +1,4 @@
+const MAP4_EXIT_X = 4070;
+const MAP5_ENTRY_X = 105;
+const MAP5_EXIT_X = 4270;
+const MAP6_ENTRY_X = 105;
