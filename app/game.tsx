@@ -321,8 +321,38 @@ export default function AshfallGame() {
       createJackal("sunset-jackal-b",1880,1580,2280),
       createJackal("sunset-jackal-c",2860,2520,3320)
     ];
+    const fox:Jackal={
+      id:"ember-fox",x:1620,y:600,groundY:600,vx:0,facing:1,mode:"idle",modeStarted:last,modeUntil:last+2400,
+      health:FOX_MAX_HEALTH,maxHealth:FOX_MAX_HEALTH,attackDamage:FOX_ATTACK_DAMAGE,lastPlayerAttack:-1,attackLanded:false,
+      hurtStarted:0,hurtUntil:0,hitDirection:1,lastDamage:0,angry:false,landing:false,targetX:1750,awarenessUntil:0,
+      patrolMin:1240,patrolMax:2540
+    };
+    const warg:Dragon={
+      x:2950,y:610,groundY:610,vx:0,facing:-1,mode:"sleep",modeStarted:last,modeUntil:last+999999999,
+      health:WARG_MAX_HEALTH,maxHealth:WARG_MAX_HEALTH,attackDamage:WARG_ATTACK_DAMAGE,lastPlayerAttack:-1,attackLanded:false,
+      hurtStarted:0,hurtUntil:0,hitDirection:1,lastDamage:0,angry:false,landing:false,targetX:2950,awarenessUntil:0
+    };
+    let wargAwoken=false;
     let playerHurtUntil=0,playerRespawnAt=0,dragonCardCollected=inventoryRef.current.some(item=>item.id===BABY_DRAGON_CARD.id);
     let jackalCardCollected=inventoryRef.current.some(item=>item.id===SUNSET_JACKAL_CARD.id);
+    let foxCardCollected=inventoryRef.current.some(item=>item.id===EMBER_FOX_CARD.id);
+    // Companion bond accrues locally each frame and flushes to React state a few times per second.
+    const pendingBondDelta:Record<string,number>={};
+    let lastBondFlush=last;
+    const addBond=(itemId:string|null,amount:number)=>{if(!itemId||amount<=0)return;pendingBondDelta[itemId]=(pendingBondDelta[itemId]??0)+amount;};
+    const flushBond=(now:number)=>{
+      if(now-lastBondFlush<380)return;
+      lastBondFlush=now;
+      const keys=Object.keys(pendingBondDelta);
+      if(!keys.length)return;
+      const current=companionBondRef.current;let changed=false;const next={...current};
+      for(const key of keys){
+        const merged=clamp((next[key]??0)+pendingBondDelta[key],0,BOND_MAX);
+        if(merged!==next[key]){next[key]=merged;changed=true;}
+        delete pendingBondDelta[key];
+      }
+      if(changed){companionBondRef.current=next;setCompanionBonds(next);}
+    };
     const eyeLayer=document.createElement("canvas"),eyeLayerCtx=eyeLayer.getContext("2d");
     const eyeCoverLayer=document.createElement("canvas"),eyeCoverCtx=eyeCoverLayer.getContext("2d");
     const attackBodyLayer=document.createElement("canvas"),attackBodyCtx=attackBodyLayer.getContext("2d");
@@ -375,13 +405,32 @@ export default function AshfallGame() {
       }
       return best;
     };
+    // ---- Companion Bond helpers: additive perks layered on top of base stats ----
+    const companionMaxHealthFor=(itemId:string|null)=>{
+      const base=companionBaseMaxHealth(itemId);
+      if(!itemId)return base;
+      const tier=bondTierFor(companionBondRef.current[itemId]??0);
+      return Math.round(base*(1+bondHealthBonus(tier)));
+    };
+    const companionStrikeDamageFor=(itemId:string|null)=>{
+      if(!itemId)return COMPANION_BASE_STRIKE_DAMAGE;
+      const tier=bondTierFor(companionBondRef.current[itemId]??0);
+      return Math.round(COMPANION_BASE_STRIKE_DAMAGE*(1+bondDamageBonus(tier)));
+    };
+    const companionCastDurationFor=(base:number,itemId:string|null)=>{
+      if(!itemId)return base;
+      const tier=bondTierFor(companionBondRef.current[itemId]??0);
+      return base*bondCastSpeedMultiplier(tier);
+    };
     const drawBackdrop=(w:number,h:number,now:number,map:MapId)=>{
       const activeBackdrop=map===1?backdrop:beachBackdrop;
       const g=ctx.createLinearGradient(0,0,0,h);
       if(map===1){g.addColorStop(0,"#030710");g.addColorStop(.56,"#0b1428");g.addColorStop(1,"#070811");}
-      else{g.addColorStop(0,"#4b5288");g.addColorStop(.48,"#ed766b");g.addColorStop(1,"#c36f49");}
+      else if(map===2){g.addColorStop(0,"#4b5288");g.addColorStop(.48,"#ed766b");g.addColorStop(1,"#c36f49");}
+      else if(map===3){g.addColorStop(0,"#1c2716");g.addColorStop(.5,"#33422a");g.addColorStop(1,"#171f14");}
+      else{g.addColorStop(0,"#241012");g.addColorStop(.46,"#4a1e1a");g.addColorStop(1,"#150a0c");}
       ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
-      if (activeBackdrop.complete&&activeBackdrop.naturalWidth) {
+      if ((map===1||map===2)&&activeBackdrop.complete&&activeBackdrop.naturalWidth) {
         const cover=Math.max(w/activeBackdrop.naturalWidth,h/activeBackdrop.naturalHeight);
         const breathe=(map===1?1.12:1.06)+Math.sin(now*.00008)*.006;
         const iw=activeBackdrop.naturalWidth*cover*breathe, ih=activeBackdrop.naturalHeight*cover*breathe;
@@ -396,6 +445,48 @@ export default function AshfallGame() {
           if(map===1){pixelCtx.globalCompositeOperation="source-atop";pixelCtx.fillStyle="rgba(6,20,39,.24)";pixelCtx.fillRect(0,0,pxW,pxH);pixelCtx.globalCompositeOperation="source-over";}
           ctx.imageSmoothingEnabled=false;ctx.globalAlpha=.95;ctx.drawImage(pixelLayer,0,0,w,h);ctx.globalAlpha=1;ctx.imageSmoothingEnabled=true;
         }
+      }else if(map===3){
+        const parallax=(cameraX*.22)%(w+240);
+        ctx.save();
+        for(let layer=0;layer<3;layer++){
+          const depth=1-layer*.28,offsetX=-((cameraX*depth*.4)%(260))-layer*10;
+          ctx.fillStyle=layer===0?"rgba(20,30,16,.9)":layer===1?"rgba(30,44,22,.8)":"rgba(42,58,30,.7)";
+          for(let i=-1;i<10;i++){
+            const tx=offsetX+i*260-parallax*0+ (i*97)%40;
+            const th=140+((i*53+layer*31)%90);
+            ctx.beginPath();ctx.moveTo(tx,h*.7);ctx.lineTo(tx+18,h*.7-th);ctx.lineTo(tx+40,h*.7);ctx.closePath();ctx.fill();
+          }
+        }
+        ctx.restore();
+        for(let i=0;i<20;i++){
+          const fx=(i*211+now*.01)%w,fy=h*.35+((i*67)%(h*.4));
+          const glow=.2+Math.max(0,Math.sin(now*.0022+i))*.5;
+          ctx.fillStyle="rgba(255,214,140,"+glow+")";ctx.beginPath();ctx.arc(fx,fy,1.6,0,Math.PI*2);ctx.fill();
+        }
+        const mist=ctx.createLinearGradient(0,h*.55,0,h);
+        mist.addColorStop(0,"rgba(60,90,50,0)");mist.addColorStop(1,"rgba(20,30,16,.3)");
+        ctx.fillStyle=mist;ctx.fillRect(0,h*.55,w,h*.45);
+      }else if(map===4){
+        for(let i=0;i<4;i++){
+          const rx=((i*613+now*.004)%(w+900))-450,ry=h*(.18+i*.08);
+          const glow=ctx.createRadialGradient(rx,ry,10,rx,ry,340+i*40);
+          glow.addColorStop(0,"rgba(255,110,60,.16)");glow.addColorStop(1,"rgba(255,110,60,0)");
+          ctx.fillStyle=glow;ctx.fillRect(rx-400,ry-260,800,520);
+        }
+        ctx.save();ctx.fillStyle="rgba(10,4,5,.85)";
+        for(let i=-1;i<12;i++){
+          const tx=((i*340-cameraX*.3)%(w+400))-200,th=90+((i*71)%140);
+          ctx.beginPath();ctx.moveTo(tx,h*.68);ctx.lineTo(tx+70,h*.68-th);ctx.lineTo(tx+150,h*.68);ctx.closePath();ctx.fill();
+        }
+        ctx.restore();
+        for(let i=0;i<26;i++){
+          const ex=(i*173+now*.05)%w,ey=h-((now*.03+i*41)%(h*.6));
+          const alpha=Math.max(0,1-ey/(h*.6))*.7;
+          ctx.fillStyle="rgba(255,160,70,"+alpha+")";ctx.beginPath();ctx.arc(ex,ey,1.4+((i%3)*.5),0,Math.PI*2);ctx.fill();
+        }
+        const heat=ctx.createLinearGradient(0,h*.5,0,h);
+        heat.addColorStop(0,"rgba(255,90,50,0)");heat.addColorStop(1,"rgba(120,30,20,.32)");
+        ctx.fillStyle=heat;ctx.fillRect(0,h*.5,w,h*.5);
       }
       if(map===1){
         for(const star of stars){
@@ -420,7 +511,7 @@ export default function AshfallGame() {
         ctx.restore();
         const storm=(now%17000);
         if(storm>15600&&storm<15830){const flash=Math.sin((storm-15600)/230*Math.PI)*.055;ctx.fillStyle="rgba(190,204,226,"+flash+")";ctx.fillRect(0,0,w,h);}
-      }else{
+      }else if(map===2){
         for(let i=0;i<18;i++){
           const waveY=h*(.55+(i%4)*.037),waveX=((i*173+now*.015*(1+i%3))%(w+180))-90;
           const sparkle=.16+Math.max(0,Math.sin(now*.003+i))* .38;
@@ -460,7 +551,7 @@ export default function AshfallGame() {
     const drawCompanionCast=(pl:Player,now:number)=>{
       const cast=companionCastRef.current;
       if(!cast.kind)return;
-      const duration=cast.kind==="recall"?COMPANION_RECALL_DURATION:780,progress=clamp((now-cast.started)/duration,0,1);
+      const duration=companionCastDurationFor(cast.kind==="recall"?COMPANION_RECALL_DURATION:780,cast.itemId),progress=clamp((now-cast.started)/duration,0,1);
       if(progress>=1){cast.kind=null;return;}
       const eased=progress*progress*(3-2*progress),fade=1-clamp((progress-.72)/.28,0,1);
       const ally=companionRef.current,palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??BABY_DRAGON_CARD.palette;
@@ -519,7 +610,7 @@ export default function AshfallGame() {
       let list=SPRITE_FRAMES.idle;
       let index=Math.floor(now/620)%list.length;
       const attacking=actionUntil.current>now;
-      const castState=companionCastRef.current,castDuration=castState.kind==="recall"?COMPANION_RECALL_DURATION:780,casting=Boolean(castState.kind&&now-castState.started<castDuration);
+      const castState=companionCastRef.current,castDuration=companionCastDurationFor(castState.kind==="recall"?COMPANION_RECALL_DURATION:780,castState.itemId),casting=Boolean(castState.kind&&now-castState.started<castDuration);
       if(attacking||casting){list=SPRITE_FRAMES.action;index=1;}
       else if(!pl.grounded){list=SPRITE_FRAMES.jump;index=0;}
       else if(pl.sliding){list=SPRITE_FRAMES.slide;index=0;}
@@ -920,6 +1011,278 @@ export default function AshfallGame() {
         playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
       }
     };
+
+    // ==== Ember Fox: new capturable companion (Ashwood Grove, Map 3) ====
+    const foxSurfaceAt=(x:number,currentY:number)=>{
+      const surfaces=map3Platforms.filter(p=>p.h>80&&x>=p.x&&x<=p.x+p.w);
+      if(!surfaces.length)return null;
+      return surfaces.reduce((best,p)=>Math.abs(p.y-currentY)<Math.abs(best.y-currentY)?p:best).y;
+    };
+    const beginFoxMode=(mode:DragonMode,now:number,duration:number)=>{
+      fox.mode=mode;fox.modeStarted=now;fox.modeUntil=now+duration;fox.landing=false;
+      if(mode==="attack")fox.y=Math.min(fox.y,fox.groundY-8);
+      if(mode==="idle"||mode==="walk"||mode==="run"||mode==="sleep")fox.y=fox.groundY;
+      if(mode==="idle"||mode==="sleep")fox.vx*=.5;
+      if(mode==="attack")fox.vx*=.2;
+    };
+    const beginFoxTravel=(mode:"walk"|"run",now:number,duration:number,targetX:number)=>{
+      fox.targetX=clamp(targetX,fox.patrolMin,fox.patrolMax);
+      beginFoxMode(mode,now,duration);
+      fox.facing=fox.targetX>=fox.x?1:-1;
+    };
+    const chooseFoxMode=(now:number)=>{
+      const pl=player.current,distance=Math.abs(pl.x-fox.x),approaching=(pl.x-fox.x)*pl.vx<0;
+      const runAwayTarget=pl.x<fox.x?fox.patrolMax:fox.patrolMin;
+      const randomTarget=fox.patrolMin+20+Math.random()*(fox.patrolMax-fox.patrolMin-40);
+      const roll=Math.random();
+      if(distance<125&&approaching&&Math.abs(pl.vx)>150){
+        fox.awarenessUntil=now+2200;
+        beginFoxTravel("run",now,850+Math.random()*450,runAwayTarget);
+      }else if(distance<230&&roll<.52){
+        fox.awarenessUntil=now+1500;
+        beginFoxMode("idle",now,1000+Math.random()*1100);
+        fox.facing=pl.x>=fox.x?1:-1;
+      }else if(roll<.3)beginFoxMode("idle",now,1400+Math.random()*1600);
+      else if(roll<.66)beginFoxTravel("walk",now,1600+Math.random()*1200,randomTarget);
+      else if(roll<.86)beginFoxTravel("run",now,800+Math.random()*650,randomTarget);
+      else if(distance>210)beginFoxMode("sleep",now,3800+Math.random()*2800);
+      else{beginFoxMode("idle",now,1300);fox.facing=pl.x>=fox.x?1:-1;}
+    };
+    const foxCounterAttack=(now:number)=>{
+      fox.facing=player.current.x>=fox.x?1:-1;
+      fox.attackLanded=false;
+      beginFoxMode("attack",now,860);
+      tone(340,.09,.02);window.setTimeout(()=>tone(200,.14,.02),140);
+    };
+    const hitFoxWithSword=(now:number)=>{
+      const pl=player.current;
+      const swingProgress=(now-actionStartedAt.current)/360;
+      if(!(activeAttackDamage.current>0&&actionUntil.current>now&&swingProgress>.14&&swingProgress<.9&&fox.lastPlayerAttack!==actionStartedAt.current))return;
+      const centerY=fox.y-22;
+      const targetAngle=Math.atan2(centerY-(pl.y+38),fox.x-pl.x);
+      const angleDifference=Math.atan2(Math.sin(targetAngle-attackAngle.current),Math.cos(targetAngle-attackAngle.current));
+      const distance=Math.hypot(fox.x-pl.x,centerY-(pl.y+38));
+      if(distance<150&&Math.abs(angleDifference)<.9){
+        fox.lastPlayerAttack=actionStartedAt.current;
+        companionRef.current.lastPlayerAttack=actionStartedAt.current;
+        commandCompanionAttack(fox.x,now);
+        fox.health=Math.max(0,fox.health-activeAttackDamage.current);
+        fox.hurtStarted=now;fox.hurtUntil=now+460;fox.hitDirection=fox.x>=pl.x?1:-1;fox.lastDamage=activeAttackDamage.current;
+        if(fox.health===0){
+          fox.angry=false;fox.awarenessUntil=0;fox.attackLanded=true;fox.vx*=.25;
+          beginFoxMode("sleep",now,999999999);
+          tone(90,.22,.034);window.setTimeout(()=>tone(58,.28,.024),110);
+          return;
+        }
+        fox.angry=true;fox.awarenessUntil=now+6800;
+        if(fox.mode!=="attack")foxCounterAttack(now);
+        tone(120,.08,.028);
+      }
+    };
+    const updateFox=(dt:number,now:number)=>{
+      if(!startedRef.current||mapRef.current!==3)return;
+      const pl=player.current;
+      const surface=foxSurfaceAt(fox.x,fox.groundY);
+      if(surface!==null)fox.groundY+=(surface-fox.groundY)*(1-Math.exp(-9*dt));
+      if(fox.health<=0){
+        fox.angry=false;fox.vx+=(0-fox.vx)*(1-Math.exp(-7*dt));fox.x+=fox.vx*dt;
+        fox.y+=(fox.groundY-fox.y)*(1-Math.exp(-8*dt));
+      }else{
+        hitFoxWithSword(now);
+        if(fox.health>0){
+          const playerDistance=Math.abs(pl.x-fox.x);
+          const sightDistance=Math.hypot(pl.x-fox.x,(pl.y+PH*.45)-(fox.y-20));
+          const startled=playerDistance<115&&(pl.x-fox.x)*pl.vx<0&&Math.abs(pl.vx)>145;
+          if(fox.angry&&(pl.health<=0||sightDistance>FOX_SIGHT_RANGE)){
+            fox.angry=false;
+            if(fox.mode!=="attack")beginFoxMode("idle",now,1300);
+          }
+          if(!fox.angry&&fox.mode==="sleep"&&(playerDistance<150||playerDistance<215&&Math.abs(pl.vx)>90)){
+            beginFoxMode("idle",now,1000);fox.facing=pl.x>=fox.x?1:-1;fox.awarenessUntil=now+2100;
+          }else if(!fox.angry&&startled&&fox.mode!=="attack"&&fox.mode!=="run"){
+            fox.awarenessUntil=now+2100;
+            beginFoxTravel("run",now,850,pl.x<fox.x?fox.patrolMax:fox.patrolMin);
+          }else if(!fox.angry&&fox.mode==="idle"&&(playerDistance<230||now<fox.awarenessUntil)){
+            fox.facing=pl.x>=fox.x?1:-1;
+          }
+          if(fox.mode==="attack"){
+            if(playerDistance>16)fox.facing=pl.x>=fox.x?1:-1;
+            fox.vx+=(0-fox.vx)*(1-Math.exp(-9*dt));
+            const lunge=clamp((now-fox.modeStarted-260)/200,0,1);
+            fox.x+=fox.facing*lunge*100*dt*3.2;
+            fox.y+=(fox.groundY-6-Math.sin(lunge*Math.PI)*15-fox.y)*(1-Math.exp(-10*dt));
+            if(!fox.attackLanded&&now-fox.modeStarted>390){
+              const forward=(pl.x-fox.x)*fox.facing;
+              const vertical=Math.abs((pl.y+42)-fox.y);
+              if(forward>-10&&forward<115&&vertical<98&&playerRespawnAt===0){
+                pl.health=Math.max(0,pl.health-fox.attackDamage);
+                playerHurtUntil=now+330;
+                commandCompanionAttack(fox.x,now);
+                if(pl.health===0){fox.angry=false;playerRespawnAt=now+950;}
+                tone(78,.16,.03);
+              }
+              fox.attackLanded=true;
+            }
+            if(now>=fox.modeUntil){
+              if(fox.angry&&pl.health>0&&sightDistance<=FOX_SIGHT_RANGE){
+                if(playerDistance<=FOX_ATTACK_RANGE+10)foxCounterAttack(now);
+                else{fox.targetX=clamp(pl.x,fox.patrolMin,fox.patrolMax);beginFoxMode("run",now,760);fox.facing=pl.x>=fox.x?1:-1;}
+              }else{fox.angry=false;beginFoxMode("idle",now,1150);fox.facing=pl.x>=fox.x?1:-1;}
+            }
+          }else{
+            if(fox.angry){
+              if(playerDistance>16)fox.facing=pl.x>=fox.x?1:-1;
+              if(playerDistance<=FOX_ATTACK_RANGE)foxCounterAttack(now);
+              else{
+                fox.targetX=clamp(pl.x,fox.patrolMin,fox.patrolMax);
+                if(fox.mode!=="run")beginFoxMode("run",now,760);else fox.modeUntil=now+760;
+              }
+            }else if(now>=fox.modeUntil)chooseFoxMode(now);
+            if(fox.mode==="walk"||fox.mode==="run"){
+              const distanceToTarget=fox.targetX-fox.x;
+              if(Math.abs(distanceToTarget)>14)fox.facing=distanceToTarget>=0?1:-1;
+              if(Math.abs(distanceToTarget)<12){
+                if(fox.angry)fox.vx+=(0-fox.vx)*(1-Math.exp(-7*dt));
+                else beginFoxMode("idle",now,1000+Math.random()*900);
+              }else{
+                const speed=fox.mode==="walk"?54:(fox.angry?176:132);
+                const targetSpeed=fox.facing*speed;
+                fox.vx+=(targetSpeed-fox.vx)*(1-Math.exp(-(fox.mode==="run"?6:4)*dt));
+                fox.x+=fox.vx*dt;
+                if(fox.x<=fox.patrolMin){fox.x=fox.patrolMin;fox.targetX=fox.patrolMax;fox.facing=1;}
+                if(fox.x>=fox.patrolMax){fox.x=fox.patrolMax;fox.targetX=fox.patrolMin;fox.facing=-1;}
+              }
+            }else{
+              fox.vx+=(0-fox.vx)*(1-Math.exp(-8*dt));
+            }
+          }
+        }
+      }
+      if(playerRespawnAt&&now>=playerRespawnAt){
+        pl.health=pl.maxHealth;pl.x=MAP3_SHORE_PORTAL_X+230;pl.y=498;pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
+        staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;
+        playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
+      }
+    };
+
+    // ==== Warg Alpha: mid/final-boss encounter (Ashfall Crater, Map 4) ====
+    const wargSurfaceAt=(x:number,currentY:number)=>{
+      const surfaces=map4Platforms.filter(p=>p.h>80&&x>=p.x&&x<=p.x+p.w);
+      if(!surfaces.length)return null;
+      return surfaces.reduce((best,p)=>Math.abs(p.y-currentY)<Math.abs(best.y-currentY)?p:best).y;
+    };
+    const beginWargMode=(mode:DragonMode,now:number,duration:number)=>{
+      warg.mode=mode;warg.modeStarted=now;warg.modeUntil=now+duration;warg.landing=false;
+      if(mode==="attack")warg.y=Math.min(warg.y,warg.groundY-16);
+      if(mode==="idle"||mode==="walk"||mode==="run"||mode==="sleep")warg.y=warg.groundY;
+      if(mode==="idle"||mode==="sleep")warg.vx*=.5;
+      if(mode==="attack")warg.vx*=.25;
+    };
+    const wargCounterAttack=(now:number)=>{
+      warg.facing=player.current.x>=warg.x?1:-1;
+      warg.attackLanded=false;
+      beginWargMode("attack",now,1180);
+      tone(210,.16,.03);window.setTimeout(()=>tone(110,.26,.032),190);
+    };
+    const hitWargWithSword=(now:number)=>{
+      const pl=player.current;
+      const swingProgress=(now-actionStartedAt.current)/360;
+      if(!(activeAttackDamage.current>0&&actionUntil.current>now&&swingProgress>.14&&swingProgress<.9&&warg.lastPlayerAttack!==actionStartedAt.current))return;
+      const centerY=warg.y-58;
+      const targetAngle=Math.atan2(centerY-(pl.y+38),warg.x-pl.x);
+      const angleDifference=Math.atan2(Math.sin(targetAngle-attackAngle.current),Math.cos(targetAngle-attackAngle.current));
+      const distance=Math.hypot(warg.x-pl.x,centerY-(pl.y+38));
+      if(distance<195&&Math.abs(angleDifference)<.88){
+        warg.lastPlayerAttack=actionStartedAt.current;
+        companionRef.current.lastPlayerAttack=actionStartedAt.current;
+        commandCompanionAttack(warg.x,now);
+        warg.health=Math.max(0,warg.health-activeAttackDamage.current);
+        warg.hurtStarted=now;warg.hurtUntil=now+460;warg.hitDirection=warg.x>=pl.x?1:-1;warg.lastDamage=activeAttackDamage.current;
+        if(warg.health===0){
+          warg.angry=false;warg.awarenessUntil=0;warg.attackLanded=true;warg.vx*=.3;
+          beginWargMode("sleep",now,999999999);
+          completeObjective("ch4-warg");
+          reachEnding();
+          tone(60,.4,.05);window.setTimeout(()=>tone(38,.5,.036),140);
+          return;
+        }
+        warg.angry=true;wargAwoken=true;warg.awarenessUntil=now+999999999;
+        if(warg.mode!=="attack")wargCounterAttack(now);
+        tone(130,.1,.036);
+      }
+    };
+    const updateWarg=(dt:number,now:number)=>{
+      if(!startedRef.current||mapRef.current!==4)return;
+      const pl=player.current;
+      const surface=wargSurfaceAt(warg.x,warg.groundY);
+      if(surface!==null)warg.groundY+=(surface-warg.groundY)*(1-Math.exp(-9*dt));
+      if(warg.health<=0){
+        warg.vx+=(0-warg.vx)*(1-Math.exp(-7*dt));warg.x+=warg.vx*dt;
+        warg.y+=(warg.groundY-warg.y)*(1-Math.exp(-8*dt));
+        return;
+      }
+      hitWargWithSword(now);
+      if(warg.health<=0)return;
+      const playerDistance=Math.abs(pl.x-warg.x);
+      const sightDistance=Math.hypot(pl.x-warg.x,(pl.y+PH*.45)-(warg.y-70));
+      if(!wargAwoken&&(sightDistance<WARG_SIGHT_RANGE||playerDistance<420)){
+        wargAwoken=true;warg.angry=true;warg.awarenessUntil=now+999999999;
+        beginWargMode("idle",now,900);warg.facing=pl.x>=warg.x?1:-1;
+        tone(90,.5,.04);
+      }
+      if(!wargAwoken){
+        warg.vx+=(0-warg.vx)*(1-Math.exp(-8*dt));
+        warg.y+=(warg.groundY-warg.y)*(1-Math.exp(-12*dt));
+        return;
+      }
+      if(warg.mode==="attack"){
+        if(playerDistance>20)warg.facing=pl.x>=warg.x?1:-1;
+        warg.vx+=(0-warg.vx)*(1-Math.exp(-9*dt));
+        const lunge=clamp((now-warg.modeStarted-380)/260,0,1);
+        warg.x+=warg.facing*lunge*118*dt*3.2;
+        warg.y+=(warg.groundY-14-Math.sin(lunge*Math.PI)*20-warg.y)*(1-Math.exp(-9*dt));
+        if(!warg.attackLanded&&now-warg.modeStarted>560){
+          const forward=(pl.x-warg.x)*warg.facing;
+          const vertical=Math.abs((pl.y+42)-warg.y);
+          if(forward>-14&&forward<155&&vertical<130&&playerRespawnAt===0){
+            pl.health=Math.max(0,pl.health-warg.attackDamage);
+            playerHurtUntil=now+380;
+            commandCompanionAttack(warg.x,now);
+            if(pl.health===0){playerRespawnAt=now+950;}
+            tone(64,.24,.04);
+          }
+          warg.attackLanded=true;
+        }
+        if(now>=warg.modeUntil){
+          if(playerDistance<=WARG_ATTACK_RANGE+20)wargCounterAttack(now);
+          else{warg.targetX=clamp(pl.x,WARG_PATROL_MIN,WARG_PATROL_MAX);beginWargMode("run",now,850);warg.facing=pl.x>=warg.x?1:-1;}
+        }
+        if(playerRespawnAt&&now>=playerRespawnAt){
+          pl.health=pl.maxHealth;pl.x=MAP4_GROVE_PORTAL_X+230;pl.y=498;pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
+          staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;
+          playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
+        }
+        return;
+      }
+      if(playerDistance>20)warg.facing=pl.x>=warg.x?1:-1;
+      if(playerDistance<=WARG_ATTACK_RANGE){wargCounterAttack(now);}
+      else{
+        warg.targetX=clamp(pl.x,WARG_PATROL_MIN,WARG_PATROL_MAX);
+        if(warg.mode!=="run")beginWargMode("run",now,850);else warg.modeUntil=now+850;
+        const distanceToTarget=warg.targetX-warg.x;
+        if(Math.abs(distanceToTarget)>16)warg.facing=distanceToTarget>=0?1:-1;
+        const targetSpeed=warg.facing*192;
+        warg.vx+=(targetSpeed-warg.vx)*(1-Math.exp(-6.5*dt));warg.x+=warg.vx*dt;
+        warg.x=clamp(warg.x,WARG_PATROL_MIN,WARG_PATROL_MAX);
+        warg.y+=(warg.groundY-warg.y)*(1-Math.exp(-11*dt));
+      }
+      if(playerRespawnAt&&now>=playerRespawnAt){
+        pl.health=pl.maxHealth;pl.x=MAP4_GROVE_PORTAL_X+230;pl.y=498;pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
+        staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;
+        playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
+      }
+    };
+
     const companionSurfaceAt=(x:number,currentY:number,map:MapId)=>{
       const surfaces=platformsFor(map).filter(p=>p.h>80&&x>=p.x&&x<=p.x+p.w);
       if(!surfaces.length)return null;
@@ -934,45 +1297,58 @@ export default function AshfallGame() {
     const updateCompanion=(dt:number,now:number)=>{
       const ally=companionRef.current;
       if(!ally.active)return;
+      addBond(ally.itemId,BOND_PASSIVE_PER_SECOND*dt);
       const pl=player.current,map=mapRef.current;
       if(ally.recallStarted>0){
         ally.attackUntil=0;ally.vx+=(0-ally.vx)*(1-Math.exp(-12*dt));ally.x+=ally.vx*dt;
-        if(now-ally.recallStarted>=COMPANION_RECALL_DURATION){ally.active=false;ally.itemId=null;ally.recallStarted=0;setDeployedItemId(null);}
+        if(now-ally.recallStarted>=companionCastDurationFor(COMPANION_RECALL_DURATION,ally.itemId)){ally.active=false;ally.itemId=null;ally.recallStarted=0;setDeployedItemId(null);}
         return;
       }
       const jackalAlly=ally.itemId===SUNSET_JACKAL_CARD.id;
-      if(ally.map!==map){ally.map=map;ally.x=pl.x-pl.facing*96;ally.groundY=pl.y+PH;ally.y=jackalAlly?ally.groundY:ally.groundY-52;ally.vx=0;ally.mode=jackalAlly?"run":"fly";ally.modeStarted=now;ally.teleportAt=now;}
+      const foxAlly=ally.itemId===EMBER_FOX_CARD.id;
+      const groundAlly=jackalAlly||foxAlly;
+      if(ally.map!==map){ally.map=map;ally.x=pl.x-pl.facing*96;ally.groundY=pl.y+PH;ally.y=groundAlly?ally.groundY:ally.groundY-52;ally.vx=0;ally.mode=groundAlly?"run":"fly";ally.modeStarted=now;ally.teleportAt=now;}
 
       const huntedJackal=map===2?nearestLiveJackal(ally.targetX||ally.x):null;
-      const hostileActive=(map===1&&dragon.health>0&&now<ally.attackUntil)||(map===2&&Boolean(huntedJackal)&&now<ally.attackUntil);
+      const huntedFox=map===3&&fox.health>0?fox:null;
+      const hostileActive=(map===1&&dragon.health>0&&now<ally.attackUntil)||(map===2&&Boolean(huntedJackal)&&now<ally.attackUntil)||(map===3&&Boolean(huntedFox)&&now<ally.attackUntil);
       const followX=clamp(pl.x-pl.facing*104,28,worldWidthFor(map)-28);
       const playerGround=pl.y+PH;
       if(Math.abs(pl.x-ally.x)>COMPANION_TELEPORT_DISTANCE){
         const arrivalGround=companionSurfaceAt(followX,playerGround,map)??playerGround;
-        ally.x=followX;ally.groundY=arrivalGround;ally.y=jackalAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.attackUntil=0;ally.teleportAt=now;ally.facing=pl.facing;setCompanionMode(jackalAlly?"run":"fly",now);
+        ally.x=followX;ally.groundY=arrivalGround;ally.y=groundAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.attackUntil=0;ally.teleportAt=now;ally.facing=pl.facing;setCompanionMode(groundAlly?"run":"fly",now);
       }
       const targetX=now<ally.attackUntil?ally.targetX:followX;
       const delta=targetX-ally.x,distance=Math.abs(delta);
       if(distance>18)ally.facing=delta>=0?1:-1;
 
-      if(now<ally.attackUntil&&distance<(jackalAlly?118:138)){
+      if(now<ally.attackUntil&&distance<(groundAlly?118:138)){
         setCompanionMode("attack",now);
         ally.vx+=(0-ally.vx)*(1-Math.exp(-10*dt));ally.x+=ally.vx*dt;
-        const pounceHeight=jackalAlly?8+Math.sin(clamp((now-ally.modeStarted)/720,0,1)*Math.PI)*22:50;
+        const pounceHeight=groundAlly?8+Math.sin(clamp((now-ally.modeStarted)/720,0,1)*Math.PI)*22:50;
         ally.y+=(ally.groundY-pounceHeight-ally.y)*(1-Math.exp(-10*dt));
         const attackElapsed=now-ally.modeStarted;
         if(!ally.attackLanded&&attackElapsed>390){
           ally.attackLanded=true;
+          const strike=companionStrikeDamageFor(ally.itemId);
           if(map===1&&hostileActive&&Math.abs(dragon.x-ally.x)<155){
-            dragon.health=Math.max(0,dragon.health-8);dragon.hurtStarted=now;dragon.hurtUntil=now+420;dragon.lastDamage=8;dragon.hitDirection=dragon.x>=ally.x?1:-1;
-            if(dragon.health===0){dragon.angry=false;dragon.awarenessUntil=0;dragon.vx*=.3;beginDragonMode("sleep",now,999999999);}
+            dragon.health=Math.max(0,dragon.health-strike);dragon.hurtStarted=now;dragon.hurtUntil=now+420;dragon.lastDamage=strike;dragon.hitDirection=dragon.x>=ally.x?1:-1;
+            addBond(ally.itemId,BOND_PER_LANDED_HIT);
+            if(dragon.health===0){dragon.angry=false;dragon.awarenessUntil=0;dragon.vx*=.3;beginDragonMode("sleep",now,999999999);addBond(ally.itemId,BOND_PER_KILL_ASSIST);}
             else{dragon.angry=true;dragon.awarenessUntil=now+8000;}
             tone(112,.1,.022);
           }else if(map===2&&huntedJackal&&Math.abs(huntedJackal.x-ally.x)<150){
-            huntedJackal.health=Math.max(0,huntedJackal.health-8);huntedJackal.hurtStarted=now;huntedJackal.hurtUntil=now+400;huntedJackal.lastDamage=8;huntedJackal.hitDirection=huntedJackal.x>=ally.x?1:-1;
-            if(huntedJackal.health===0){huntedJackal.angry=false;huntedJackal.awarenessUntil=0;huntedJackal.vx*=.25;beginJackalMode(huntedJackal,"sleep",now,999999999);}
+            huntedJackal.health=Math.max(0,huntedJackal.health-strike);huntedJackal.hurtStarted=now;huntedJackal.hurtUntil=now+400;huntedJackal.lastDamage=strike;huntedJackal.hitDirection=huntedJackal.x>=ally.x?1:-1;
+            addBond(ally.itemId,BOND_PER_LANDED_HIT);
+            if(huntedJackal.health===0){huntedJackal.angry=false;huntedJackal.awarenessUntil=0;huntedJackal.vx*=.25;beginJackalMode(huntedJackal,"sleep",now,999999999);addBond(ally.itemId,BOND_PER_KILL_ASSIST);}
             else{huntedJackal.angry=true;huntedJackal.awarenessUntil=now+7000;}
             tone(118,.1,.02);
+          }else if(map===3&&huntedFox&&Math.abs(huntedFox.x-ally.x)<150){
+            huntedFox.health=Math.max(0,huntedFox.health-strike);huntedFox.hurtStarted=now;huntedFox.hurtUntil=now+400;huntedFox.lastDamage=strike;huntedFox.hitDirection=huntedFox.x>=ally.x?1:-1;
+            addBond(ally.itemId,BOND_PER_LANDED_HIT);
+            if(huntedFox.health===0){huntedFox.angry=false;huntedFox.awarenessUntil=0;huntedFox.vx*=.25;huntedFox.mode="sleep";huntedFox.modeStarted=now;huntedFox.modeUntil=now+999999999;addBond(ally.itemId,BOND_PER_KILL_ASSIST);}
+            else{huntedFox.angry=true;huntedFox.awarenessUntil=now+6800;}
+            tone(120,.1,.02);
           }
         }
         if(attackElapsed>720){
@@ -985,23 +1361,27 @@ export default function AshfallGame() {
       const currentSurface=companionSurfaceAt(ally.x,ally.groundY,map);
       if(currentSurface!==null)ally.groundY+=(currentSurface-ally.groundY)*(1-Math.exp(-11*dt));
       const noGroundAhead=companionSurfaceAt(ally.x+ally.facing*48,ally.groundY,map)===null;
-      const needsFlight=!jackalAlly&&(Math.abs(playerGround-ally.groundY)>34||noGroundAhead);
+      const needsFlight=!groundAlly&&(Math.abs(playerGround-ally.groundY)>34||noGroundAhead);
       if(distance>46){
         const followMode:DragonMode=needsFlight?"fly":jackalAlly&&distance>220?"fly":distance>170?"run":"walk";
         setCompanionMode(followMode,now);
-        const speed=followMode==="fly"?(jackalAlly?148:128):followMode==="run"?(jackalAlly?176:158):64;
+        const speed=followMode==="fly"?(jackalAlly?148:128):followMode==="run"?(groundAlly?176:158):(foxAlly?70:64);
         const response=followMode==="walk"?4.2:followMode==="fly"?4.8:6.6;
         ally.vx+=(ally.facing*speed-ally.vx)*(1-Math.exp(-response*dt));ally.x+=ally.vx*dt;
         ally.x=clamp(ally.x,28,worldWidthFor(map)-28);
         const nextSurface=companionSurfaceAt(ally.x,ally.groundY,map);
         if(nextSurface!==null)ally.groundY+=(nextSurface-ally.groundY)*(1-Math.exp(-10*dt));
         const leapArc=jackalAlly&&followMode==="fly"?Math.sin(clamp((now-ally.modeStarted)/720,0,1)*Math.PI)*46:0;
-        const targetY=followMode==="fly"&&!jackalAlly?Math.min(playerGround-68,ally.groundY-76):ally.groundY-leapArc;
+        const targetY=followMode==="fly"&&!groundAlly?Math.min(playerGround-68,ally.groundY-76):ally.groundY-leapArc;
         ally.y+=(targetY-ally.y)*(1-Math.exp(-(followMode==="fly"?5:12)*dt));
       }else{
         setCompanionMode("idle",now);ally.vx+=(0-ally.vx)*(1-Math.exp(-9*dt));ally.x+=ally.vx*dt;ally.y+=(ally.groundY-ally.y)*(1-Math.exp(-12*dt));
         ally.facing=pl.x>=ally.x?1:-1;
+        if(petQueued.current&&Math.abs(pl.x-ally.x)<BOND_PET_RANGE&&now-lastPetAtRef.current>BOND_PET_COOLDOWN&&!dialogueRef.current&&!inventoryOpenRef.current&&!pauseOpenRef.current){
+          lastPetAtRef.current=now;petFlashRef.current=now;addBond(ally.itemId,BOND_PER_PET);tone(660,.14,.02);window.setTimeout(()=>tone(880,.16,.016),90);
+        }
       }
+      petQueued.current=false;
     };
     const drawPixelJackal=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean)=>{
       const scale=size/90;
@@ -1059,13 +1439,121 @@ export default function AshfallGame() {
       }
       ctx.restore();
     };
+    const drawPixelFox=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean)=>{
+      const scale=size/78;
+      const runCycle=(elapsed/(mode==="run"?82:150))%1;
+      const gait=Math.sin(runCycle*Math.PI*2);
+      const attack=mode==="attack"?clamp(elapsed/860,0,1):0;
+      const sleep=mode==="sleep";
+      const bob=mode==="idle"?Math.sin(now*.0055)*1.2:mode==="walk"||mode==="run"?Math.abs(gait)*1.8:0;
+      const lunge=attack>.3&&attack<.7?(attack-.3)/.4:0;
+      const tail=sleep?1.1:mode==="attack"?-0.5:0.5+Math.sin(now*.0075+elapsed*.011)*0.5;
+      const earFlick=Math.sin(now*.013+elapsed*.005)>0.84?0.32:0;
+      ctx.save();
+      ctx.fillStyle="rgba(40,16,8,"+(0.4-lunge*0.2)+")";
+      ctx.beginPath();ctx.ellipse(x,groundY+3,17*scale,4*scale,0,0,Math.PI*2);ctx.fill();
+      ctx.translate(x+facing*lunge*15,y-bob);
+      ctx.rotate(facing*(sleep?0.16:mode==="attack"?-0.14+lunge*0.32:gait*0.045));
+      ctx.scale(facing*scale,scale);
+      const fur="#ff8a3d",furDark="#a4400f",furLight="#ffd28a",chest="#fff2d6",outline="#2a1005",eye="#ffe27a";
+      if(hurt&&Math.floor(now/45)%2===0)ctx.globalAlpha=.55;
+      const drawLimb=(lx:number,ly:number,lw:number,lh:number,rot:number)=>{
+        ctx.save();ctx.translate(lx,ly);ctx.rotate(rot);ctx.fillStyle=outline;ctx.fillRect(-lw/2-1,-1,lw+2,lh+2);ctx.fillStyle=furDark;ctx.fillRect(-lw/2,0,lw,lh);ctx.restore();
+      };
+      if(sleep){
+        ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(0,-8,19,13,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=fur;ctx.beginPath();ctx.ellipse(0,-8,17,11,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=chest;ctx.beginPath();ctx.ellipse(5,-6,8,6.5,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=furDark;ctx.beginPath();ctx.ellipse(-14,-4,9,6,.65,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle="#fff8ea";ctx.beginPath();ctx.ellipse(-19,-4,3,2.4,.65,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=eye;ctx.globalAlpha=hurt?ctx.globalAlpha:0.32;ctx.beginPath();ctx.ellipse(11,-12,1.9,1,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=hurt&&Math.floor(now/45)%2===0?.55:1;
+        ctx.restore();return;
+      }
+      const frontSwing=mode==="idle"?0.07:mode==="fly"?0.55:gait*0.78;
+      const backSwing=mode==="idle"?-0.07:mode==="fly"?-0.45:-gait*0.78;
+      drawLimb(-10,7,5,15,backSwing);drawLimb(-5,7,5,14,backSwing*.7+.14);
+      ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(0,-5,16,10.5,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=fur;ctx.beginPath();ctx.ellipse(0,-5,14.4,9,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=furLight;ctx.beginPath();ctx.ellipse(2.5,-6.5,9,5.6,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=chest;ctx.beginPath();ctx.ellipse(6.5,-1.5,6,5.4,0,0,Math.PI*2);ctx.fill();
+      ctx.save();ctx.translate(-13,-5);ctx.rotate(tail);ctx.fillStyle=outline;ctx.fillRect(-3,-4,19,9);ctx.fillStyle=furDark;ctx.fillRect(-2,-3,17,7);ctx.fillStyle=fur;ctx.fillRect(2,-2.5,10,4.5);ctx.fillStyle="#fff8ea";ctx.fillRect(11,-2,7,5);ctx.restore();
+      ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(9,-16);ctx.lineTo(19,-15);ctx.lineTo(17,-9);ctx.lineTo(8,-9);ctx.closePath();ctx.fill();
+      ctx.fillStyle=fur;ctx.beginPath();ctx.moveTo(9.5,-15);ctx.lineTo(18,-14.2);ctx.lineTo(16.4,-9.6);ctx.lineTo(9,-9.6);ctx.closePath();ctx.fill();
+      ctx.fillStyle=chest;ctx.beginPath();ctx.moveTo(11,-11.5);ctx.lineTo(17,-11);ctx.lineTo(15.6,-9.6);ctx.lineTo(11.4,-9.6);ctx.closePath();ctx.fill();
+      ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(18,-11.4);ctx.lineTo(22.5,-10.6);ctx.lineTo(18.6,-9.4);ctx.closePath();ctx.fill();
+      ctx.fillStyle="#160a04";ctx.beginPath();ctx.moveTo(18.6,-11);ctx.lineTo(21.6,-10.5);ctx.lineTo(18.9,-9.7);ctx.closePath();ctx.fill();
+      ctx.save();ctx.translate(9,-19);ctx.rotate(-.22-earFlick);ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(3.2,-11);ctx.lineTo(6.4,.6);ctx.fill();ctx.fillStyle=fur;ctx.beginPath();ctx.moveTo(1,0);ctx.lineTo(3.2,-9.2);ctx.lineTo(5.6,.4);ctx.fill();ctx.fillStyle="#3a1a10";ctx.beginPath();ctx.moveTo(1.8,-.6);ctx.lineTo(3.2,-6.6);ctx.lineTo(4.6,-.4);ctx.fill();ctx.restore();
+      ctx.save();ctx.translate(14,-18.2);ctx.rotate(.16+earFlick*.6);ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(2.6,-9.8);ctx.lineTo(5.6,.6);ctx.fill();ctx.fillStyle=fur;ctx.beginPath();ctx.moveTo(.9,0);ctx.lineTo(2.6,-8.2);ctx.lineTo(4.9,.4);ctx.fill();ctx.restore();
+      ctx.fillStyle=eye;ctx.beginPath();ctx.ellipse(15.6,-12.6,2,1.7,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#2a1005";ctx.beginPath();ctx.ellipse(16.2,-12.6,.9,1.15,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#fff6c8";ctx.fillRect(14.9,-13.2,.8,.8);
+      drawLimb(6,8,5,14,frontSwing);drawLimb(11,8,4.4,13,frontSwing*.75-.1);
+      if(mode==="attack"&&attack>.4){ctx.fillStyle="#ffe6a8";ctx.globalAlpha=.8;ctx.fillRect(21,-10.5,5,1.8);ctx.fillRect(21,-8,4.4,1.8);}
+      ctx.restore();
+    };
+    const drawPixelWarg=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean,angry:boolean)=>{
+      const scale=size/150;
+      const runCycle=(elapsed/(mode==="run"?100:180))%1;
+      const gait=Math.sin(runCycle*Math.PI*2);
+      const attack=mode==="attack"?clamp(elapsed/1180,0,1):0;
+      const sleep=mode==="sleep";
+      const bob=mode==="idle"?Math.sin(now*.0042)*1.6:mode==="walk"||mode==="run"?Math.abs(gait)*2.6:0;
+      const lunge=attack>.32&&attack<.74?(attack-.32)/.42:0;
+      const tail=sleep?0.85:mode==="attack"?-0.6:0.25+Math.sin(now*.006+elapsed*.008)*0.4;
+      const growl=angry?.55+Math.sin(now*.02)*.25:0;
+      ctx.save();
+      ctx.fillStyle="rgba(10,6,4,"+(0.52-lunge*0.22)+")";
+      ctx.beginPath();ctx.ellipse(x,groundY+4,40*(1-lunge*.3)*scale,8*scale,0,0,Math.PI*2);ctx.fill();
+      ctx.translate(x+facing*lunge*24,y-bob);
+      ctx.rotate(facing*(sleep?0.14:mode==="attack"?-0.1+lunge*0.3:gait*0.035));
+      ctx.scale(facing*scale,scale);
+      const fur="#4a4650",furDark="#221f26",furLight="#6d6a76",chest="#8b8794",outline="#0c0a0e",eye=angry?"#ff5340":"#c9433a",scar="#1a1015";
+      if(hurt&&Math.floor(now/45)%2===0)ctx.globalAlpha=.55;
+      const drawLimb=(lx:number,ly:number,lw:number,lh:number,rot:number)=>{
+        ctx.save();ctx.translate(lx,ly);ctx.rotate(rot);ctx.fillStyle=outline;ctx.fillRect(-lw/2-1.5,-1.5,lw+3,lh+3);ctx.fillStyle=furDark;ctx.fillRect(-lw/2,0,lw,lh);ctx.restore();
+      };
+      if(sleep){
+        ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(0,-18,38,26,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=fur;ctx.beginPath();ctx.ellipse(0,-18,35,23,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=chest;ctx.beginPath();ctx.ellipse(10,-15,16,13,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=furDark;ctx.beginPath();ctx.ellipse(-26,-10,14,10,.6,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=eye;ctx.globalAlpha=hurt?ctx.globalAlpha:0.22;ctx.beginPath();ctx.ellipse(22,-24,3.4,1.8,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=hurt&&Math.floor(now/45)%2===0?.55:1;
+        ctx.restore();return;
+      }
+      const frontSwing=mode==="idle"?0.08:gait*0.68;
+      const backSwing=mode==="idle"?-0.08:-gait*0.68;
+      drawLimb(-22,13,10,30,backSwing);drawLimb(-10,13,10,29,backSwing*.7+.15);
+      ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(0,-10,34,22,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=fur;ctx.beginPath();ctx.ellipse(0,-10,31,19.5,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=furLight;ctx.beginPath();ctx.ellipse(6,-13,20,12,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=chest;ctx.beginPath();ctx.ellipse(13,-3,14,12,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=scar;ctx.save();ctx.translate(-2,-16);ctx.rotate(.5);ctx.fillRect(-1,-9,2,18);ctx.restore();
+      ctx.save();ctx.translate(-27,-9);ctx.rotate(tail);ctx.fillStyle=outline;ctx.fillRect(-4,-5,32,13);ctx.fillStyle=furDark;ctx.fillRect(-3,-4,29,11);ctx.fillStyle=fur;ctx.fillRect(16,-2,13,7);ctx.restore();
+      ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(27,-24,19,15,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=fur;ctx.beginPath();ctx.ellipse(27,-24,16.5,13,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=furLight;ctx.fillRect(34,-27,13,9);
+      ctx.fillStyle=outline;ctx.fillRect(45,-25,7,5);
+      ctx.fillStyle="#100a08";ctx.fillRect(47,-23,5,3);
+      ctx.save();ctx.translate(21,-38);ctx.rotate(-.2);ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(7,-23);ctx.lineTo(14,1.5);ctx.fill();ctx.fillStyle=furLight;ctx.beginPath();ctx.moveTo(1.5,0);ctx.lineTo(7,-20);ctx.lineTo(12,1);ctx.fill();ctx.fillStyle="#241820";ctx.beginPath();ctx.moveTo(4,-1);ctx.lineTo(7,-13);ctx.lineTo(10,0);ctx.fill();ctx.restore();
+      ctx.save();ctx.translate(32,-37);ctx.rotate(.18);ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(5.4,-20);ctx.lineTo(12,1.5);ctx.fill();ctx.fillStyle=fur;ctx.beginPath();ctx.moveTo(1.5,0);ctx.lineTo(5.4,-17);ctx.lineTo(10.4,1);ctx.fill();ctx.restore();
+      ctx.fillStyle=eye;ctx.shadowColor=angry?"rgba(255,83,64,.85)":"transparent";ctx.shadowBlur=angry?10+growl*8:0;
+      ctx.beginPath();ctx.ellipse(35,-27,3.6,2.9,0,0,Math.PI*2);ctx.fill();
+      ctx.shadowBlur=0;ctx.fillStyle="#100a08";ctx.beginPath();ctx.ellipse(36.4,-27,1.6,2,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#fff6c8";ctx.fillRect(33.6,-28.6,1.6,1.6);
+      drawLimb(12,15,10,29,frontSwing);drawLimb(24,15,9,27,frontSwing*.75-.1);
+      if(mode==="attack"&&attack>.4){ctx.fillStyle="#ffe6d0";ctx.globalAlpha=.85;ctx.fillRect(46,-23,10,3.4);ctx.fillRect(46,-18,9,3.4);}
+      ctx.restore();
+    };
     const drawCompanion=(now:number)=>{
       const ally=companionRef.current;
       if(!ally.active||ally.map!==mapRef.current)return;
       const isJackal=ally.itemId===SUNSET_JACKAL_CARD.id;
-      if(!isJackal&&(!dragonImage.complete||!dragonImage.naturalWidth))return;
-      const palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??(isJackal?SUNSET_JACKAL_CARD.palette:BABY_DRAGON_CARD.palette);
-      const companionName=isJackal?"SUNSET JACKAL":"BABY DRAGON";
+      const isFox=ally.itemId===EMBER_FOX_CARD.id;
+      const isGroundAlly=isJackal||isFox;
+      if(!isGroundAlly&&(!dragonImage.complete||!dragonImage.naturalWidth))return;
+      const palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??(isJackal?SUNSET_JACKAL_CARD.palette:isFox?EMBER_FOX_CARD.palette:BABY_DRAGON_CARD.palette);
+      const companionName=companionDisplayName(ally.itemId);
+      const bondTier=bondTierFor(companionBondRef.current[ally.itemId??""]??0);
       const frames=DRAGON_FRAMES[ally.mode],elapsed=now-ally.modeStarted;
       let index=0;
       if(ally.mode==="idle")index=Math.floor(elapsed/520)%2;
@@ -1135,8 +1623,9 @@ export default function AshfallGame() {
         ctx.save();ctx.translate(ally.x,ally.groundY-66-cardRise);ctx.rotate((recalling?1:-1)*(1-arrive)*1.4+(recalling?progress:-progress)*.18);ctx.scale(cardScale,cardScale);ctx.globalAlpha=cardAlpha;ctx.shadowColor=palette.glow;ctx.shadowBlur=24;
         const cardGradient=ctx.createLinearGradient(-22,-34,22,34);cardGradient.addColorStop(0,palette.accent);cardGradient.addColorStop(.22,palette.mid);cardGradient.addColorStop(.72,palette.dark);cardGradient.addColorStop(1,palette.glow);ctx.fillStyle=cardGradient;ctx.beginPath();ctx.roundRect(-22,-34,44,68,6);ctx.fill();
         ctx.shadowBlur=0;ctx.strokeStyle=palette.glow;ctx.lineWidth=2;ctx.stroke();ctx.strokeStyle=palette.dark;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(-18,-30,36,60,4);ctx.stroke();
-        ctx.save();ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.clip();ctx.fillStyle=isJackal?"#2a120c":"#101a13";ctx.fillRect(-14,-24,28,34);
+        ctx.save();ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.clip();ctx.fillStyle=isJackal?"#2a120c":isFox?"#1c0d08":"#101a13";ctx.fillRect(-14,-24,28,34);
         if(isJackal){ctx.save();ctx.translate(0,8);ctx.scale(0.42,0.42);drawPixelJackal(0,0,18,1,"idle",elapsed,now,70,false);ctx.restore();}
+        else if(isFox){ctx.save();ctx.translate(0,7);ctx.scale(0.46,0.46);drawPixelFox(0,0,16,1,"idle",elapsed,now,66,false);ctx.restore();}
         else ctx.drawImage(dragonImage,cardFrame.x,cardFrame.y,cardFrame.w,cardFrame.h,-15,-25,30,36);ctx.restore();
         ctx.strokeStyle=palette.glow;ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(-14,-24,28,34,3);ctx.stroke();ctx.fillStyle="#eaffcf";ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="900 4.5px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText(companionName,0,17);ctx.fillStyle=palette.glow;ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillText("✦",0,26);ctx.restore();
       };
@@ -1154,9 +1643,10 @@ export default function AshfallGame() {
       }
 
       const summonLift=(1-summonCreature)*34,recallPull=(1-recallCreature)*30;
-      if(isJackal){
+      if(isGroundAlly){
         ctx.save();ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?"rgba(255,186,82,.85)":"rgba(240,138,58,.45)";ctx.shadowBlur=ally.mode==="attack"?16:8;
-        drawPixelJackal(ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,96*spriteGrow,false);
+        if(isFox)drawPixelFox(ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,84*spriteGrow,false);
+        else drawPixelJackal(ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,96*spriteGrow,false);
         ctx.restore();
       }else{
         ctx.save();ctx.translate(ally.x,ally.y+summonLift-recallPull);ctx.rotate(ally.facing*(1-recallCreature)*.72);ctx.scale(ally.facing*spriteGrow,spriteGrow);
@@ -1166,9 +1656,12 @@ export default function AshfallGame() {
 
       if(summon>.72&&recall<.46){
         const healthRatio=clamp(ally.health/ally.maxHealth,0,1),barY=ally.y-112;
-        ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.92)";ctx.strokeText(`ALLY · ${companionName}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle=isJackal?"#ffe1b0":"#d9ffb0";ctx.fillText(`ALLY · ${companionName}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);
+        const bondTag=bondTier==="wary"?"":` · ${BOND_TIER_LABEL[bondTier].toUpperCase()}`;
+        ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.92)";ctx.strokeText(`ALLY · ${companionName}${bondTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle=isFox?"#ffd0a0":isJackal?"#ffe1b0":"#d9ffb0";ctx.fillText(`ALLY · ${companionName}${bondTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);
         ctx.fillStyle="rgba(2,7,8,.84)";ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.fill();
         const healthGradient=ctx.createLinearGradient(ally.x-46,0,ally.x+46,0);healthGradient.addColorStop(0,"#5ed52d");healthGradient.addColorStop(1,"#b7ff57");ctx.fillStyle=healthGradient;ctx.beginPath();ctx.roundRect(ally.x-46,barY+2,92*healthRatio,3,1.5);ctx.fill();ctx.strokeStyle="rgba(190,255,132,.72)";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.stroke();ctx.restore();
+        const petHint=now-petFlashRef.current<700;
+        if(petHint){const petAlpha=1-clamp((now-petFlashRef.current)/700,0,1);ctx.save();ctx.globalAlpha=visibility*petAlpha;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 9px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillStyle="#ffe27a";ctx.shadowColor="#ffb347";ctx.shadowBlur=10;ctx.fillText("♥ +BOND",ally.x,barY-19-(1-petAlpha)*18);ctx.restore();}
       }
     };
     const drawMagicalAnimalCard=(name:string,x:number,groundY:number,now:number,formedAt:number,image:HTMLImageElement,portrait:{x:number;y:number;w:number;h:number},palette:CardPalette)=>{
@@ -1373,6 +1866,101 @@ export default function AshfallGame() {
         ctx.restore();
       }
     };
+    const drawFoxCardTransformation=(now:number)=>{
+      const elapsed=now-fox.modeStarted;
+      const absorb=clamp((elapsed-120)/720,0,1);
+      if(absorb<1){
+        const pull=1-Math.pow(1-absorb,2);
+        ctx.save();ctx.globalAlpha=1-pull;ctx.translate(0,-pull*24);
+        drawPixelFox(fox.x,fox.y,fox.groundY,fox.facing,"sleep",elapsed,now,FOX_RENDER_SIZE*(1-pull*.7),false);
+        ctx.restore();
+      }
+      if(!foxCardCollected)drawMagicalAnimalCard("Ember Fox",fox.x,fox.groundY,now,fox.modeStarted+330,dragonImage,{x:0,y:25,w:256,h:260},EMBER_FOX_CARD.palette);
+    };
+    const drawFox=(now:number)=>{
+      if(mapRef.current!==3)return;
+      if(fox.health<=0){drawFoxCardTransformation(now);return;}
+      const elapsed=now-fox.modeStarted;
+      const hurtActive=fox.hurtUntil>now;
+      const hurtProgress=hurtActive?clamp((now-fox.hurtStarted)/460,0,1):1;
+      const hurtPulse=hurtActive?Math.sin(hurtProgress*Math.PI):0;
+      const recoilX=hurtPulse*9*fox.hitDirection;
+      ctx.save();ctx.shadowColor=hurtActive?"rgba(255,220,160,.9)":fox.mode==="attack"?"rgba(255,170,80,.55)":fox.angry?"rgba(255,110,40,.5)":"rgba(255,138,61,.2)";ctx.shadowBlur=hurtActive?16:fox.angry?11:5;
+      drawPixelFox(fox.x+recoilX,fox.y,fox.groundY,fox.facing,fox.mode,elapsed,now,FOX_RENDER_SIZE,hurtActive);
+      ctx.restore();
+      const barW=70,barH=7,barX=fox.x+recoilX-barW/2,barY=fox.y-58;
+      const healthRatio=clamp(fox.health/fox.maxHealth,0,1);
+      const healthLabel=(fox.angry?"ANGRY  ":"")+"EMBER FOX  "+fox.health+" / "+fox.maxHealth;
+      ctx.save();
+      ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="700 8px ui-monospace, SFMono-Regular, Menlo, monospace";
+      ctx.lineWidth=3;ctx.strokeStyle="rgba(20,8,4,.9)";ctx.strokeText(healthLabel,fox.x+recoilX,barY-3);
+      ctx.fillStyle=fox.angry?"#ffb19d":"#ffe0b8";ctx.fillText(healthLabel,fox.x+recoilX,barY-3);
+      ctx.fillStyle="rgba(20,8,4,.9)";ctx.fillRect(barX-2,barY-2,barW+4,barH+4);
+      ctx.fillStyle="#3a170a";ctx.fillRect(barX,barY,barW,barH);
+      const healthGradient=ctx.createLinearGradient(barX,barY,barX+barW,barY);
+      healthGradient.addColorStop(0,"#ffb861");healthGradient.addColorStop(1,"#e0501f");
+      ctx.fillStyle=healthGradient;ctx.fillRect(barX,barY,barW*healthRatio,barH);
+      ctx.strokeStyle="rgba(255,215,150,.7)";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barW+1,barH+1);
+      if(hurtActive){ctx.globalAlpha=1-hurtProgress;ctx.font="900 13px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillStyle="#ffdca0";ctx.fillText("-"+fox.lastDamage,fox.x+recoilX,barY-15-hurtProgress*16);}
+      ctx.restore();
+    };
+    const drawWarg=(now:number)=>{
+      if(mapRef.current!==4)return;
+      const elapsed=now-warg.modeStarted;
+      const hurtActive=warg.hurtUntil>now;
+      const hurtProgress=hurtActive?clamp((now-warg.hurtStarted)/500,0,1):1;
+      const hurtPulse=hurtActive?Math.sin(hurtProgress*Math.PI):0;
+      const recoilX=hurtPulse*11*warg.hitDirection;
+      const mode=warg.health<=0?"sleep":warg.mode;
+      ctx.save();ctx.shadowColor=hurtActive?"rgba(255,220,160,.92)":warg.mode==="attack"?"rgba(255,90,70,.6)":warg.angry?"rgba(255,60,40,.55)":"rgba(120,60,60,.22)";ctx.shadowBlur=hurtActive?22:warg.angry?16:6;
+      drawPixelWarg(warg.x+recoilX,warg.y,warg.groundY,warg.facing,mode,elapsed,now,WARG_RENDER_SIZE,hurtActive,warg.angry);
+      ctx.restore();
+      if(warg.health<=0){
+        if(wargAwoken){ctx.save();ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 13px Georgia, serif";ctx.fillStyle="#ffe7a8";ctx.shadowColor="rgba(255,180,90,.7)";ctx.shadowBlur=14;ctx.fillText("The Warg Alpha falls silent.",warg.x,warg.y-110);ctx.restore();}
+        return;
+      }
+      const barW=118,barH=10,barX=warg.x+recoilX-barW/2,barY=warg.y-152;
+      const healthRatio=clamp(warg.health/warg.maxHealth,0,1);
+      const healthLabel=(warg.angry?"WARG ALPHA — AWAKE  ":"WARG ALPHA — SLEEPING  ")+warg.health+" / "+warg.maxHealth;
+      ctx.save();
+      ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="700 10px ui-monospace, SFMono-Regular, Menlo, monospace";
+      ctx.lineWidth=3;ctx.strokeStyle="rgba(10,4,4,.92)";ctx.strokeText(healthLabel,warg.x+recoilX,barY-4);
+      ctx.fillStyle=warg.angry?"#ffb3a0":"#e7d8ff";ctx.fillText(healthLabel,warg.x+recoilX,barY-4);
+      ctx.fillStyle="rgba(10,4,4,.92)";ctx.fillRect(barX-2,barY-2,barW+4,barH+4);
+      ctx.fillStyle="#2c1418";ctx.fillRect(barX,barY,barW,barH);
+      const healthGradient=ctx.createLinearGradient(barX,barY,barX+barW,barY);
+      healthGradient.addColorStop(0,"#ff6a52");healthGradient.addColorStop(1,"#c22e3c");
+      ctx.fillStyle=healthGradient;ctx.fillRect(barX,barY,barW*healthRatio,barH);
+      ctx.strokeStyle="rgba(255,170,150,.72)";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barW+1,barH+1);
+      if(hurtActive){ctx.globalAlpha=1-hurtProgress;ctx.font="900 15px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillStyle="#ffdfc0";ctx.fillText("-"+warg.lastDamage,warg.x+recoilX,barY-18-hurtProgress*18);}
+      ctx.restore();
+    };
+    // ==== NPC relationships: canvas-drawn friendly characters ====
+    const drawNpc=(npc:NpcDef,now:number)=>{
+      if(npc.map!==mapRef.current)return;
+      const bob=Math.sin(now*.0026+npc.x*.01)*2.2;
+      const groundY=590,x=npc.x+34,y=groundY-56+bob;
+      const {skin,cloak,trim,accent}=npc.palette;
+      const near=npcNearPlayer(npc,mapRef.current,player.current.x);
+      ctx.save();
+      ctx.fillStyle="rgba(2,4,5,.5)";ctx.beginPath();ctx.ellipse(x,groundY+2,20,5,0,0,Math.PI*2);ctx.fill();
+      ctx.translate(x,y);
+      ctx.fillStyle=cloak;ctx.beginPath();ctx.moveTo(-15,52);ctx.quadraticCurveTo(-19,10,-11,-6);ctx.lineTo(11,-6);ctx.quadraticCurveTo(19,10,15,52);ctx.closePath();ctx.fill();
+      ctx.fillStyle=trim;ctx.fillRect(-15,44,30,5);
+      ctx.fillStyle=accent;ctx.beginPath();ctx.ellipse(0,-2,4.5,4.5,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(0,-22,12,13,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=cloak;ctx.beginPath();ctx.ellipse(0,-30,13,8,0,0,Math.PI);ctx.fill();
+      ctx.fillStyle="#160e0a";ctx.beginPath();ctx.ellipse(-4.5,-23,1.6,2,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(4.5,-23,1.6,2,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle="#160e0a";ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(0,-16,4,.15,Math.PI-.15);ctx.stroke();
+      if(near){
+        ctx.restore();ctx.save();ctx.globalAlpha=.6+Math.sin(now*.006)*.25;ctx.fillStyle=trim;ctx.shadowColor=trim;ctx.shadowBlur=8;ctx.beginPath();ctx.arc(x,y-52,2.6,0,Math.PI*2);ctx.fill();
+      }
+      ctx.restore();
+      ctx.save();ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 9px ui-monospace, SFMono-Regular, Menlo, monospace";
+      ctx.lineWidth=3;ctx.strokeStyle="rgba(4,6,8,.85)";ctx.strokeText(npc.name.toUpperCase(),x,y-64);
+      ctx.fillStyle=trim;ctx.fillText(npc.name.toUpperCase(),x,y-64);
+      ctx.restore();
+    };
     const drawPixelPlatform=(p:Platform,now:number,map:MapId)=>{
       const ledge=p.h<=24;
       const depth=Math.min(p.h,ledge?24:150);
@@ -1457,7 +2045,7 @@ export default function AshfallGame() {
       }
       ctx.globalAlpha=1;
       if(portalFlashUntil.current>now){ctx.fillStyle="rgba(255,244,214,"+((portalFlashUntil.current-now)/430*.18)+")";ctx.fillRect(cameraX,0,viewW,WORLD_H);}
-      drawDragon(now);drawJackals(now);drawCompanion(now);
+      drawDragon(now);drawJackals(now);drawFox(now);drawWarg(now);for(const npc of NPCS)drawNpc(npc,now);drawCompanion(now);
       drawPlayer(player.current,now);ctx.restore();
     };
     const frame=(now:number)=>{
@@ -1499,37 +2087,44 @@ export default function AshfallGame() {
         if(pl.y>WORLD_H+80){pl.x=map===1?Math.max(120,pl.x-180):340;pl.y=240;pl.vy=0;pl.grounded=false;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}pl.step+=Math.abs(pl.vx)*dt*.048;
       }else{pl.vx*=.82;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
       const castState=companionCastRef.current;
-      const castDuration=castState.kind==="recall"?COMPANION_RECALL_DURATION:780;
+      const castDuration=companionCastDurationFor(castState.kind==="recall"?COMPANION_RECALL_DURATION:780,castState.itemId);
       if(castState.kind&&now-castState.started<castDuration)pl.facing=castState.direction;
-      updateDragon(dt,now);updateJackals(dt,now);
+      updateDragon(dt,now);updateJackals(dt,now);updateFox(dt,now);updateWarg(dt,now);
       if(deployQueued.current){
         const itemId=equippedRef.current[selectedSlotRef.current];
         const item=itemId?inventoryRef.current.find(entry=>entry.id===itemId):null;
         const ally=companionRef.current;
         if(item?.type==="animal-card"){
           if(ally.active&&ally.itemId===item.id){
-            if(ally.recallStarted===0){const direction:1|-1=ally.x>=pl.x?1:-1;ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;companionCastRef.current={started:now,kind:"recall",direction};pl.facing=direction;tone(470,.16,.022);window.setTimeout(()=>tone(280,.22,.024),180);window.setTimeout(()=>tone(135,.34,.022),610);}
+            if(ally.recallStarted===0){const direction:1|-1=ally.x>=pl.x?1:-1;ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;companionCastRef.current={started:now,kind:"recall",direction,itemId:ally.itemId};pl.facing=direction;tone(470,.16,.022);window.setTimeout(()=>tone(280,.22,.024),180);window.setTimeout(()=>tone(135,.34,.022),610);}
           }else{
             const summonX=clamp(pl.x+pl.facing*COMPANION_DEPLOY_DISTANCE,30,activeWorldW-30);
             const summonGround=companionSurfaceAt(summonX,pl.y+PH,map)??pl.y+PH;
             ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=summonX;ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.recallStarted=0;ally.teleportAt=0;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;
-            ally.maxHealth=item.id===SUNSET_JACKAL_CARD.id?JACKAL_MAX_HEALTH:DRAGON_MAX_HEALTH;ally.health=ally.maxHealth;
-            const direction:1|-1=summonX>=pl.x?1:-1;companionCastRef.current={started:now,kind:"summon",direction};pl.facing=direction;setDeployedItemId(item.id);tone(330,.18,.024);window.setTimeout(()=>tone(620,.22,.022),170);window.setTimeout(()=>tone(940,.28,.02),420);
+            ally.maxHealth=companionMaxHealthFor(item.id);ally.health=ally.maxHealth;
+            const direction:1|-1=summonX>=pl.x?1:-1;companionCastRef.current={started:now,kind:"summon",direction,itemId:item.id};pl.facing=direction;setDeployedItemId(item.id);tone(330,.18,.024);window.setTimeout(()=>tone(620,.22,.022),170);window.setTimeout(()=>tone(940,.28,.02),420);
           }
         }
         deployQueued.current=false;
       }
-      updateCompanion(dt,now);
+      updateCompanion(dt,now);flushBond(now);
       const cardReady=map===1&&dragon.health<=0&&!dragonCardCollected&&now-dragon.modeStarted>900;
       const nearDragonCard=cardReady&&Math.abs(pl.x-dragon.x)<105&&Math.abs((pl.y+PH)-dragon.groundY)<85;
       const readyJackal=map===2&&!jackalCardCollected?jackals.find(jackal=>jackal.health<=0&&now-jackal.modeStarted>900&&Math.abs(pl.x-jackal.x)<105&&Math.abs((pl.y+PH)-jackal.groundY)<85):undefined;
+      const nearFoxCard=map===3&&!foxCardCollected&&fox.health<=0&&now-fox.modeStarted>900&&Math.abs(pl.x-fox.x)<105&&Math.abs((pl.y+PH)-fox.groundY)<85;
       if(pickupQueued.current){
         if(nearDragonCard&&collectInventoryItem(BABY_DRAGON_CARD)){
           dragonCardCollected=true;toggleEquippedItem(BABY_DRAGON_CARD.id);
+          completeObjective("ch1-dragon");
           tone(760,.16,.025);window.setTimeout(()=>tone(1040,.22,.018),90);
         }else if(readyJackal&&collectInventoryItem(SUNSET_JACKAL_CARD)){
           jackalCardCollected=true;toggleEquippedItem(SUNSET_JACKAL_CARD.id);
+          completeObjective("ch2-jackals");
           tone(640,.16,.024);window.setTimeout(()=>tone(980,.22,.018),90);
+        }else if(nearFoxCard&&collectInventoryItem(EMBER_FOX_CARD)){
+          foxCardCollected=true;toggleEquippedItem(EMBER_FOX_CARD.id);
+          completeObjective("ch3-fox");
+          tone(700,.16,.024);window.setTimeout(()=>tone(1060,.22,.018),90);
         }
         pickupQueued.current=false;
       }
@@ -1541,11 +2136,21 @@ export default function AshfallGame() {
         aimAngle.current=Math.atan2(aimWorldY-(pl.y+34),aimWorldX-pl.x);
       }
       let action="";
-      if(!dialogueRef.current){
+      if(!dialogueRef.current&&!pauseOpenRef.current){
+        const npcHere=NPCS.find(n=>npcNearPlayer(n,map,pl.x));
+        const ally=companionRef.current;
+        const canPet=ally.active&&ally.map===map&&ally.mode==="idle"&&Math.abs(pl.x-ally.x)<BOND_PET_RANGE&&now-lastPetAtRef.current>BOND_PET_COOLDOWN;
         if(nearDragonCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Baby Dragon card";
         else if(readyJackal)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Sunset Jackal card";
+        else if(nearFoxCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Ember Fox card";
+        else if(npcHere)action=`Talk to ${npcHere.name}`;
         else if(map===1&&Math.abs(pl.x-(MAP1_PORTAL_X+55))<145)action="Enter Map 2";
         else if(map===2&&Math.abs(pl.x-(MAP2_PORTAL_X+55))<145)action="Return to Map 1";
+        else if(map===2&&Math.abs(pl.x-(MAP2_GROVE_PORTAL_X+55))<145)action="Enter Ashwood Grove";
+        else if(map===3&&Math.abs(pl.x-(MAP3_SHORE_PORTAL_X+55))<145)action="Return to Sunset Shore";
+        else if(map===3&&Math.abs(pl.x-(MAP3_CRATER_PORTAL_X+55))<145)action="Enter Ashfall Crater";
+        else if(map===4&&Math.abs(pl.x-(MAP4_GROVE_PORTAL_X+55))<145)action="Return to Ashwood Grove";
+        else if(canPet)action=`Pet ${companionDisplayName(ally.itemId)}`;
       }
       if(action!==lastAction){lastAction=action;setNearAction(action||null);}
       ctx.clearRect(0,0,w,h);drawBackdrop(w,h,now,map);drawWorld(w,h,scale,now);
@@ -1563,10 +2168,16 @@ export default function AshfallGame() {
     };
     raf=requestAnimationFrame(frame);
     return()=>{cancelAnimationFrame(raf);window.removeEventListener("resize",resize);knight.removeEventListener("load",prepareActualEyes);};
-  },[collectInventoryItem,toggleEquippedItem,tone]);
+  },[collectInventoryItem,completeObjective,reachEnding,toggleEquippedItem,tone]);
 
   const touch=useCallback((key:string,value:boolean,e:React.PointerEvent)=>{e.preventDefault();keys.current[key]=value;if(key==="w"&&value&&!dialogueRef.current)jumpQueued.current=true;if(key==="s"&&value&&!dialogueRef.current)slideQueued.current=true;},[]);
   const toggleSound=()=>{soundRef.current=!soundRef.current;setSoundOn(soundRef.current);if(soundRef.current)tone(520,.16,.025);};
+
+  const dialogueLine=dialogue?dialogue[dialogueIndex]:null;
+  const dialogueChoices=dialogueLine?.choices??null;
+  const activeChapter=CHAPTERS.find(c=>c.id===chapterId)??CHAPTERS[0];
+  const companionCards=[BABY_DRAGON_CARD,SUNSET_JACKAL_CARD,EMBER_FOX_CARD];
+  const mapName=CHAPTER_NAME[mapNumber];
 
   return <main className="game-shell" aria-label="Echoes of Ashfall game">
     <canvas ref={canvasRef} className="game-canvas" data-sword-damage={SWORD_DAMAGE} aria-label={`${PLAYER_NAME} in a playable side-scrolling world. Move the cursor to aim and left click to attack for ${SWORD_DAMAGE} damage. Four rapid sword attacks are available before stamina must recover.`} onPointerDown={(e)=>{if(e.button===0){e.preventDefault();updateAim(e.clientX,e.clientY);attack();}}}/>
