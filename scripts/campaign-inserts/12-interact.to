@@ -1,0 +1,7 @@
+    if(map===1&&Math.abs(x-(MAP1_PORTAL_X+55))<145) enterMap(2,1);
+    else if(map===2&&Math.abs(x-(MAP2_PORTAL_X+55))<145) enterMap(1,2);
+    else if(map===2&&Math.abs(x-(MAP2_EXIT_X+55))<145) enterMap(3,2);
+    else if(map===3&&Math.abs(x-(MAP3_ENTRY_X+55))<145) enterMap(2,3);
+    else if(map===3&&Math.abs(x-(MAP3_EXIT_X+55))<145) enterMap(4,3);
+    else if(map===4&&Math.abs(x-(MAP4_ENTRY_X+55))<145) enterMap(3,4);
+    else if(map===4&&Math.abs(x-(MAP4_EXIT_X+55))<145) showDialogue(SEALED_GATE_LINES);
