@@ -1,0 +1,1 @@
+    if(!startedRef.current||mapRef.current!==2)return;
