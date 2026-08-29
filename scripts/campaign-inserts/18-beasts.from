@@ -1,0 +1,5 @@
+    const jackals:Jackal[]=[
+      createJackal("sunset-jackal-a",980,720,1280),
+      createJackal("sunset-jackal-b",1880,1580,2280),
+      createJackal("sunset-jackal-c",2860,2520,3320)
+    ];
