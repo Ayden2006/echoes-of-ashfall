@@ -1,0 +1,4 @@
+  {x:720,y:455,w:160,h:18},{x:1760,y:430,w:180,h:18},{x:2860,y:420,w:190,h:18}
+];
+const map5PlatformsLocal = map5Platforms;
+const map6PlatformsLocal = map6Platforms;

@@ -1,0 +1,1 @@
+const cardStats = (id:string|null) => laterActCardStats(id)??(id===SUNSET_JACKAL_CARD.id?{hp:JACKAL_MAX_HEALTH,ground:true as const,kind:"jackal"}:id===CINDER_FOX_CARD.id?{hp:FOX_MAX_HEALTH,ground:true as const,kind:"fox"}:id===PALE_STAG_CARD.id?{hp:STAG_MAX_HEALTH,ground:true as const,kind:"stag"}:{hp:DRAGON_MAX_HEALTH,ground:false as const,kind:"dragon"});

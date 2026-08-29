@@ -1,0 +1,2 @@
+    else if(map===4&&Math.abs(x-(MAP4_ENTRY_X+55))<145) enterMap(3,4);
+    else if(map===4&&Math.abs(x-(MAP4_EXIT_X+55))<145) showDialogue(SEALED_GATE_LINES);

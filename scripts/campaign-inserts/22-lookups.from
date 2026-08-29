@@ -1,0 +1,9 @@
+const worldWidthFor = (map:MapId) => map===1?MAP1_W:map===2?MAP2_W:map===3?MAP3_W:map===4?MAP4_W:map===5?4400:4800;
+const platformsFor = (map:MapId) => map===1?map1Platforms:map===2?map2Platforms:map===3?map3Platforms:map4Platforms;
+const spawnFor = (map:MapId, from:MapId|null) => {
+  if(from===null) return {x:230,y:498,facing:1 as 1|-1};
+  if(map===1) return {x:4860,y:483,facing:-1 as 1|-1};
+  const arrivingFromPrev = (map===2&&from===1)||(map===3&&from===2)||(map===4&&from===3);
+  if(arrivingFromPrev) return {x:340,y:498,facing:1 as 1|-1};
+  return {x:Math.max(240,worldWidthFor(map)-340),y:498,facing:-1 as 1|-1};
+};

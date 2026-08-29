@@ -1,0 +1,5 @@
+    else if(map===4&&Math.abs(x-(MAP4_ENTRY_X+55))<145) enterMap(3,4);
+    else if(map===4&&Math.abs(x-(MAP4_EXIT_X+55))<145) enterMap(5,4);
+    else if(map===5&&Math.abs(x-(MAP5_ENTRY_X+55))<145) enterMap(4,5);
+    else if(map===5&&Math.abs(x-(MAP5_EXIT_X+55))<145) enterMap(6,5);
+    else if(map===6&&Math.abs(x-(MAP6_ENTRY_X+55))<145) enterMap(5,6);
