@@ -82,6 +82,18 @@ const STAG_MAX_HEALTH = 95;
 const STAG_ATTACK_DAMAGE = 10;
 const STAG_RENDER_SIZE = 118;
 const PALE_STAG_CARD:InventoryItem = {id:"pale-stag-card",name:"Pale Stag",type:"animal-card",description:"A moonwell stag spirit from the cliffs.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#0b1418",mid:"#2a4a55",accent:"#8ee7ff",glow:"#d7fbff"}};
+const CAMPAIGN_OPENING:Line[] = [{speaker:"Moon Night",text:"The rain carries a signal. Something in Ashfall is still calling."},{speaker:"Moon Night",text:"Follow the echo through castle, shore, ash, and moonwell. Press E for cards, Q to deploy."}];
+const MAP_STORY:Record<MapId,{name:string;objective:string;intro:Line[]}> = {1:{name:"The Signal in the Rain",objective:"Find the baby dragon in the rain, then take the far-right portal.",intro:[{speaker:"Moon Night",text:"Moonlit stone. A young ash dragon hunts these ruins."}]},2:{name:"Sunset Shore",objective:"Track the Sunset Jackals, then take the eastern portal to Ash Hollow.",intro:[{speaker:"Moon Night",text:"The shore burns gold. Bind a jackal, then push east."}]},3:{name:"Ash Hollow",objective:"Bind a Cinder Fox, then reach the moonwell gate.",intro:[{speaker:"Moon Night",text:"Foxfire moves through the ash."}]},4:{name:"Moonwell Cliffs",objective:"Face the Pale Stag. Maps 5 and 6 are still sealed.",intro:[{speaker:"Moon Night",text:"The far gate is sealed. Maps 5 and 6 still wait."}]},5:{name:"The Quiet Ember",objective:"Reserved for Game Builder 2.",intro:[{speaker:"Moon Night",text:"Not open yet."}]},6:{name:"Ashfall's Heart",objective:"Reserved for Game Builder 2.",intro:[{speaker:"Moon Night",text:"The last echo is still unwritten."}]}};
+const SEALED_GATE_LINES:Line[] = [{speaker:"Moon Night",text:"The gate answers, but Maps 5 and 6 are not open yet."}];
+const cardStats = (id:string|null) => id===SUNSET_JACKAL_CARD.id?{hp:JACKAL_MAX_HEALTH,ground:true as const,kind:"jackal"}:id===CINDER_FOX_CARD.id?{hp:FOX_MAX_HEALTH,ground:true as const,kind:"fox"}:id===PALE_STAG_CARD.id?{hp:STAG_MAX_HEALTH,ground:true as const,kind:"stag"}:{hp:DRAGON_MAX_HEALTH,ground:false as const,kind:"dragon"};
+const FOX_MAX_HEALTH = 55;
+const FOX_ATTACK_DAMAGE = 7;
+const FOX_RENDER_SIZE = 78;
+const CINDER_FOX_CARD:InventoryItem = {id:"cinder-fox-card",name:"Cinder Fox",type:"animal-card",description:"An ember fox spirit from Ash Hollow.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#1a0a08",mid:"#6a2414",accent:"#ff7a3a",glow:"#ffc08a"}};
+const STAG_MAX_HEALTH = 95;
+const STAG_ATTACK_DAMAGE = 10;
+const STAG_RENDER_SIZE = 118;
+const PALE_STAG_CARD:InventoryItem = {id:"pale-stag-card",name:"Pale Stag",type:"animal-card",description:"A moonwell stag spirit from the cliffs.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#0b1418",mid:"#2a4a55",accent:"#8ee7ff",glow:"#d7fbff"}};
 const LYNX_MAX_HEALTH = 95;
 const LYNX_ATTACK_DAMAGE = 10;
 const LYNX_RENDER_SIZE = 94;
@@ -272,6 +284,7 @@ export default function AshfallGame() {
   const seenIntroRef = useRef<Set<MapId>>(new Set());
   const metNpcRef = useRef<Set<string>>(new Set());
   const campaignEndedRef = useRef(false);
+  const seenIntroRef = useRef<Set<MapId>>(new Set());
   const audioRef = useRef<AudioContext|null>(null);
   const soundRef = useRef(true);
   const [started,setStarted] = useState(false);
@@ -473,6 +486,16 @@ export default function AshfallGame() {
       createJackal("sunset-jackal-b",1880,1580,2280),
       createJackal("sunset-jackal-c",2860,2520,3320)
     ];
+    const createBeast=(id:string,x:number,patrolMin:number,patrolMax:number,health:number,damage:number):Jackal=>({...createJackal(id,x,patrolMin,patrolMax),health,maxHealth:health,attackDamage:damage,y:590,groundY:590});
+    const foxes:Jackal[]=[
+      createBeast("cinder-fox-a",920,620,1480,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE),
+      createBeast("cinder-fox-b",2480,2100,3300,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE)
+    ];
+    const stags:Jackal[]=[
+      createBeast("pale-stag-a",1760,1180,2680,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE)
+    ];
+    const wildPackFor=(map:MapId)=>map===2?jackals:map===3?foxes:map===4?stags:null;
+    const wildCardFor=(map:MapId)=>map===2?SUNSET_JACKAL_CARD:map===3?CINDER_FOX_CARD:map===4?PALE_STAG_CARD:null;
     const createBeast=(id:string,x:number,patrolMin:number,patrolMax:number,health:number,damage:number):Jackal=>({...createJackal(id,x,patrolMin,patrolMax),health,maxHealth:health,attackDamage:damage,y:590,groundY:590});
     const foxes:Jackal[]=[
       createBeast("cinder-fox-a",920,620,1480,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE),
