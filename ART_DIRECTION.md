@@ -9,3 +9,7 @@ The ground is part of the backdrop, not a separate flat gameplay strip. It shoul
 For the current night-castle setting, the environment should read as a natural night: blue-black sky, deep navy distance, cool slate stone, pale blue-gray moonlight, and small cyan atmospheric accents. Purple belongs mainly to the knight and restrained accent details; do not wash the sky, fog, or ground in violet. Animate the environment with subtle cel-like motion—fog drift, clouds, rain, stars, grass, and light flicker—while keeping collision surfaces crisp and readable.
 
 Map 2 is a natural sunset beach rendered with the same dimensional pixel-art language. The sky and ocean use warm gold, peach, coral, and coastal blue, while the playable sand repeats that sunset light in a crisp layered pixel cap and deeper warm-brown body. Each future map should keep its ground material visibly tied to its backdrop lighting and palette.
+
+Map 3, Ash Hollow, is a smoldering ember wood. The sky is charcoal and rust, with falling ash, burnt-tree silhouettes, and a low orange glow on the horizon. The playable ground is layered umber, soot, and dull ember caps so Moon Night's feet still read as planted. Foxfire accents stay small; do not flood the scene in neon orange.
+
+Map 4, Moonwell Cliffs, is a cool moonlit escarpment. The sky is deep teal-indigo with a pale moon, thin mist, and tiny cyan motes. The playable stone uses slate, cool gray-blue, and bioluminescent moss caps so the cliff edge stays readable. Keep the moonwell's glow local; do not wash the whole cliff in turquoise.
