@@ -285,6 +285,8 @@ export default function AshfallGame() {
       if (["arrowleft","arrowright","arrowup","arrowdown"," ","tab"].includes(k)) e.preventDefault();
       if(k==="tab"&&!e.repeat){toggleInventory();return;}
       if(inventoryOpenRef.current){keys.current[k]=false;return;}
+      if(k==="escape"&&!e.repeat){togglePause();return;}
+      if(pauseOpenRef.current){keys.current[k]=false;return;}
       if(startedRef.current&&/^[1-5]$/.test(k)&&!e.repeat){selectUsableSlot(Number(k)-1);return;}
       if(startedRef.current&&k==="q"&&!e.repeat){deployQueued.current=true;return;}
       if (!startedRef.current && (k==="enter"||k===" ")) startGame();
@@ -292,7 +294,7 @@ export default function AshfallGame() {
       else {
         if ((k==="w"||k==="arrowup"||k===" ")&&!e.repeat) jumpQueued.current=true;
         if ((k==="s"||k==="arrowdown")&&!e.repeat) slideQueued.current=true;
-        if (k==="e"&&!e.repeat){pickupQueued.current=true;interact();}
+        if (k==="e"&&!e.repeat){pickupQueued.current=true;petQueued.current=true;interact();}
       }
     };
     const up=(e:KeyboardEvent)=>{ keys.current[e.key.toLowerCase()]=false; };
@@ -300,7 +302,7 @@ export default function AshfallGame() {
     window.addEventListener("keydown",down,{passive:false}); window.addEventListener("keyup",up);
     window.addEventListener("pointermove",aim,{passive:true});
     return()=>{window.removeEventListener("keydown",down);window.removeEventListener("keyup",up);window.removeEventListener("pointermove",aim);};
-  },[advanceDialogue,interact,selectUsableSlot,startGame,toggleInventory,updateAim]);
+  },[advanceDialogue,interact,selectUsableSlot,startGame,toggleInventory,togglePause,updateAim]);
 
   useEffect(()=>{
     const canvas=canvasRef.current, ctx=canvas?.getContext("2d");
