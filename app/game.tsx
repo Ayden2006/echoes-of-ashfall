@@ -39,7 +39,7 @@ const MAP6_VEIN_X = 3820;
 const MAP6_HEART_X = 4670;
 const MAP4_MOONWELL_X = 2360;
 const MAP1_PLAQUE_X = 2680;
-const MAP2_SHELL_X = 1140;
+const MAP2_SHELL_X = 1515;
 const MAP3_HOLLOW_X = 1510;
 const MAP5_COAL_X = 1480;
 const MAP6_ECHO_X = 4120;
@@ -123,7 +123,7 @@ const ECHO_LINES:Line[] = [{speaker:"Moon Night",text:"A cracked echo-stone. The
 type Landmark = {map:MapId; x:number; groundY:number; radius:number; action:string; lines:Line[]};
 const LANDMARKS:Landmark[] = [
   {map:1,x:MAP1_PLAQUE_X,groundY:382,radius:120,action:"Study the rain-worn plaque",lines:PLAQUE_LINES},
-  {map:2,x:MAP2_SHELL_X,groundY:472,radius:120,action:"Study the dusk-shell",lines:SHELL_LINES},
+  {map:2,x:MAP2_SHELL_X,groundY:430,radius:130,action:"Study the dusk-shell",lines:SHELL_LINES},
   {map:3,x:MAP3_HOLLOW_X,groundY:418,radius:120,action:"Study the foxfire hollow",lines:HOLLOW_LINES},
   {map:4,x:MAP4_MOONWELL_X,groundY:575,radius:140,action:"Study the moonwell",lines:MOONWELL_LINES},
   {map:5,x:MAP5_KILN_X,groundY:590,radius:140,action:"Study the quiet kiln",lines:KILN_LINES},
@@ -131,7 +131,7 @@ const LANDMARKS:Landmark[] = [
   {map:6,x:MAP6_VEIN_X,groundY:545,radius:140,action:"Study the cooled vein",lines:VEIN_LINES},
   {map:6,x:MAP6_ECHO_X,groundY:430,radius:120,action:"Study the echo-stone",lines:ECHO_LINES}
 ];
-const landmarkAt=(map:MapId,x:number,footY:number)=>LANDMARKS.find(mark=>mark.map===map&&Math.abs(x-mark.x)<mark.radius&&Math.abs(footY-mark.groundY)<48);
+const landmarkAt=(map:MapId,x:number,footY:number)=>LANDMARKS.find(mark=>mark.map===map&&Math.abs(x-mark.x)<mark.radius&&Math.abs(footY-mark.groundY)<56);
 const npcTalkKey=(npc:{id:string;map:MapId})=>npc.id+":"+npc.map;
 const cardStats = (id:string|null) => isSunsetJackalCardId(id)?{hp:JACKAL_MAX_HEALTH,ground:true as const,kind:"jackal"}:id===CINDER_FOX_CARD.id?{hp:FOX_MAX_HEALTH,ground:true as const,kind:"fox"}:id===PALE_STAG_CARD.id?{hp:STAG_MAX_HEALTH,ground:true as const,kind:"stag"}:id===EMBER_LYNX_CARD.id?{hp:LYNX_MAX_HEALTH,ground:true as const,kind:"lynx"}:id===HEART_WYRM_CARD.id?{hp:WYRM_MAX_HEALTH,ground:false as const,kind:"wyrm"}:{hp:DRAGON_MAX_HEALTH,ground:false as const,kind:"dragon"};
 const GROUND_BEAST_CARD_IDS = new Set([SUNSET_JACKAL_CARD.id,...Object.values(JACKAL_CARD_BY_BEAST).map(card=>card.id),CINDER_FOX_CARD.id,PALE_STAG_CARD.id,EMBER_LYNX_CARD.id]);
@@ -2253,12 +2253,12 @@ export default function AshfallGame() {
           ctx.fillStyle=glow;ctx.fillRect(x-60,groundY-60,120,70);
           ctx.fillStyle="#d49a68";ctx.beginPath();ctx.ellipse(x,groundY-8,16,10, -.2,0,Math.PI*2);ctx.fill();
           ctx.fillStyle="#ffe1a3";ctx.beginPath();ctx.ellipse(x+3,groundY-10,8,5,-.2,0,Math.PI*2);ctx.fill();
-          ctx.globalAlpha=.34+pulse*.16;ctx.fillStyle="#ffd27a";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("SHELL",x,groundY-28);
+          ctx.globalAlpha=.5+pulse*.25;ctx.fillStyle="#ffd27a";ctx.font="900 11px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("SHELL",x,groundY-32);
         }else if(map===3){
           ctx.fillStyle="#1b0d08";ctx.fillRect(x-9,groundY-38,18,38);
           ctx.fillStyle="rgba(255,104,40,"+(.22+pulse*.2)+")";ctx.beginPath();ctx.ellipse(x,groundY-40,14,10,0,0,Math.PI*2);ctx.fill();
           ctx.fillStyle="rgba(255,170,90,"+(.3+pulse*.25)+")";ctx.beginPath();ctx.ellipse(x,groundY-42,7,5,0,0,Math.PI*2);ctx.fill();
-          ctx.globalAlpha=.34+pulse*.16;ctx.fillStyle="#ffc08a";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("HOLLOW",x,groundY-56);
+          ctx.globalAlpha=.5+pulse*.25;ctx.fillStyle="#ffc08a";ctx.font="900 11px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("HOLLOW",x,groundY-60);
         }else if(map===5){
           ctx.fillStyle="#2b130d";ctx.fillRect(x-22,groundY-16,44,16);
           ctx.fillStyle="rgba(255,130,62,"+(.28+pulse*.22)+")";ctx.beginPath();ctx.ellipse(x,groundY-18,12,8,0,0,Math.PI*2);ctx.fill();
