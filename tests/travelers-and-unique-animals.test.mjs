@@ -94,12 +94,12 @@ test("each map keeps a unique animal on the existing card + E/Q pattern", () => 
   assert.match(game, /"Pick up "\+otherWildCard\.name\+" card"/);
   assert.match(game, /k==="q"&&!e\.repeat/);
 
+  // Jackal card art is PR #5's slice — do not lock it to the baby-dragon PNG.
   assert.match(game, /id:"cinder-fox-card".*image:"\/cinder-fox-card\.svg"/);
   assert.match(game, /id:"pale-stag-card".*image:"\/pale-stag-card\.svg"/);
   assert.match(game, /id:"ember-lynx-card".*image:"\/ember-lynx-card\.svg"/);
   assert.match(game, /id:"heart-wyrm-card".*image:"\/heart-wyrm-card\.svg"/);
   assert.match(game, /id:"baby-dragon-card".*image:"\/baby-dragon-sprite-sheet\.png"/);
-  assert.match(game, /id:"sunset-jackal-card".*image:"\/baby-dragon-sprite-sheet\.png"/);
 });
 
 test("player is Moon Night, never Moon Knight, and Reed/Kest stay", () => {
