@@ -34,10 +34,7 @@ test("ground jackals leap instead of using DragonMode fly", async () => {
   const game = await readFile("app/game.tsx", "utf8");
   assert.match(game, /const nextMode=!wyrm&&mode==="fly"\?"run":mode/);
   assert.match(game, /startJackalLeap/);
-  assert.match(
-    game,
-    /else if\(jackal\.id\.startsWith\("heart-wyrm"\)&&roll<\.9\)beginJackalTravel\(jackal,"fly"/,
-  );
+  assert.match(game, /if\(nextMode==="sleep"\|\|nextMode==="attack"\)\{jackal\.leapUntil=0/);
   assert.doesNotMatch(
     game,
     /jackal\.id\.startsWith\("heart-wyrm"\)\|\|roll<\.9\)beginJackalTravel\(jackal,"fly"/,

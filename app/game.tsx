@@ -1056,9 +1056,10 @@ export default function AshfallGame() {
       const wyrm=jackal.id.startsWith("heart-wyrm");
       const nextMode=!wyrm&&mode==="fly"?"run":mode;
       jackal.mode=nextMode;jackal.modeStarted=now;jackal.modeUntil=now+duration;jackal.landing=false;
+      if(nextMode==="sleep"||nextMode==="attack"){jackal.leapUntil=0;jackal.leapStarted=0;}
       if(nextMode==="fly")jackal.y=Math.min(jackal.y,jackal.groundY-(wyrm?96:36));
       if(nextMode==="attack")jackal.y=Math.min(jackal.y,jackal.groundY-10);
-      if((nextMode==="idle"||nextMode==="walk"||nextMode==="run"||nextMode==="sleep")&&now>=jackal.leapUntil)jackal.y=jackal.groundY;
+      if(nextMode==="idle"||nextMode==="walk"||nextMode==="run"||nextMode==="sleep")jackal.y=jackal.groundY;
       if(nextMode==="idle"||nextMode==="sleep")jackal.vx*=.5;
       if(nextMode==="attack")jackal.vx*=.22;
     };
@@ -1204,14 +1205,14 @@ export default function AshfallGame() {
             const wyrmFly=jackal.mode==="fly"&&jackal.id.startsWith("heart-wyrm");
             const flyLeap=wyrmFly?Math.sin(clamp((now-jackal.modeStarted)/(jackal.modeUntil-jackal.modeStarted||1),0,1)*Math.PI)*110:0;
             const hopT=jackal.leapUntil>jackal.leapStarted?clamp((now-jackal.leapStarted)/(jackal.leapUntil-jackal.leapStarted),0,1):0;
-            const hop=(!wyrmFly&&now<jackal.leapUntil)?Math.sin(hopT*Math.PI)*46:0;
+            const hop=(!wyrmFly&&now<jackal.leapUntil&&(jackal.mode==="walk"||jackal.mode==="run"))?Math.sin(hopT*Math.PI)*46:0;
             const targetY=jackal.groundY-(flyLeap||hop);
             jackal.y+=(targetY-jackal.y)*(1-Math.exp(-10*dt));
           }
         }else{
           jackal.vx+=(0-jackal.vx)*(1-Math.exp(-8*dt));
           const hopT=jackal.leapUntil>jackal.leapStarted?clamp((now-jackal.leapStarted)/(jackal.leapUntil-jackal.leapStarted),0,1):0;
-          const hop=now<jackal.leapUntil&&!jackal.id.startsWith("heart-wyrm")?Math.sin(hopT*Math.PI)*46:0;
+          const hop=now<jackal.leapUntil&&!jackal.id.startsWith("heart-wyrm")&&(jackal.mode==="walk"||jackal.mode==="run")?Math.sin(hopT*Math.PI)*46:0;
           jackal.y+=(jackal.groundY-hop-jackal.y)*(1-Math.exp(-12*dt));
         }
       }
@@ -1329,7 +1330,7 @@ export default function AshfallGame() {
       ctx.save();ctx.translate(x,groundY+3);ctx.scale(1,.32);
       const shadow=ctx.createRadialGradient(0,0,2,0,0,30*scale);shadow.addColorStop(0,"rgba(38,15,10,"+(0.48-leap*.22)+")");shadow.addColorStop(1,"rgba(38,15,10,0)");ctx.fillStyle=shadow;ctx.beginPath();ctx.arc(0,0,30*scale,0,Math.PI*2);ctx.fill();ctx.restore();
       ctx.save();
-      ctx.translate(x+facing*lunge*18,y-bob-leap*8-footLift);
+      ctx.translate(x+facing*lunge*18,sleep?groundY-8-bob:y-bob-leap*8-footLift);
       ctx.rotate(facing*(sleep?0.12:leap>0.05?-0.22*leap:mode==="attack"?-0.10+lunge*0.38:gait*0.05));
       ctx.scale(facing*scale*(1+pounce*.12),(kind==="stag"?scale*1.08:scale)*(1-pounce*.08+(sleep?Math.sin(now*.0028)*.02:0)));
       const tint=variant?.tint;
