@@ -13,7 +13,7 @@ button { font:inherit; }
 .topbar { position:absolute; inset:0 0 auto; padding:clamp(18px,3vw,34px) clamp(18px,4vw,52px); display:flex; justify-content:space-between; align-items:flex-start; pointer-events:none; }
 .hud-left { display:flex; flex-direction:column; align-items:flex-start; gap:14px; }
 .health-hud { width:clamp(158px,17vw,202px); padding:9px 10px 8px; border:1px solid rgba(225,197,148,.42); border-left:3px solid #d6aa62; border-radius:2px; background:linear-gradient(100deg,rgba(7,10,14,.92),rgba(20,12,28,.78)); box-shadow:0 8px 28px rgba(0,0,0,.34),inset 0 0 18px rgba(104,46,155,.12); backdrop-filter:blur(7px); }
-.knight-name { margin:0 0 7px; color:#d9b7ff; font-family:Georgia,serif; font-size:10px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; text-shadow:0 0 9px rgba(141,71,207,.42); }
+.player-name { margin:0 0 7px; color:#d9b7ff; font-family:Georgia,serif; font-size:10px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; text-shadow:0 0 9px rgba(141,71,207,.42); }
 .health-readout { display:flex; align-items:center; gap:7px; color:#f0c376; line-height:1; text-transform:uppercase; }
 .health-readout svg { color:#e45a6e; fill:rgba(228,90,110,.2); filter:drop-shadow(0 0 5px rgba(228,90,110,.28)); }
 .health-readout strong { color:#fff4e4; font-family:Georgia,serif; font-size:19px; font-weight:700; font-variant-numeric:tabular-nums; }
@@ -32,6 +32,7 @@ button { font:inherit; }
 .quick-slot.selected { border-color:#f2d47d; box-shadow:0 0 0 1px rgba(242,212,125,.22),0 0 14px rgba(242,212,125,.18); }
 .quick-slot.deployed { border-color:#8dea4d; box-shadow:0 0 0 1px rgba(141,234,77,.2),0 0 17px rgba(105,231,61,.25); }
 .quick-card-thumb { display:block; width:20px; height:29px; border:1px solid #72db35; border-radius:2px; background-color:#090d0c; background-repeat:no-repeat; background-size:400% 600%; background-position:0 0; }
+.quick-card-thumb.portrait-art,.inventory-card-thumb.portrait-art { background-size:cover; background-position:50% 42%; }
 .quick-empty { width:13px; height:18px; border:1px dashed rgba(231,238,233,.12); border-radius:2px; }
 .quick-slots>small { grid-column:1/-1; margin-top:1px; color:rgba(231,238,233,.38); font-size:7px; letter-spacing:.08em; text-align:left; text-transform:uppercase; }
 .quick-slots>small b { color:#b8ef91; }
@@ -93,7 +94,7 @@ button { font:inherit; }
 .inventory-help b { color:#9bed5d; }
 .touch-controls { display:none; }
 @media (hover:none),(max-width:720px) {
-  .controls{display:none}.topbar{padding:14px}.hud-left{gap:9px}.health-hud{width:144px;padding:7px 8px 6px}.quick-slots{width:144px;gap:3px}.quick-slot{height:38px}.quick-card-thumb{width:16px;height:23px}.quick-slots>small{display:none}.knight-name{margin-bottom:5px;font-size:8px}.health-readout strong{font-size:17px}.health-readout span{font-size:7px}.chapter-line{width:17px}.chapter-mark{gap:8px}.chapter-name{font-size:13px}.objective{max-width:44vw}.dialogue-box{min-height:116px;padding:18px 20px 16px}.dialogue-wrap{bottom:90px}.sound-button{top:78px;right:16px;bottom:auto;width:34px;height:34px}
+  .controls{display:none}.topbar{padding:14px}.hud-left{gap:9px}.health-hud{width:144px;padding:7px 8px 6px}.quick-slots{width:144px;gap:3px}.quick-slot{height:38px}.quick-card-thumb{width:16px;height:23px}.quick-slots>small{display:none}.player-name{margin-bottom:5px;font-size:8px}.health-readout strong{font-size:17px}.health-readout span{font-size:7px}.chapter-line{width:17px}.chapter-mark{gap:8px}.chapter-name{font-size:13px}.objective{max-width:44vw}.dialogue-box{min-height:116px;padding:18px 20px 16px}.dialogue-wrap{bottom:90px}.sound-button{top:78px;right:16px;bottom:auto;width:34px;height:34px}
   .inventory-screen{padding:8px}.inventory-panel{max-height:calc(100dvh - 16px);padding:14px}.inventory-header{grid-template-columns:1fr auto;gap:10px}.inventory-counts{grid-column:1/-1;justify-content:flex-start}.inventory-section-title small{display:none}.active-slots{gap:5px}.active-slot{min-height:73px}.inventory-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}.inventory-slot{min-height:66px}.inventory-card-thumb{width:24px;height:34px}.active-slot .inventory-card-thumb{width:27px;height:38px}
   .touch-controls{position:absolute;z-index:7;inset:auto 0 14px;display:flex;justify-content:space-between;padding:0 8px;pointer-events:none}.touch-group{display:flex;gap:6px}.touch-btn{width:46px;height:46px;border:1px solid rgba(231,238,233,.22);border-radius:50%;background:rgba(5,10,12,.42);color:rgba(231,238,233,.78);font-size:16px;pointer-events:auto;touch-action:none;backdrop-filter:blur(5px)}.touch-btn.action{border-color:rgba(116,230,226,.45);color:var(--signal)}.touch-btn.attack{border-color:rgba(174,123,235,.56);color:#d7b6ff}
 }
