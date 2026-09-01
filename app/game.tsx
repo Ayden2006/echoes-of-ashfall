@@ -498,7 +498,7 @@ export default function AshfallGame() {
     const map=mapRef.current;
     const npc=NPCS.find(n=>n.map===map&&Math.abs(x-n.x)<n.talkRadius);
     if(npc){
-      const hasCard=inventoryRef.current.some(entry=>entry.id===npc.cardId);
+      const hasCard=inventoryRef.current.some(entry=>npc.cardId===SUNSET_JACKAL_CARD.id?isSunsetJackalCardId(entry.id):entry.id===npc.cardId);
       if(!metNpcRef.current.has(npc.id)){metNpcRef.current.add(npc.id);showDialogue(npc.firstTalk);}
       else if(hasCard) showDialogue(npc.afterCaptureTalk);
       else showDialogue(npc.againTalk);

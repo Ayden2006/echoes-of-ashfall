@@ -53,6 +53,23 @@ test("named travelers reuse E-talk and change if you meet them again", () => {
   assert.match(game, /else showDialogue\(npc\.againTalk\)/);
 });
 
+test("Sera afterCapture treats any sunset jackal card, including PR 5 suffixes", () => {
+  const seraShore = npcBlock("sera", 2);
+  assert.match(seraShore, /cardId:SUNSET_JACKAL_CARD\.id/);
+  assert.match(game, /const isSunsetJackalCardId = \(id:string\|null\) => Boolean\(id&&id\.startsWith\("sunset-jackal-card"\)\)/);
+  assert.match(game, /npc\.cardId===SUNSET_JACKAL_CARD\.id\?isSunsetJackalCardId\(entry\.id\):entry\.id===npc\.cardId/);
+  const fnMatch = game.match(/const isSunsetJackalCardId = \(id:string\|null\) => ([^;]+);/);
+  assert.ok(fnMatch);
+  const held = new Function("id", `return (${fnMatch[1]});`);
+  assert.equal(held("sunset-jackal-card"), true);
+  assert.equal(held("sunset-jackal-card-a"), true);
+  assert.equal(held("sunset-jackal-card-b"), true);
+  assert.equal(held("sunset-jackal-card-c"), true);
+  assert.equal(held("cinder-fox-card"), false);
+  assert.equal(held("ember-lynx-card"), false);
+  assert.equal(held(null), false);
+});
+
 test("this is not a dating sim and adds no relationship engine", () => {
   assert.doesNotMatch(game, /bondMeter|affectionMeter|loveInterest|heartMeter|romanceChoice|dialogueChoice/);
   assert.doesNotMatch(campaign, /bondMeter|loveInterest|romanceChoice/);
