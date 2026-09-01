@@ -195,7 +195,7 @@ const NPCS:Npc[] = [
   {id:"sera",name:"Sera",map:2,x:480,talkRadius:150,cardId:SUNSET_JACKAL_CARD.id,
     firstTalk:[
       {speaker:"Sera",text:"Easy on the sand. Jackals hunt in threes here."},
-      {speaker:"Moon Night",text:"The shore burns gold."},
+      {speaker:"Moon Night",text:"Then I'll take the dusk road with one of them."},
       {speaker:"Sera",text:"Sunset Jackals. Dusk-born, four-legged, not the castle dragon."},
       {speaker:"Sera",text:"Bind one, then push east before the light dies. I'll still be on this beach if you turn back."}
     ],
