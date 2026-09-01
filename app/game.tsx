@@ -110,8 +110,9 @@ const ENDING_LINES:Line[] = [{speaker:"Moon Night",text:"The echo is still. Ashf
 const KILN_LINES:Line[] = [{speaker:"Moon Night",text:"Reed's kiln holds a quiet coal. It does not ask to be fed."},{speaker:"Moon Night",text:"The lynx walk this heat like a path. East of here the heart is louder."}];
 const VEIN_LINES:Line[] = [{speaker:"Moon Night",text:"A cooled vein in the clinker. The pulse is louder past this crack."},{speaker:"Moon Night",text:"The altar is still east. I will not rush the last step."}];
 const cardStats = (id:string|null) => isSunsetJackalCardId(id)?{hp:JACKAL_MAX_HEALTH,ground:true as const,kind:"jackal"}:id===CINDER_FOX_CARD.id?{hp:FOX_MAX_HEALTH,ground:true as const,kind:"fox"}:id===PALE_STAG_CARD.id?{hp:STAG_MAX_HEALTH,ground:true as const,kind:"stag"}:id===EMBER_LYNX_CARD.id?{hp:LYNX_MAX_HEALTH,ground:true as const,kind:"lynx"}:id===HEART_WYRM_CARD.id?{hp:WYRM_MAX_HEALTH,ground:false as const,kind:"wyrm"}:{hp:DRAGON_MAX_HEALTH,ground:false as const,kind:"dragon"};
-const GROUND_BEAST_CARD_IDS = new Set([...Object.values(JACKAL_CARD_BY_BEAST).map(card=>card.id),CINDER_FOX_CARD.id,PALE_STAG_CARD.id,EMBER_LYNX_CARD.id]);
+const GROUND_BEAST_CARD_IDS = new Set([SUNSET_JACKAL_CARD.id,...Object.values(JACKAL_CARD_BY_BEAST).map(card=>card.id),CINDER_FOX_CARD.id,PALE_STAG_CARD.id,EMBER_LYNX_CARD.id]);
 const CARD_DISPLAY_NAME:Record<string,string> = {
+  [SUNSET_JACKAL_CARD.id]:"SUNSET JACKAL",
   ...Object.fromEntries(Object.values(JACKAL_CARD_BY_BEAST).map(card=>[card.id,"SUNSET JACKAL"])),
   [CINDER_FOX_CARD.id]:"CINDER FOX",[PALE_STAG_CARD.id]:"PALE STAG",
   [EMBER_LYNX_CARD.id]:"EMBER LYNX",[HEART_WYRM_CARD.id]:"HEART WYRM"
@@ -492,6 +493,7 @@ export default function AshfallGame() {
     const beachBackdrop=new Image(); beachBackdrop.src="/map2-sunset-beach.png";
     const knight=new Image(); knight.src="/knight-sprite-sheet.png";
     const dragonImage=new Image(); dragonImage.src="/baby-dragon-sprite-sheet.png";
+    const jackalCardArt=new Image(); jackalCardArt.src="/sunset-jackal-card.svg";
     const dragon:Dragon={x:1710,y:570,groundY:570,vx:0,facing:1,mode:"idle",modeStarted:last,modeUntil:last+2800,health:DRAGON_MAX_HEALTH,maxHealth:DRAGON_MAX_HEALTH,attackDamage:DRAGON_ATTACK_DAMAGE,lastPlayerAttack:-1,attackLanded:false,hurtStarted:0,hurtUntil:0,hitDirection:1,lastDamage:0,angry:false,landing:false,targetX:1840,awarenessUntil:0};
     const createJackal=(id:string,x:number,patrolMin:number,patrolMax:number):Jackal=>({
       id,x,y:590,groundY:590,vx:0,facing:1,mode:"idle",modeStarted:last,modeUntil:last+2200+Math.random()*1800,
@@ -1578,7 +1580,7 @@ export default function AshfallGame() {
         const healthGradient=ctx.createLinearGradient(ally.x-46,0,ally.x+46,0);healthGradient.addColorStop(0,"#5ed52d");healthGradient.addColorStop(1,"#b7ff57");ctx.fillStyle=healthGradient;ctx.beginPath();ctx.roundRect(ally.x-46,barY+2,92*healthRatio,3,1.5);ctx.fill();ctx.strokeStyle="rgba(190,255,132,.72)";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.stroke();ctx.restore();
       }
     };
-    const drawMagicalAnimalCard=(name:string,x:number,groundY:number,now:number,formedAt:number,image:HTMLImageElement,portrait:{x:number;y:number;w:number;h:number},palette:CardPalette)=>{
+    const drawMagicalAnimalCard=(name:string,x:number,groundY:number,now:number,formedAt:number,image:HTMLImageElement|null,portrait:{x:number;y:number;w:number;h:number}|null,palette:CardPalette)=>{
       const elapsed=now-formedAt;
       const reveal=clamp(elapsed/620,0,1);
       if(reveal<=0)return;
@@ -1612,13 +1614,21 @@ export default function AshfallGame() {
       portraitGlow.addColorStop(0,palette.mid);portraitGlow.addColorStop(1,palette.dark);
       ctx.fillStyle=portraitGlow;ctx.fillRect(-29,-44,58,62);
       const lowerName=name.toLowerCase();
-      if(lowerName.includes("jackal")||lowerName.includes("fox")||lowerName.includes("stag")||lowerName.includes("lynx")){
-        const tint=lowerName.includes("fox")?FOX_TINT:lowerName.includes("stag")?STAG_TINT:lowerName.includes("lynx")?LYNX_TINT:undefined;
-        const kind:BeastKind=lowerName.includes("fox")?"fox":lowerName.includes("stag")?"stag":lowerName.includes("lynx")?"lynx":"jackal";
+      const jackalPortrait=lowerName.includes("jackal");
+      const sheetPortrait=Boolean(image&&/baby-dragon|sprite-sheet/i.test(image.src));
+      if(jackalPortrait){
+        if(image&&image.complete&&image.naturalWidth>0&&!sheetPortrait){
+          ctx.drawImage(image,-29,-44,58,62);
+        }else{
+          ctx.save();ctx.translate(2,14);drawPixelJackal(0,0,20,1,"idle",now,now,82,false,{kind:"jackal"});ctx.restore();
+        }
+      }else if(lowerName.includes("fox")||lowerName.includes("stag")||lowerName.includes("lynx")){
+        const tint=lowerName.includes("fox")?FOX_TINT:lowerName.includes("stag")?STAG_TINT:LYNX_TINT;
+        const kind:BeastKind=lowerName.includes("fox")?"fox":lowerName.includes("stag")?"stag":"lynx";
         ctx.save();ctx.translate(0,18);drawPixelJackal(0,0,16,1,"idle",now,now,78,false,{tint,antlers:kind==="stag",tufts:kind==="lynx",kind});ctx.restore();
       }else if(lowerName.includes("wyrm")){
         ctx.save();ctx.translate(0,16);drawPixelWyrm(0,0,18,1,"idle",now,now,86,false);ctx.restore();
-      }else{
+      }else if(image&&portrait){
         ctx.imageSmoothingEnabled=true;
         ctx.drawImage(image,portrait.x,portrait.y,portrait.w,portrait.h,-30,-45,60,64);
       }
@@ -1754,7 +1764,7 @@ export default function AshfallGame() {
         drawPixelJackal(jackal.x,jackal.y,jackal.groundY,jackal.facing,"sleep",elapsed,now,JACKAL_RENDER_SIZE*(1-pull*.7),false);
         ctx.restore();
       }
-      if(!jackalCardsCollected.has((JACKAL_CARD_BY_BEAST[jackal.id]??SUNSET_JACKAL_CARD).id))drawMagicalAnimalCard("Sunset Jackal",jackal.x,jackal.groundY,now,jackal.modeStarted+350,dragonImage,{x:0,y:25,w:256,h:260},SUNSET_JACKAL_CARD.palette);
+      if(!jackalCardsCollected.has((JACKAL_CARD_BY_BEAST[jackal.id]??SUNSET_JACKAL_CARD).id))drawMagicalAnimalCard("Sunset Jackal",jackal.x,jackal.groundY,now,jackal.modeStarted+350,jackalCardArt,null,SUNSET_JACKAL_CARD.palette);
     };
     const drawJackals=(now:number)=>{
       if(mapRef.current!==2)return;
