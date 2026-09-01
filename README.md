@@ -38,16 +38,18 @@ npm run build
 
 Moon Night follows a fading signal through Ashfall. The road runs castle → beach → hollow → cliffs → quiet ember → heart.
 
-- Map 1 — The Signal in the Rain (moonlit castle): Baby Dragon
-- Map 2 — Sunset Shore (sunset beach): Sunset Jackals
-- Map 3 — Ash Hollow (ember wood): Cinder Foxes
-- Map 4 — Moonwell Cliffs: Pale Stag; far gate opens into The Quiet Ember
-- Map 5 — The Quiet Ember (kiln terrace): Ember Lynx; Reed talks if you press `E`; the quiet kiln can be studied with `E`
-- Map 6 — Ashfall's Heart (inner chamber): Heart Wyrm; Kest talks if you press `E`; a cooled vein and the Ashfall Heart Altar both use `E` (the altar ends the campaign)
+- Map 1 — The Signal in the Rain (moonlit castle): Baby Dragon; Calen talks if you press `E`
+- Map 2 — Sunset Shore (sunset beach): Sunset Jackals; Sera talks if you press `E`
+- Map 3 — Ash Hollow (ember wood): Cinder Foxes; Bram talks if you press `E`
+- Map 4 — Moonwell Cliffs: Pale Stag; Calen can be met again; far gate opens into The Quiet Ember
+- Map 5 — The Quiet Ember (kiln terrace): Ember Lynx; Reed talks if you press `E`; Sera can be met again; the quiet kiln can be studied with `E`
+- Map 6 — Ashfall's Heart (inner chamber): Heart Wyrm; Kest talks if you press `E`; Bram can be met again; a cooled vein and the Ashfall Heart Altar both use `E` (the altar ends the campaign)
 
 Maps 2 and 3 use multi-height terrain instead of a single flat strip, ground animals track the terrain surface they stand on, later maps use layered regional backdrops, and the world map only reveals regions the player has unlocked.
 
 Moon Night has 100 health and 15 sword damage. Defeat an animal to form its magical card, press `E` to collect it, equip it, then press `Q` to deploy or recall the companion. Animals keep chasing and attacking whoever hurt them until that target is defeated or escapes sight range. Every unique animal uses that same card + Q pattern.
+
+Named travelers and knights stand on the road and talk if you press `E` — the same talk used by Reed and Kest. First words, a later talk, and talk after you bind that map's animal all change. Meet Calen, Sera, or Bram again farther east and they remember the last crossing. This is not a dating sim: there are no bond meters, romance choices, or extra relationship systems.
 
 ## Main project files
 
