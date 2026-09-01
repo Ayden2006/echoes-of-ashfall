@@ -4,7 +4,7 @@ const path = "app/game.tsx";
 let text = readFileSync(path, "utf8");
 
 if (text.includes("const companionGestureRef = useRef")) {
-  console.log("Moon Knight companion gesture already applied.");
+  console.log("Moon Night companion gesture already applied.");
   process.exit(0);
 }
 
@@ -13,13 +13,13 @@ if (text.includes("const companionGestureRef = useRef")) {
 // evolved implementation is present, this one-time generation step is a no-op and
 // must not try to re-apply the obsolete source blocks.
 if (text.includes("const companionCastRef = useRef")) {
-  console.log("Moon Knight companion cast animation already present; skipping legacy patch.");
+  console.log("Moon Night companion cast animation already present; skipping legacy patch.");
   process.exit(0);
 }
 
 function replaceOnce(oldText, newText) {
   if (!text.includes(oldText)) {
-    throw new Error("Expected Echoes of Ashfall source block was not found; refusing to apply a partial Moon Knight animation patch.");
+    throw new Error("Expected Echoes of Ashfall source block was not found; refusing to apply a partial Moon Night animation patch.");
   }
   text = text.replace(oldText, newText);
 }
@@ -107,5 +107,5 @@ replaceOnce(
 );
 
 writeFileSync(path, text);
-console.log("Applied Moon Knight companion deploy/recall gesture animation.");
+console.log("Applied Moon Night companion deploy/recall gesture animation.");
 // Triggered from chat to persist the animation into app/game.tsx on main.
