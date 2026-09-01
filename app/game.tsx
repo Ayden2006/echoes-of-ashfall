@@ -84,19 +84,19 @@ const cardThumbClass = (item:InventoryItem) => item.image.includes("sprite-sheet
 const FOX_MAX_HEALTH = 55;
 const FOX_ATTACK_DAMAGE = 7;
 const FOX_RENDER_SIZE = 78;
-const CINDER_FOX_CARD:InventoryItem = {id:"cinder-fox-card",name:"Cinder Fox",type:"animal-card",description:"An ember fox spirit from Ash Hollow.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#1a0a08",mid:"#6a2414",accent:"#ff7a3a",glow:"#ffc08a"}};
+const CINDER_FOX_CARD:InventoryItem = {id:"cinder-fox-card",name:"Cinder Fox",type:"animal-card",description:"An ember fox spirit from Ash Hollow.",image:"/cinder-fox-card.svg",palette:{dark:"#1a0a08",mid:"#6a2414",accent:"#ff7a3a",glow:"#ffc08a"}};
 const STAG_MAX_HEALTH = 95;
 const STAG_ATTACK_DAMAGE = 10;
 const STAG_RENDER_SIZE = 118;
-const PALE_STAG_CARD:InventoryItem = {id:"pale-stag-card",name:"Pale Stag",type:"animal-card",description:"A moonwell stag spirit from the cliffs.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#0b1418",mid:"#2a4a55",accent:"#8ee7ff",glow:"#d7fbff"}};
+const PALE_STAG_CARD:InventoryItem = {id:"pale-stag-card",name:"Pale Stag",type:"animal-card",description:"A moonwell stag spirit from the cliffs.",image:"/pale-stag-card.svg",palette:{dark:"#0b1418",mid:"#2a4a55",accent:"#8ee7ff",glow:"#d7fbff"}};
 const LYNX_MAX_HEALTH = 95;
 const LYNX_ATTACK_DAMAGE = 10;
 const LYNX_RENDER_SIZE = 94;
-const EMBER_LYNX_CARD:InventoryItem = {id:"ember-lynx-card",name:"Ember Lynx",type:"animal-card",description:"A magical card holding the spirit of a coal-pelt lynx from The Quiet Ember.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#1a0c08",mid:"#7a2e14",accent:"#e07030",glow:"#ffb060"}};
+const EMBER_LYNX_CARD:InventoryItem = {id:"ember-lynx-card",name:"Ember Lynx",type:"animal-card",description:"A magical card holding the spirit of a coal-pelt lynx from The Quiet Ember.",image:"/ember-lynx-card.svg",palette:{dark:"#1a0c08",mid:"#7a2e14",accent:"#e07030",glow:"#ffb060"}};
 const WYRM_MAX_HEALTH = 170;
 const WYRM_ATTACK_DAMAGE = 14;
 const WYRM_RENDER_SIZE = 152;
-const HEART_WYRM_CARD:InventoryItem = {id:"heart-wyrm-card",name:"Heart Wyrm",type:"animal-card",description:"A magical card holding the last pulse of Ashfall's Heart.",image:"/baby-dragon-sprite-sheet.png",palette:{dark:"#140816",mid:"#4a2048",accent:"#d45a6a",glow:"#ffc8a0"}};
+const HEART_WYRM_CARD:InventoryItem = {id:"heart-wyrm-card",name:"Heart Wyrm",type:"animal-card",description:"A magical card holding the last pulse of Ashfall's Heart.",image:"/heart-wyrm-card.svg",palette:{dark:"#140816",mid:"#4a2048",accent:"#d45a6a",glow:"#ffc8a0"}};
 const CAMPAIGN_OPENING:Line[] = [{speaker:"Moon Night",text:"The rain carries a signal. Something in Ashfall is still calling."},{speaker:"Moon Night",text:"Follow the echo through castle, shore, ash, moonwell, quiet ember, and heart."},{speaker:"Moon Night",text:"If an animal falls, its spirit becomes a card. Press E to take it, then Q to deploy."}];
 const MAP_STORY:Record<MapId,{name:string;objective:string;intro:Line[]}> = {
   1:{name:"The Signal in the Rain",objective:"Find the baby dragon in the rain, then take the far-right portal.",intro:[{speaker:"Moon Night",text:"Moonlit stone. A young ash dragon hunts these ruins."},{speaker:"Moon Night",text:"Defeat it, take its card, then follow the signal east."}]},
@@ -128,7 +128,7 @@ const beastKindFor = (id:string|null):BeastKind => id===CINDER_FOX_CARD.id?"fox"
 const beastAntlersFor = (id:string|null) => id===PALE_STAG_CARD.id;
 const beastTuftsFor = (id:string|null) => id===EMBER_LYNX_CARD.id;
 type Jackal = Dragon & {id:string; patrolMin:number; patrolMax:number; leapStarted:number; leapUntil:number};
-type Npc = {id:string; name:string; map:MapId; x:number; talkRadius:number; firstTalk:Line[]; againTalk:Line[]; afterCaptureTalk:Line[]; cardId:string; palette:{skin:string;cloak:string;trim:string;accent:string}};
+type Npc = {id:string; name:string; map:MapId; x:number; talkRadius:number; firstTalk:Line[]; againTalk:Line[]; afterCaptureTalk:Line[]; cardId:string; helm?:boolean; palette:{skin:string;cloak:string;trim:string;accent:string}};
 const NPCS:Npc[] = [
   {id:"reed",name:"Reed",map:5,x:760,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
     firstTalk:[
@@ -161,6 +161,91 @@ const NPCS:Npc[] = [
       {speaker:"Moon Night",text:"Then we walk it together."}
     ],
     palette:{skin:"#c99a80",cloak:"#3a2048",trim:"#d45a6a",accent:"#ffc8a0"}
+  },
+  {id:"calen",name:"Calen",map:1,x:820,talkRadius:150,cardId:BABY_DRAGON_CARD.id,helm:true,
+    firstTalk:[
+      {speaker:"Calen",text:"Hold. The rain has carried a signal since dusk."},
+      {speaker:"Moon Night",text:"I came for that echo."},
+      {speaker:"Calen",text:"Then keep your sword ready. A young ash dragon hunts the moonlit stone ahead."},
+      {speaker:"Calen",text:"If it falls, its spirit becomes a card. Press E, then Q. I'll still be here if you walk back."}
+    ],
+    againTalk:[{speaker:"Calen",text:"The rain hasn't stopped, Moon Night. East is the shore. The dragon still keeps the ruins."}],
+    afterCaptureTalk:[
+      {speaker:"Calen",text:"You bound the castle dragon. That card will follow you."},
+      {speaker:"Calen",text:"The road gets longer from here. If we meet again, I'll know you kept walking."}
+    ],
+    palette:{skin:"#c9b08a",cloak:"#2a3348",trim:"#8aa4c8",accent:"#c8e4ff"}
+  },
+  {id:"calen",name:"Calen",map:4,x:3180,talkRadius:150,cardId:PALE_STAG_CARD.id,helm:true,
+    firstTalk:[
+      {speaker:"Calen",text:"Cliff wind. I keep this moonwell while the stag still walks."},
+      {speaker:"Moon Night",text:"The signal pooled here."},
+      {speaker:"Calen",text:"Aye. Pale antlers, not a castle dragon. Bind it if you can. East is the quiet ember."}
+    ],
+    againTalk:[
+      {speaker:"Calen",text:"We meet again. I left the castle rain for this watch."},
+      {speaker:"Calen",text:"The stag keeps the well. I keep the road behind you."}
+    ],
+    afterCaptureTalk:[
+      {speaker:"Calen",text:"You bound the pale stag. That's another spirit walking with you."},
+      {speaker:"Calen",text:"Reed keeps a kiln east of here. Tell him a castle knight still stands."}
+    ],
+    palette:{skin:"#c9b08a",cloak:"#2a3348",trim:"#8aa4c8",accent:"#c8e4ff"}
+  },
+  {id:"sera",name:"Sera",map:2,x:480,talkRadius:150,cardId:SUNSET_JACKAL_CARD.id,
+    firstTalk:[
+      {speaker:"Sera",text:"Easy on the sand. Jackals hunt in threes here."},
+      {speaker:"Moon Night",text:"Then I'll take the dusk road with one of them."},
+      {speaker:"Sera",text:"Sunset Jackals. Dusk-born, four-legged, not the castle dragon."},
+      {speaker:"Sera",text:"Bind one, then push east before the light dies. I'll still be on this beach if you turn back."}
+    ],
+    againTalk:[{speaker:"Sera",text:"Still here, Moon Night. Three jackals. The hollow is east when you're ready."}],
+    afterCaptureTalk:[
+      {speaker:"Sera",text:"You took a jackal card. Good."},
+      {speaker:"Sera",text:"Ash Hollow smolders past that gate. I walk when the light fails. We may share the road again."}
+    ],
+    palette:{skin:"#d4a07a",cloak:"#6a3418",trim:"#f08a3a",accent:"#ffd27a"}
+  },
+  {id:"sera",name:"Sera",map:5,x:3920,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
+    firstTalk:[
+      {speaker:"Sera",text:"The coals here wait. I'm Sera. I walked the shore until the light died."},
+      {speaker:"Moon Night",text:"Reed keeps the kiln."},
+      {speaker:"Sera",text:"He does. The lynx wear coal pelts — tufted ears, bobbed tails. Not jackals. Talk to Reed if you haven't."}
+    ],
+    againTalk:[
+      {speaker:"Sera",text:"We keep crossing roads. Reed is west. The heart is east. Don't go in cold."}
+    ],
+    afterCaptureTalk:[
+      {speaker:"Sera",text:"You bound a lynx. That heat will walk with you."},
+      {speaker:"Sera",text:"If you see Bram farther in, tell him the hollow didn't keep me."}
+    ],
+    palette:{skin:"#d4a07a",cloak:"#6a3418",trim:"#f08a3a",accent:"#ffd27a"}
+  },
+  {id:"bram",name:"Bram",map:3,x:480,talkRadius:150,cardId:CINDER_FOX_CARD.id,
+    firstTalk:[
+      {speaker:"Bram",text:"Ash in the lungs. I'm Bram. I scout the hollow so nobody walks in blind."},
+      {speaker:"Moon Night",text:"Foxfire moves between the trunks."},
+      {speaker:"Bram",text:"Cinder Foxes. Ember coats, white-tipped tails. Bind one, then the moonwell gate is east."}
+    ],
+    againTalk:[{speaker:"Bram",text:"Still scouting, Moon Night. The foxes don't share the path. East is Moonwell Cliffs."}],
+    afterCaptureTalk:[
+      {speaker:"Bram",text:"You earned a fox card. The cliffs will ask for a stag next."},
+      {speaker:"Bram",text:"I'll take the long way around. If the road holds, we'll speak again."}
+    ],
+    palette:{skin:"#c09070",cloak:"#3a1c12",trim:"#ff7a3a",accent:"#ffc08a"}
+  },
+  {id:"bram",name:"Bram",map:6,x:1480,talkRadius:150,cardId:HEART_WYRM_CARD.id,
+    firstTalk:[
+      {speaker:"Bram",text:"So this is the heart. I tracked the hollow this far."},
+      {speaker:"Moon Night",text:"Kest walked ahead."},
+      {speaker:"Bram",text:"He's west of the wyrm. Long-bodied, ribbon-finned. Not a fox. Speak with him, then finish it."}
+    ],
+    againTalk:[{speaker:"Bram",text:"We meet at the last echo. I'm not leaving until the altar cools."}],
+    afterCaptureTalk:[
+      {speaker:"Bram",text:"You bound the Heart Wyrm. Rest the signal."},
+      {speaker:"Bram",text:"Then we all walk out as people. Not as ghosts on the road."}
+    ],
+    palette:{skin:"#c09070",cloak:"#3a1c12",trim:"#ff7a3a",accent:"#ffc08a"}
   }
 ];
 const DRAGON_FRAMES:Record<DragonMode,DragonFrame[]> = {
@@ -413,7 +498,7 @@ export default function AshfallGame() {
     const map=mapRef.current;
     const npc=NPCS.find(n=>n.map===map&&Math.abs(x-n.x)<n.talkRadius);
     if(npc){
-      const hasCard=inventoryRef.current.some(entry=>entry.id===npc.cardId);
+      const hasCard=inventoryRef.current.some(entry=>npc.cardId===SUNSET_JACKAL_CARD.id?isSunsetJackalCardId(entry.id):entry.id===npc.cardId);
       if(!metNpcRef.current.has(npc.id)){metNpcRef.current.add(npc.id);showDialogue(npc.firstTalk);}
       else if(hasCard) showDialogue(npc.afterCaptureTalk);
       else showDialogue(npc.againTalk);
@@ -1886,7 +1971,7 @@ export default function AshfallGame() {
       const map=mapRef.current,pl=player.current;
       for(const npc of NPCS){
         if(npc.map!==map)continue;
-        const bob=Math.sin(now*.0026+npc.x*.01)*2.2,groundY=590,x=npc.x,y=groundY-2+bob;
+        const bob=Math.sin(now*.0026+npc.x*.01)*2.2,groundY=surfaceYAt(map,npc.x,590)??590,x=npc.x,y=groundY-2+bob;
         const near=Math.abs(pl.x-npc.x)<npc.talkRadius;
         ctx.save();
         ctx.fillStyle="rgba(2,4,5,.5)";ctx.beginPath();ctx.ellipse(x,groundY+2,17,4.5,0,0,Math.PI*2);ctx.fill();
@@ -1898,7 +1983,14 @@ export default function AshfallGame() {
         ctx.fillStyle=npc.palette.trim;ctx.fillRect(-13,-8,26,4);
         ctx.fillStyle=npc.palette.accent;ctx.beginPath();ctx.ellipse(0,-50,3.6,3.6,0,0,Math.PI*2);ctx.fill();
         ctx.fillStyle=npc.palette.skin;ctx.beginPath();ctx.ellipse(0,-64,10,11,0,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle=npc.palette.cloak;ctx.beginPath();ctx.ellipse(0,-71,11,7,0,0,Math.PI);ctx.fill();
+        if(npc.helm){
+          ctx.fillStyle=npc.palette.trim;ctx.beginPath();ctx.ellipse(0,-70,11,8,0,0,Math.PI*2);ctx.fill();
+          ctx.fillStyle=npc.palette.cloak;ctx.fillRect(-11,-70,22,5);
+          ctx.fillStyle="rgba(8,10,16,.72)";ctx.fillRect(-8,-66,16,4);
+          ctx.fillStyle=npc.palette.accent;ctx.fillRect(10,-28,3,18);
+        }else{
+          ctx.fillStyle=npc.palette.cloak;ctx.beginPath();ctx.ellipse(0,-71,11,7,0,0,Math.PI);ctx.fill();
+        }
         ctx.fillStyle="#160e0a";ctx.beginPath();ctx.ellipse(-4,-65,1.4,1.8,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(4,-65,1.4,1.8,0,0,Math.PI*2);ctx.fill();
         ctx.restore();
         ctx.save();ctx.globalAlpha=near?(.55+Math.sin(now*.005)*.18):.32;ctx.fillStyle=npc.palette.accent;ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText(npc.name.toUpperCase(),x,y-100);ctx.restore();
