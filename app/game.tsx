@@ -38,6 +38,11 @@ const MAP6_ENTRY_X = 105;
 const MAP6_VEIN_X = 3820;
 const MAP6_HEART_X = 4670;
 const MAP4_MOONWELL_X = 2360;
+const MAP1_PLAQUE_X = 2680;
+const MAP2_SHELL_X = 1140;
+const MAP3_HOLLOW_X = 1510;
+const MAP5_COAL_X = 1480;
+const MAP6_ECHO_X = 4120;
 const MAX_HEALTH = 100;
 const SWORD_DAMAGE = 15;
 const MAX_STAMINA = 100;
@@ -51,7 +56,7 @@ const DRAGON_RENDER_SIZE = 138;
 const DRAGON_SIGHT_RANGE = 720;
 const DRAGON_ATTACK_RANGE = 135;
 const DRAGON_CHASE_MIN = 1100;
-const DRAGON_CHASE_MAX = 2700;
+const DRAGON_CHASE_MAX = 3920;
 const DRAGON_PATROL_MIN = 1475;
 const DRAGON_PATROL_MAX = 1990;
 const DRAGON_CELL = 256;
@@ -109,6 +114,25 @@ const MAP_STORY:Record<MapId,{name:string;objective:string;intro:Line[]}> = {
 const ENDING_LINES:Line[] = [{speaker:"Moon Night",text:"The echo is still. Ashfall keeps its heart, and I keep the road."},{speaker:"Kest",text:"Come on. Reed will want to know the kiln can rest."}];
 const KILN_LINES:Line[] = [{speaker:"Moon Night",text:"Reed's kiln holds a quiet coal. It does not ask to be fed."},{speaker:"Moon Night",text:"The lynx walk this heat like a path. East of here the heart is louder."}];
 const VEIN_LINES:Line[] = [{speaker:"Moon Night",text:"A cooled vein in the clinker. The pulse is louder past this crack."},{speaker:"Moon Night",text:"The altar is still east. I will not rush the last step."}];
+const PLAQUE_LINES:Line[] = [{speaker:"Moon Night",text:"A rain-worn plaque on the high stone. Castle kilns once fed this wall."},{speaker:"Moon Night",text:"The signal is older than the rain. East, always east."}];
+const SHELL_LINES:Line[] = [{speaker:"Moon Night",text:"A dusk-shell half-buried in the dune. It still holds a little gold light."},{speaker:"Moon Night",text:"Jackals hunt in threes. The hollow is farther east."}];
+const HOLLOW_LINES:Line[] = [{speaker:"Moon Night",text:"A foxfire hollow. The stump still breathes ember."},{speaker:"Moon Night",text:"Cinder Foxes walk this ash. The moonwell gate is east."}];
+const MOONWELL_LINES:Line[] = [{speaker:"Moon Night",text:"The well holds a pale light, not rain. The signal pools here."},{speaker:"Moon Night",text:"A Pale Stag keeps this cliff. East the quiet ember waits."}];
+const COAL_LINES:Line[] = [{speaker:"Moon Night",text:"A banked coal-bed. Someone tended this after the roar died."},{speaker:"Moon Night",text:"Lynx-shaped heat. The heart is still east."}];
+const ECHO_LINES:Line[] = [{speaker:"Moon Night",text:"A cracked echo-stone. The pulse is quieter on this side of the vein."},{speaker:"Moon Night",text:"The altar is still east. I will not rush the last step."}];
+type Landmark = {map:MapId; x:number; groundY:number; radius:number; action:string; lines:Line[]};
+const LANDMARKS:Landmark[] = [
+  {map:1,x:MAP1_PLAQUE_X,groundY:382,radius:120,action:"Study the rain-worn plaque",lines:PLAQUE_LINES},
+  {map:2,x:MAP2_SHELL_X,groundY:472,radius:120,action:"Study the dusk-shell",lines:SHELL_LINES},
+  {map:3,x:MAP3_HOLLOW_X,groundY:418,radius:120,action:"Study the foxfire hollow",lines:HOLLOW_LINES},
+  {map:4,x:MAP4_MOONWELL_X,groundY:575,radius:140,action:"Study the moonwell",lines:MOONWELL_LINES},
+  {map:5,x:MAP5_KILN_X,groundY:590,radius:140,action:"Study the quiet kiln",lines:KILN_LINES},
+  {map:5,x:MAP5_COAL_X,groundY:440,radius:120,action:"Study the banked coal-bed",lines:COAL_LINES},
+  {map:6,x:MAP6_VEIN_X,groundY:545,radius:140,action:"Study the cooled vein",lines:VEIN_LINES},
+  {map:6,x:MAP6_ECHO_X,groundY:430,radius:120,action:"Study the echo-stone",lines:ECHO_LINES}
+];
+const landmarkAt=(map:MapId,x:number,footY:number)=>LANDMARKS.find(mark=>mark.map===map&&Math.abs(x-mark.x)<mark.radius&&Math.abs(footY-mark.groundY)<48);
+const npcTalkKey=(npc:{id:string;map:MapId})=>npc.id+":"+npc.map;
 const cardStats = (id:string|null) => isSunsetJackalCardId(id)?{hp:JACKAL_MAX_HEALTH,ground:true as const,kind:"jackal"}:id===CINDER_FOX_CARD.id?{hp:FOX_MAX_HEALTH,ground:true as const,kind:"fox"}:id===PALE_STAG_CARD.id?{hp:STAG_MAX_HEALTH,ground:true as const,kind:"stag"}:id===EMBER_LYNX_CARD.id?{hp:LYNX_MAX_HEALTH,ground:true as const,kind:"lynx"}:id===HEART_WYRM_CARD.id?{hp:WYRM_MAX_HEALTH,ground:false as const,kind:"wyrm"}:{hp:DRAGON_MAX_HEALTH,ground:false as const,kind:"dragon"};
 const GROUND_BEAST_CARD_IDS = new Set([SUNSET_JACKAL_CARD.id,...Object.values(JACKAL_CARD_BY_BEAST).map(card=>card.id),CINDER_FOX_CARD.id,PALE_STAG_CARD.id,EMBER_LYNX_CARD.id]);
 const CARD_DISPLAY_NAME:Record<string,string> = {
@@ -178,7 +202,7 @@ const NPCS:Npc[] = [
   },
   {id:"calen",name:"Calen",map:4,x:3180,talkRadius:150,cardId:PALE_STAG_CARD.id,helm:true,
     firstTalk:[
-      {speaker:"Calen",text:"Cliff wind. I keep this moonwell while the stag still walks."},
+      {speaker:"Calen",text:"Cliff wind. I left the castle rain for this watch."},
       {speaker:"Moon Night",text:"The signal pooled here."},
       {speaker:"Calen",text:"Aye. Pale antlers, not a castle dragon. Bind it if you can. East is the quiet ember."}
     ],
@@ -297,31 +321,32 @@ const map1Platforms: Platform[] = [
   {x:0,y:590,w:782,h:180},{x:758,y:610,w:644,h:160},{x:1378,y:570,w:664,h:200},
   {x:2018,y:600,w:544,h:170},{x:2538,y:550,w:594,h:220},{x:3108,y:590,w:564,h:180},
   {x:3648,y:535,w:534,h:235},{x:4158,y:575,w:1042,h:195},
-  {x:1020,y:475,w:170,h:18},{x:2260,y:470,w:160,h:18},{x:3320,y:455,w:180,h:18}
+  {x:1020,y:475,w:170,h:18},{x:2260,y:470,w:160,h:18},{x:2448,y:428,w:150,h:18},
+  {x:2588,y:382,w:210,h:18},{x:3320,y:455,w:180,h:18},{x:3780,y:430,w:170,h:18}
 ];
 const map2Platforms: Platform[] = [
   {x:0,y:590,w:535,h:180},{x:500,y:568,w:470,h:202},{x:940,y:588,w:410,h:182},
   {x:1320,y:562,w:455,h:208},{x:1740,y:538,w:430,h:232},{x:2140,y:560,w:430,h:210},
   {x:2540,y:585,w:420,h:185},{x:2925,y:558,w:405,h:212},{x:3295,y:578,w:305,h:192},
   {x:610,y:466,w:150,h:18},{x:1140,y:472,w:180,h:18},{x:1515,y:430,w:155,h:18},
-  {x:2245,y:445,w:200,h:18},{x:2750,y:468,w:165,h:18},{x:3140,y:438,w:150,h:18}
+  {x:2245,y:445,w:200,h:18},{x:2360,y:448,w:155,h:18},{x:2750,y:468,w:165,h:18},{x:3140,y:438,w:150,h:18}
 ];
 const map3Platforms: Platform[] = [
   {x:0,y:590,w:560,h:180},{x:520,y:566,w:520,h:204},{x:1000,y:600,w:470,h:170},
   {x:1430,y:548,w:520,h:222},{x:1910,y:575,w:500,h:195},{x:2370,y:535,w:520,h:235},
   {x:2850,y:580,w:500,h:190},{x:3310,y:548,w:690,h:222},
   {x:620,y:448,w:180,h:18},{x:1170,y:475,w:170,h:18},{x:1510,y:418,w:200,h:18},
-  {x:2160,y:446,w:180,h:18},{x:2520,y:410,w:190,h:18},{x:3150,y:452,w:175,h:18},{x:3540,y:420,w:190,h:18}
+  {x:2160,y:446,w:180,h:18},{x:1780,y:400,w:170,h:18},{x:2520,y:410,w:190,h:18},{x:3150,y:452,w:175,h:18},{x:3540,y:420,w:190,h:18}
 ];
 const map4Platforms: Platform[] = [
   {x:0,y:590,w:1180,h:180},{x:1140,y:560,w:980,h:210},{x:2080,y:575,w:900,h:195},{x:2940,y:545,w:1260,h:225},
-  {x:720,y:455,w:160,h:18},{x:1760,y:430,w:180,h:18},{x:2860,y:420,w:190,h:18}
+  {x:720,y:455,w:160,h:18},{x:1760,y:430,w:180,h:18},{x:2860,y:420,w:190,h:18},{x:3480,y:400,w:170,h:18}
 ];
 const map5Platforms: Platform[] = [
   {x:0,y:590,w:1280,h:180},{x:1180,y:570,w:820,h:200},{x:1900,y:590,w:780,h:180},
   {x:2560,y:565,w:720,h:205},{x:3160,y:575,w:640,h:195},{x:3700,y:555,w:700,h:215},
   {x:720,y:455,w:160,h:18},{x:1480,y:440,w:170,h:18},
-  {x:2180,y:455,w:180,h:18},{x:2880,y:430,w:160,h:18},{x:3480,y:420,w:150,h:18}
+  {x:2180,y:455,w:180,h:18},{x:1760,y:430,w:160,h:18},{x:2880,y:430,w:160,h:18},{x:3480,y:420,w:150,h:18}
 ];
 const map6Platforms: Platform[] = [
   {x:0,y:590,w:1180,h:180},{x:1140,y:560,w:780,h:210},{x:1920,y:590,w:1160,h:180},
@@ -498,14 +523,15 @@ export default function AshfallGame() {
     const map=mapRef.current;
     const npc=NPCS.find(n=>n.map===map&&Math.abs(x-n.x)<n.talkRadius);
     if(npc){
+      const talkKey=npcTalkKey(npc);
       const hasCard=inventoryRef.current.some(entry=>npc.cardId===SUNSET_JACKAL_CARD.id?isSunsetJackalCardId(entry.id):entry.id===npc.cardId);
-      if(!metNpcRef.current.has(npc.id)){metNpcRef.current.add(npc.id);showDialogue(npc.firstTalk);}
+      if(!metNpcRef.current.has(talkKey)){metNpcRef.current.add(talkKey);showDialogue(npc.firstTalk);}
       else if(hasCard) showDialogue(npc.afterCaptureTalk);
       else showDialogue(npc.againTalk);
       return;
     }
-    if(map===5&&Math.abs(x-MAP5_KILN_X)<140){showDialogue(KILN_LINES);return;}
-    if(map===6&&Math.abs(x-MAP6_VEIN_X)<140){showDialogue(VEIN_LINES);return;}
+    const landmark=landmarkAt(map,x,player.current.y+PH);
+    if(landmark){showDialogue(landmark.lines);return;}
     if(map===1&&Math.abs(x-(MAP1_PORTAL_X+55))<145) enterMap(2,1);
     else if(map===2&&Math.abs(x-(MAP2_PORTAL_X+55))<145) enterMap(1,2);
     else if(map===2&&Math.abs(x-(MAP2_EXIT_X+55))<145) enterMap(3,2);
@@ -588,18 +614,25 @@ export default function AshfallGame() {
     const jackals:Jackal[]=[
       createJackal("sunset-jackal-a",980,720,1280),
       createJackal("sunset-jackal-b",1880,1580,2280),
+      createJackal("sunset-jackal-scout",2400,2300,2500),
       createJackal("sunset-jackal-c",2860,2520,3320)
     ];
     const createBeast=(id:string,x:number,patrolMin:number,patrolMax:number,health:number,damage:number):Jackal=>({...createJackal(id,x,patrolMin,patrolMax),health,maxHealth:health,attackDamage:damage,y:590,groundY:590});
+    const roosts:Jackal[]=[
+      createBeast("ash-roost",3820,3480,4180,80,8)
+    ];
     const foxes:Jackal[]=[
       createBeast("cinder-fox-a",920,620,1480,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE),
+      createBeast("cinder-fox-c",1780,1520,2050,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE),
       createBeast("cinder-fox-b",2480,2100,3300,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE)
     ];
     const stags:Jackal[]=[
-      createBeast("pale-stag-a",1760,1180,2680,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE)
+      createBeast("pale-stag-a",1760,1180,2680,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE),
+      createBeast("pale-stag-b",3600,3380,3920,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE)
     ];
     const lynxes:Jackal[]=[
       createBeast("ember-lynx-a",1280,980,1680,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE),
+      createBeast("ember-lynx-d",1820,1700,1940,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE),
       createBeast("ember-lynx-b",2140,1960,2480,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE),
       createBeast("ember-lynx-c",3120,2760,3580,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE)
     ];
@@ -607,8 +640,8 @@ export default function AshfallGame() {
       createBeast("heart-wyrm",2480,1880,3180,WYRM_MAX_HEALTH,WYRM_ATTACK_DAMAGE)
     ];
     const seedPackGround=(pack:Jackal[],map:MapId)=>{for(const beast of pack){const ground=surfaceYAt(map,beast.x,beast.groundY);if(ground!==null){beast.groundY=ground;beast.y=ground;}}};
-    seedPackGround(jackals,2);seedPackGround(foxes,3);seedPackGround(stags,4);seedPackGround(lynxes,5);seedPackGround(wyrmPack,6);
-    const wildPackFor=(map:MapId)=>map===2?jackals:map===3?foxes:map===4?stags:map===5?lynxes:map===6?wyrmPack:null;
+    seedPackGround(roosts,1);seedPackGround(jackals,2);seedPackGround(foxes,3);seedPackGround(stags,4);seedPackGround(lynxes,5);seedPackGround(wyrmPack,6);
+    const wildPackFor=(map:MapId)=>map===1?roosts:map===2?jackals:map===3?foxes:map===4?stags:map===5?lynxes:map===6?wyrmPack:null;
     const wildCardFor=(map:MapId)=>map===2?SUNSET_JACKAL_CARD:map===3?CINDER_FOX_CARD:map===4?PALE_STAG_CARD:map===5?EMBER_LYNX_CARD:map===6?HEART_WYRM_CARD:null;
     let playerHurtUntil=0,playerRespawnAt=0,dragonCardCollected=inventoryRef.current.some(item=>item.id===BABY_DRAGON_CARD.id);
     const jackalCardsCollected=new Set(Object.values(JACKAL_CARD_BY_BEAST).filter(card=>inventoryRef.current.some(item=>item.id===card.id)).map(card=>card.id));
@@ -895,7 +928,7 @@ export default function AshfallGame() {
       ctx.save();ctx.translate(pl.x,pl.y);ctx.scale(pl.facing,1);
       if(pl.grounded){
         ctx.fillStyle="rgba(1,2,4,.72)";ctx.beginPath();ctx.ellipse(0,PH+1,31,7,0,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle=mapRef.current===1?"rgba(179,158,235,.3)":"rgba(255,215,139,.36)";ctx.fillRect(-20,PH-1,40,2);
+        ctx.fillStyle=mapRef.current===1?"rgba(179,158,235,.3)":mapRef.current===3?"rgba(255,140,80,.36)":mapRef.current===4?"rgba(142,231,255,.36)":mapRef.current===5?"rgba(255,150,90,.36)":mapRef.current===6?"rgba(224,120,160,.36)":"rgba(255,215,139,.36)";ctx.fillRect(-20,PH-1,40,2);
       }
       let list=SPRITE_FRAMES.idle;
       let index=Math.floor(now/620)%list.length;
@@ -1134,24 +1167,24 @@ export default function AshfallGame() {
       }
 
       if(playerRespawnAt&&now>=playerRespawnAt){
-        pl.health=pl.maxHealth;pl.x=230;pl.y=498;pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
+        pl.health=pl.maxHealth;pl.x=respawnXFor(mapRef.current);pl.y=498;pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
         staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;
         playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
       }
     };
     const beginJackalMode=(jackal:Jackal,mode:DragonMode,now:number,duration:number)=>{
-      const wyrm=jackal.id.startsWith("heart-wyrm");
-      const nextMode=!wyrm&&mode==="fly"?"run":mode;
+      const canFly=jackal.id.startsWith("heart-wyrm")||jackal.id.startsWith("ash-roost");
+      const nextMode=!canFly&&mode==="fly"?"run":mode;
       jackal.mode=nextMode;jackal.modeStarted=now;jackal.modeUntil=now+duration;jackal.landing=false;
       if(nextMode==="sleep"||nextMode==="attack"){jackal.leapUntil=0;jackal.leapStarted=0;}
-      if(nextMode==="fly")jackal.y=Math.min(jackal.y,jackal.groundY-(wyrm?96:36));
+      if(nextMode==="fly")jackal.y=Math.min(jackal.y,jackal.groundY-(jackal.id.startsWith("heart-wyrm")?96:54));
       if(nextMode==="attack")jackal.y=Math.min(jackal.y,jackal.groundY-10);
       if(nextMode==="idle"||nextMode==="walk"||nextMode==="run"||nextMode==="sleep")jackal.y=jackal.groundY;
       if(nextMode==="idle"||nextMode==="sleep")jackal.vx*=.5;
       if(nextMode==="attack")jackal.vx*=.22;
     };
     const startJackalLeap=(jackal:Jackal,now:number)=>{
-      if(jackal.id.startsWith("heart-wyrm"))return;
+      if(jackal.id.startsWith("heart-wyrm")||jackal.id.startsWith("ash-roost"))return;
       jackal.leapStarted=now;
       jackal.leapUntil=now+620+Math.random()*180;
     };
@@ -1175,7 +1208,7 @@ export default function AshfallGame() {
       }else if(roll<.32)beginJackalMode(jackal,"idle",now,1600+Math.random()*1800);
       else if(roll<.62)beginJackalTravel(jackal,"walk",now,1800+Math.random()*1400,randomTarget);
       else if(roll<.8)beginJackalTravel(jackal,"run",now,900+Math.random()*700,randomTarget);
-      else if(jackal.id.startsWith("heart-wyrm")&&roll<.9)beginJackalTravel(jackal,"fly",now,780+Math.random()*420,randomTarget);
+      else if((jackal.id.startsWith("heart-wyrm")||jackal.id.startsWith("ash-roost"))&&roll<.9)beginJackalTravel(jackal,"fly",now,780+Math.random()*420,randomTarget);
       else if(roll<.9){beginJackalTravel(jackal,"run",now,780+Math.random()*420,randomTarget);startJackalLeap(jackal,now);}
       else if(distance>220)beginJackalMode(jackal,"sleep",now,4200+Math.random()*3200);
       else{beginJackalMode(jackal,"idle",now,1400);jackal.facing=pl.x>=jackal.x?1:-1;}
@@ -1289,7 +1322,7 @@ export default function AshfallGame() {
             jackal.x+=jackal.vx*dt;
             if(jackal.x<=jackal.patrolMin){jackal.x=jackal.patrolMin;jackal.targetX=jackal.patrolMax;jackal.facing=1;}
             if(jackal.x>=jackal.patrolMax){jackal.x=jackal.patrolMax;jackal.targetX=jackal.patrolMin;jackal.facing=-1;}
-            const wyrmFly=jackal.mode==="fly"&&jackal.id.startsWith("heart-wyrm");
+            const wyrmFly=jackal.mode==="fly"&&(jackal.id.startsWith("heart-wyrm")||jackal.id.startsWith("ash-roost"));
             const flyLeap=wyrmFly?Math.sin(clamp((now-jackal.modeStarted)/(jackal.modeUntil-jackal.modeStarted||1),0,1)*Math.PI)*110:0;
             const hopT=jackal.leapUntil>jackal.leapStarted?clamp((now-jackal.leapStarted)/(jackal.leapUntil-jackal.leapStarted),0,1):0;
             const hop=(!wyrmFly&&now<jackal.leapUntil&&(jackal.mode==="walk"||jackal.mode==="run"))?Math.sin(hopT*Math.PI)*46:0;
@@ -1299,7 +1332,7 @@ export default function AshfallGame() {
         }else{
           jackal.vx+=(0-jackal.vx)*(1-Math.exp(-8*dt));
           const hopT=jackal.leapUntil>jackal.leapStarted?clamp((now-jackal.leapStarted)/(jackal.leapUntil-jackal.leapStarted),0,1):0;
-          const hop=now<jackal.leapUntil&&!jackal.id.startsWith("heart-wyrm")&&(jackal.mode==="walk"||jackal.mode==="run")?Math.sin(hopT*Math.PI)*46:0;
+          const hop=now<jackal.leapUntil&&!jackal.id.startsWith("heart-wyrm")&&!jackal.id.startsWith("ash-roost")&&(jackal.mode==="walk"||jackal.mode==="run")?Math.sin(hopT*Math.PI)*46:0;
           jackal.y+=(jackal.groundY-hop-jackal.y)*(1-Math.exp(-12*dt));
         }
       }
@@ -1849,7 +1882,8 @@ export default function AshfallGame() {
         drawPixelJackal(jackal.x,jackal.y,jackal.groundY,jackal.facing,"sleep",elapsed,now,JACKAL_RENDER_SIZE*(1-pull*.7),false);
         ctx.restore();
       }
-      if(!jackalCardsCollected.has((JACKAL_CARD_BY_BEAST[jackal.id]??SUNSET_JACKAL_CARD).id))drawMagicalAnimalCard("Sunset Jackal",jackal.x,jackal.groundY,now,jackal.modeStarted+350,jackalCardArt,null,SUNSET_JACKAL_CARD.palette);
+      const droppedJackalCard=JACKAL_CARD_BY_BEAST[jackal.id];
+      if(droppedJackalCard&&!jackalCardsCollected.has(droppedJackalCard.id))drawMagicalAnimalCard("Sunset Jackal",jackal.x,jackal.groundY,now,jackal.modeStarted+350,jackalCardArt,null,SUNSET_JACKAL_CARD.palette);
     };
     const drawJackals=(now:number)=>{
       if(mapRef.current!==2)return;
@@ -1929,8 +1963,50 @@ export default function AshfallGame() {
       }
       if(!otherWildCollected.has(card.id))drawMagicalAnimalCard(card.name,beast.x,beast.groundY,now,beast.modeStarted+340,dragonImage,{x:0,y:25,w:256,h:260},card.palette);
     };
+    const drawRoosts=(now:number)=>{
+      if(mapRef.current!==1||!dragonImage.complete||!dragonImage.naturalWidth)return;
+      const size=96,spriteScale=size/DRAGON_CELL;
+      for(const roost of roosts){
+        const elapsed=now-roost.modeStarted;
+        if(roost.health<=0){
+          const absorb=clamp((elapsed-120)/720,0,1);
+          if(absorb<1){
+            const pull=1-Math.pow(1-absorb,2);
+            const frame=DRAGON_FRAMES.sleep[3];
+            ctx.save();ctx.translate(roost.x,roost.y-pull*28);ctx.rotate(roost.facing*pull*.5);ctx.scale(roost.facing*(1-pull*.78),1-pull*.7);ctx.globalAlpha=1-pull;
+            ctx.shadowColor="rgba(168,255,67,.8)";ctx.shadowBlur=8+pull*18;
+            ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);
+            ctx.restore();
+          }
+          continue;
+        }
+        const frames=DRAGON_FRAMES[roost.mode==="fly"? "fly":roost.mode==="attack"?"attack":roost.mode==="sleep"?"sleep":roost.mode==="run"||roost.mode==="walk"?"run":"idle"];
+        const index=Math.min(frames.length-1,Math.floor(elapsed/(roost.mode==="run"?95:220))%frames.length);
+        const frame=frames[index];
+        const hurtActive=roost.hurtUntil>now,hurtProgress=hurtActive?clamp((now-roost.hurtStarted)/480,0,1):1;
+        const recoilX=hurtActive?Math.sin(hurtProgress*Math.PI)*10*roost.hitDirection:0;
+        ctx.save();ctx.fillStyle="rgba(1,4,5,.5)";ctx.beginPath();ctx.ellipse(roost.x,roost.groundY+3,26,5.5,0,0,Math.PI*2);ctx.fill();ctx.restore();
+        ctx.save();ctx.translate(roost.x+recoilX,roost.y);ctx.scale(roost.facing,1);ctx.imageSmoothingEnabled=true;
+        ctx.globalAlpha=hurtActive&&Math.floor(now/48)%2===0?.52:1;
+        ctx.shadowColor=hurtActive?"rgba(255,245,151,.9)":roost.angry?"rgba(255,92,58,.5)":"rgba(81,188,41,.22)";ctx.shadowBlur=hurtActive?18:roost.angry?11:6;
+        ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);
+        ctx.restore();
+        const barW=72,barH=8,barX=roost.x+recoilX-barW/2,barY=roost.y-78;
+        const healthRatio=clamp(roost.health/roost.maxHealth,0,1);
+        const healthLabel=(roost.angry?"ANGRY  ":"")+"ASH ROOSTLING  "+roost.health+" / "+roost.maxHealth;
+        ctx.save();ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="700 8px ui-monospace, SFMono-Regular, Menlo, monospace";
+        ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.9)";ctx.strokeText(healthLabel,roost.x+recoilX,barY-3);
+        ctx.fillStyle=roost.angry?"#ffb19d":"#efffd6";ctx.fillText(healthLabel,roost.x+recoilX,barY-3);
+        ctx.fillStyle="rgba(2,6,8,.9)";ctx.fillRect(barX-2,barY-2,barW+4,barH+4);
+        ctx.fillStyle="#401924";ctx.fillRect(barX,barY,barW,barH);
+        ctx.fillStyle="#9cf63d";ctx.fillRect(barX,barY,barW*healthRatio,barH);
+        if(hurtActive){ctx.globalAlpha=1-hurtProgress;ctx.font="900 13px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillStyle="#f4ffb0";ctx.fillText("-"+roost.lastDamage,roost.x+recoilX,barY-16-hurtProgress*16);}
+        ctx.restore();
+      }
+    };
     const drawOtherWildlife=(now:number)=>{
       const map=mapRef.current;
+      if(map===1){drawRoosts(now);return;}
       if(map===6){for(const wyrm of wyrmPack)drawWyrm(wyrm,now);return;}
       const pack=wildPackFor(map),card=wildCardFor(map);
       if(!pack||!card||map===2)return;
@@ -2058,6 +2134,8 @@ export default function AshfallGame() {
       ctx.fillStyle="#163040";ctx.beginPath();ctx.ellipse(x,groundY-6,54,16,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle="rgba(180,240,255,"+(.28+pulse*.22)+")";ctx.beginPath();ctx.ellipse(x,groundY-8,44,11,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle="rgba(215,251,255,.5)";ctx.fillRect(x-18,groundY-10,28,3);
+      ctx.globalAlpha=.32+pulse*.18;ctx.fillStyle="#d7fbff";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";
+      ctx.fillText("MOONWELL",x,groundY-36);
       ctx.restore();
     };
     const drawAshTrees=(now:number,viewW:number)=>{
@@ -2074,7 +2152,7 @@ export default function AshfallGame() {
     };
     const drawAshfallHeartAltar=(now:number)=>{
       if(mapRef.current!==6)return;
-      const x=MAP6_HEART_X+40,groundY=590,pulse=.5+Math.sin(now*.0022)*.28;
+      const x=MAP6_HEART_X+40,groundY=545,pulse=.5+Math.sin(now*.0022)*.28;
       ctx.save();
       const glow=ctx.createRadialGradient(x,groundY-70,6,x,groundY-70,190);
       glow.addColorStop(0,"rgba(212,90,106,"+(.24+pulse*.14)+")");glow.addColorStop(1,"rgba(212,90,106,0)");
@@ -2154,16 +2232,60 @@ export default function AshfallGame() {
         ctx.fillStyle="rgba("+portalColor+","+(.28+i*.045)+")";ctx.fillRect(x+29+(i*13)%46,sy,4+(i%2)*3,2);
       }
     };
+    const drawSecrets=(now:number)=>{
+      const map=mapRef.current;
+      const pulse=.45+Math.sin(now*.002)*.2;
+      const marks=LANDMARKS.filter(mark=>mark.map===map&&mark.x!==MAP5_KILN_X&&mark.x!==MAP6_VEIN_X&&mark.x!==MAP4_MOONWELL_X);
+      for(const mark of marks){
+        const x=mark.x,groundY=mark.groundY;
+        ctx.save();
+        if(map===1){
+          const glow=ctx.createRadialGradient(x,groundY-24,4,x,groundY-24,70);
+          glow.addColorStop(0,"rgba(116,230,226,"+(.16+pulse*.12)+")");glow.addColorStop(1,"rgba(116,230,226,0)");
+          ctx.fillStyle=glow;ctx.fillRect(x-80,groundY-90,160,100);
+          ctx.fillStyle="#2a3848";ctx.fillRect(x-16,groundY-52,32,52);
+          ctx.fillStyle="#71869e";ctx.fillRect(x-18,groundY-58,36,8);
+          ctx.fillStyle="rgba(200,220,230,.35)";ctx.fillRect(x-10,groundY-44,20,3);ctx.fillRect(x-10,groundY-36,16,3);ctx.fillRect(x-10,groundY-28,18,3);
+          ctx.globalAlpha=.34+pulse*.16;ctx.fillStyle="#c8e4ff";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("PLAQUE",x,groundY-66);
+        }else if(map===2){
+          const glow=ctx.createRadialGradient(x,groundY-10,4,x,groundY-10,54);
+          glow.addColorStop(0,"rgba(255,210,122,"+(.2+pulse*.14)+")");glow.addColorStop(1,"rgba(255,210,122,0)");
+          ctx.fillStyle=glow;ctx.fillRect(x-60,groundY-60,120,70);
+          ctx.fillStyle="#d49a68";ctx.beginPath();ctx.ellipse(x,groundY-8,16,10, -.2,0,Math.PI*2);ctx.fill();
+          ctx.fillStyle="#ffe1a3";ctx.beginPath();ctx.ellipse(x+3,groundY-10,8,5,-.2,0,Math.PI*2);ctx.fill();
+          ctx.globalAlpha=.34+pulse*.16;ctx.fillStyle="#ffd27a";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("SHELL",x,groundY-28);
+        }else if(map===3){
+          ctx.fillStyle="#1b0d08";ctx.fillRect(x-9,groundY-38,18,38);
+          ctx.fillStyle="rgba(255,104,40,"+(.22+pulse*.2)+")";ctx.beginPath();ctx.ellipse(x,groundY-40,14,10,0,0,Math.PI*2);ctx.fill();
+          ctx.fillStyle="rgba(255,170,90,"+(.3+pulse*.25)+")";ctx.beginPath();ctx.ellipse(x,groundY-42,7,5,0,0,Math.PI*2);ctx.fill();
+          ctx.globalAlpha=.34+pulse*.16;ctx.fillStyle="#ffc08a";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("HOLLOW",x,groundY-56);
+        }else if(map===5){
+          ctx.fillStyle="#2b130d";ctx.fillRect(x-22,groundY-16,44,16);
+          ctx.fillStyle="rgba(255,130,62,"+(.28+pulse*.22)+")";ctx.beginPath();ctx.ellipse(x,groundY-18,12,8,0,0,Math.PI*2);ctx.fill();
+          for(let i=0;i<5;i++){
+            const sparkY=groundY-22-((now*.045+i*29)%48);
+            ctx.fillStyle="rgba(255,170,90,"+(.18+i*.08)+")";ctx.fillRect(x-6+(i%3)*5,sparkY,2,3);
+          }
+          ctx.globalAlpha=.34+pulse*.16;ctx.fillStyle="#ffb060";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("COAL",x,groundY-36);
+        }else if(map===6){
+          ctx.fillStyle="#2a1420";ctx.beginPath();ctx.moveTo(x-14,groundY);ctx.lineTo(x-8,groundY-46);ctx.lineTo(x+2,groundY-58);ctx.lineTo(x+12,groundY-40);ctx.lineTo(x+16,groundY);ctx.closePath();ctx.fill();
+          ctx.fillStyle="rgba(224,120,150,"+(.28+pulse*.22)+")";ctx.fillRect(x-2,groundY-44,4,28);
+          ctx.globalAlpha=.34+pulse*.16;ctx.fillStyle="#ffc8a0";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("ECHO",x,groundY-68);
+        }
+        ctx.restore();
+      }
+    };
     const drawWorld=(w:number,h:number,scale:number,now:number)=>{
       ctx.save();ctx.scale(scale,scale);ctx.translate(-cameraX,0);
       const viewW=w/scale,map=mapRef.current,activePlatforms=platformsFor(map);
+      const portalGround=(x:number)=>surfaceYAt(map,x+55,590)??590;
       for(const p of activePlatforms){
         if(p.x+p.w<cameraX-100||p.x>cameraX+viewW+100)continue;
         drawPixelPlatform(p,now,map);
       }
       drawRegionalScenery(now,viewW,map);
       if(map===1){
-        drawPortal(MAP1_PORTAL_X,575,now,map);
+        drawPortal(MAP1_PORTAL_X,portalGround(MAP1_PORTAL_X),now,map);
         ctx.strokeStyle="rgba(61,82,96,.78)";ctx.lineWidth=3;
         for(let gx=90;gx<MAP1_W;gx+=57){
           const surface=activePlatforms.find(p=>gx>p.x&&gx<p.x+p.w&&p.h>80)?.y;
@@ -2182,16 +2304,16 @@ export default function AshfallGame() {
         ctx.globalAlpha=1;
         for(const m of motes){const a=.25+.35*Math.sin(now*.0015+m.p);ctx.fillStyle="rgba(116,230,226,"+a+")";ctx.beginPath();ctx.arc(m.x,m.y+Math.sin(m.p+now*.001)*14,2.2,0,Math.PI*2);ctx.fill();}
       }else if(map===2){
-        drawPortal(MAP2_PORTAL_X,590,now,map);
-        drawPortal(MAP2_EXIT_X,590,now,map);
+        drawPortal(MAP2_PORTAL_X,portalGround(MAP2_PORTAL_X),now,map);
+        drawPortal(MAP2_EXIT_X,portalGround(MAP2_EXIT_X),now,map);
         for(let sx=430;sx<MAP2_W;sx+=173){
           const twinkle=.18+Math.max(0,Math.sin(now*.0021+sx*.01))*.4;
           const surface=surfaceYAt(2,sx,590)??590;ctx.fillStyle="rgba(255,226,165,"+twinkle+")";ctx.fillRect(sx,surface-8-(sx%3),5+(sx%4),2);
         }
       }else if(map===3){
         drawAshTrees(now,viewW);
-        drawPortal(MAP3_ENTRY_X,590,now,map,"255,140,80");
-        drawPortal(MAP3_EXIT_X,590,now,map,"255,140,80");
+        drawPortal(MAP3_ENTRY_X,portalGround(MAP3_ENTRY_X),now,map,"255,140,80");
+        drawPortal(MAP3_EXIT_X,portalGround(MAP3_EXIT_X),now,map,"255,140,80");
         for(let i=0;i<20;i++){
           const ax=((i*197+now*.03*(1+(i%3)))%(MAP3_W+200))-80;
           const ay=590-((now*.02*(1+i%4)+i*83)%480);
@@ -2199,16 +2321,16 @@ export default function AshfallGame() {
         }
       }else if(map===4){
         drawMoonwell(now);
-        drawPortal(MAP4_ENTRY_X,590,now,map,"142,231,255");
-        drawPortal(MAP4_EXIT_X,545,now,map,"142,231,255");
+        drawPortal(MAP4_ENTRY_X,portalGround(MAP4_ENTRY_X),now,map,"142,231,255");
+        drawPortal(MAP4_EXIT_X,portalGround(MAP4_EXIT_X),now,map,"142,231,255");
         for(let sx=380;sx<MAP4_W;sx+=190){
           const twinkle=.14+Math.max(0,Math.sin(now*.0018+sx*.01))*.3;
           ctx.fillStyle="rgba(142,231,255,"+twinkle+")";ctx.fillRect(sx,538-(sx%4),4,2);
         }
       }else if(map===5){
         drawQuietKiln(now);
-        drawPortal(MAP5_ENTRY_X,590,now,map,"255,140,80");
-        drawPortal(MAP5_EXIT_X,550,now,map,"255,140,80");
+        drawPortal(MAP5_ENTRY_X,portalGround(MAP5_ENTRY_X),now,map,"255,140,80");
+        drawPortal(MAP5_EXIT_X,portalGround(MAP5_EXIT_X),now,map,"255,140,80");
         for(let i=0;i<26;i++){
           const ex=((i*211+now*.04*(1+(i%3)))%(MAP5_W+220))-110;
           const ey=590-((now*.03*(1+i%4)+i*97)%520);
@@ -2222,7 +2344,7 @@ export default function AshfallGame() {
       }else if(map===6){
         drawHeartColumns(now,viewW);
         drawCooledVein(now);
-        drawPortal(MAP6_ENTRY_X,590,now,map,"212,90,106");
+        drawPortal(MAP6_ENTRY_X,portalGround(MAP6_ENTRY_X),now,map,"212,90,106");
         drawAshfallHeartAltar(now);
         const heartPulse=.2+Math.sin(now*.0016)*.12;
         ctx.save();ctx.globalCompositeOperation="screen";
@@ -2238,6 +2360,7 @@ export default function AshfallGame() {
         }
       }
       ctx.globalAlpha=1;
+      drawSecrets(now);
       if(portalFlashUntil.current>now){ctx.fillStyle="rgba(255,244,214,"+((portalFlashUntil.current-now)/430*.18)+")";ctx.fillRect(cameraX,0,viewW,WORLD_H);}
       drawDragon(now);drawJackals(now);drawOtherWildlife(now);drawNpcs(now);drawCompanion(now);
       drawPlayer(player.current,now);ctx.restore();
@@ -2337,12 +2460,12 @@ export default function AshfallGame() {
       let action="";
       if(!dialogueRef.current){
         const nearNpc=NPCS.find(n=>n.map===map&&Math.abs(pl.x-n.x)<n.talkRadius);
+        const nearLandmark=landmarkAt(map,pl.x,pl.y+PH);
         if(nearDragonCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Baby Dragon card";
         else if(readyJackal)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Sunset Jackal card";
         else if(readyOtherWild&&otherWildCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up "+otherWildCard.name+" card";
         else if(nearNpc)action="Talk to "+nearNpc.name;
-        else if(map===5&&Math.abs(pl.x-MAP5_KILN_X)<140)action="Study the quiet kiln";
-        else if(map===6&&Math.abs(pl.x-MAP6_VEIN_X)<140)action="Study the cooled vein";
+        else if(nearLandmark)action=nearLandmark.action;
         else if(map===1&&Math.abs(pl.x-(MAP1_PORTAL_X+55))<145)action="Enter Sunset Shore";
         else if(map===2&&Math.abs(pl.x-(MAP2_PORTAL_X+55))<145)action="Return to The Signal in the Rain";
         else if(map===2&&Math.abs(pl.x-(MAP2_EXIT_X+55))<145)action="Enter Ash Hollow";

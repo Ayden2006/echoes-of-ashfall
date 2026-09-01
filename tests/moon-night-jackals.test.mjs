@@ -44,12 +44,12 @@ test("Map 2 world-pickup jackal card does not use baby-dragon art", async () => 
 
 test("ground jackals leap instead of using DragonMode fly", async () => {
   const game = await readFile("app/game.tsx", "utf8");
-  assert.match(game, /const nextMode=!wyrm&&mode==="fly"\?"run":mode/);
+  assert.match(game, /const nextMode=!canFly&&mode==="fly"\?"run":mode/);
   assert.match(game, /startJackalLeap/);
   assert.match(game, /if\(nextMode==="sleep"\|\|nextMode==="attack"\)\{jackal\.leapUntil=0/);
   assert.match(
     game,
-    /else if\(jackal\.id\.startsWith\("heart-wyrm"\)&&roll<\.9\)beginJackalTravel\(jackal,"fly"/,
+    /jackal\.id\.startsWith\("heart-wyrm"\)\|\|jackal\.id\.startsWith\("ash-roost"\)\)&&roll<\.9\)beginJackalTravel\(jackal,"fly"/,
   );
   assert.doesNotMatch(
     game,
