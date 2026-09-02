@@ -54,6 +54,17 @@ test("extra E-talk secrets use the existing landmark pattern and keep kiln/vein/
   assert.doesNotMatch(game, /Moon Knight/);
 });
 
+test("high secrets have a stepping-stone ledge so a single jump can reach them", () => {
+  assert.match(game, /\{x:1418,y:498,w:160,h:18\}/);
+  assert.match(game, /\{x:1515,y:430,w:155,h:18\}/);
+  assert.match(game, /\{x:1400,y:488,w:150,h:18\}/);
+  assert.match(game, /\{x:1510,y:418,w:200,h:18\}/);
+  assert.match(game, /\{x:1360,y:508,w:140,h:18\}/);
+  assert.match(game, /\{x:1480,y:440,w:170,h:18\}/);
+  assert.match(game, /\{x:3980,y:490,w:150,h:18\}/);
+  assert.match(game, /\{x:4120,y:430,w:180,h:18\}/);
+});
+
 test("prebuild still uses the Moon Night companion script, not moon-knight", () => {
   assert.match(pkg, /apply-moon-night-companion-animation\.mjs/);
   assert.doesNotMatch(pkg, /moon-knight/);

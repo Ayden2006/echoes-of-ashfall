@@ -39,8 +39,8 @@ npm run build
 Moon Night follows a fading signal through Ashfall. The road runs castle → beach → hollow → cliffs → quiet ember → heart.
 
 - Map 1 — The Signal in the Rain (moonlit castle): Baby Dragon and an eastern roostling; Calen talks if you press `E`; a high rain-worn plaque can be studied with `E`
-- Map 2 — Sunset Shore (sunset beach): Sunset Jackals (including a road scout); Sera talks if you press `E`; a dusk-shell on a dune ledge can be studied with `E`
-- Map 3 — Ash Hollow (ember wood): Cinder Foxes; Bram talks if you press `E`; a foxfire hollow can be studied with `E`
+- Map 2 — Sunset Shore (sunset beach): Sunset Jackals (including a road scout); Sera talks if you press `E`; a dusk-shell on a mid-beach ledge (step up from the sand) can be studied with `E`
+- Map 3 — Ash Hollow (ember wood): Cinder Foxes; Bram talks if you press `E`; a foxfire hollow on a stepped ledge can be studied with `E`
 - Map 4 — Moonwell Cliffs: Pale Stag; Calen can be met again; the moonwell can be studied with `E`; far gate opens into The Quiet Ember
 - Map 5 — The Quiet Ember (kiln terrace): Ember Lynx; Reed talks if you press `E`; Sera can be met again; the quiet kiln and a banked coal-bed can be studied with `E`
 - Map 6 — Ashfall's Heart (inner chamber): Heart Wyrm; Kest talks if you press `E`; Bram can be met again; a cooled vein, an echo-stone, and the Ashfall Heart Altar all use `E` (the altar ends the campaign)
