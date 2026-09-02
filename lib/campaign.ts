@@ -39,7 +39,8 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     objective: "Find the baby dragon in the rain, then take the far-right portal.",
     intro: [
       { speaker: "Moon Night", text: "Moonlit stone. A young ash dragon hunts these ruins." },
-      { speaker: "Moon Night", text: "Defeat it, take its card, then follow the signal east." }
+      { speaker: "Moon Night", text: "The rain is not just weather. The echo is already in the walls." },
+      { speaker: "Moon Night", text: "Defeat the dragon, take its card, then follow the signal east." }
     ],
     entryPortalX: 105,
     exitPortalX: 5070,
@@ -56,7 +57,8 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     objective: "Track the three Sunset Jackals, then take the eastern portal to Ash Hollow.",
     intro: [
       { speaker: "Moon Night", text: "The shore burns gold. Jackals keep this dusk." },
-      { speaker: "Moon Night", text: "Three of them. Bind one, then push east before the light dies." }
+      { speaker: "Moon Night", text: "If the castle spark was the first note, this hunt is the dusk of it." },
+      { speaker: "Moon Night", text: "Bind one, then push east before the light dies." }
     ],
     entryPortalX: 105,
     exitPortalX: 3470,
@@ -73,6 +75,7 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     objective: "Bind a Cinder Fox in the hollow, then reach the moonwell gate.",
     intro: [
       { speaker: "Moon Night", text: "The first fall still smolders here. Foxfire moves between the trunks." },
+      { speaker: "Moon Night", text: "The signal feels closer to the animals than to the east gate." },
       { speaker: "Moon Night", text: "A Cinder Fox can walk the ash with me if I earn its card." }
     ],
     entryPortalX: 105,
@@ -90,6 +93,7 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     objective: "Face the Pale Stag, then take the far gate into The Quiet Ember.",
     intro: [
       { speaker: "Moon Night", text: "The moonwell pools the signal. The far gate is open now." },
+      { speaker: "Moon Night", text: "If the hollow told the truth, the stag is holding what I already carry." },
       { speaker: "Moon Night", text: "A Pale Stag keeps this cliff. East is The Quiet Ember." }
     ],
     entryPortalX: 105,
@@ -138,6 +142,14 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
 export const PLAYABLE_MAPS: MapId[] = [1, 2, 3, 4, 5, 6];
 export const SEALED_GATE_LINES: Line[] = [
   { speaker: "Moon Night", text: "The gate answers. The Quiet Ember is open east of the moonwell." }
+];
+
+export const CAMPAIGN_ENDING: Line[] = [
+  { speaker: "Moon Night", text: "The cards go still against the stone. Dragon, jackal, fox, stag, lynx, wyrm — each was a shard of the same fading call." },
+  { speaker: "Moon Night", text: "I did not chase a signal east. I carried it. The echo is still because it has a place to rest." },
+  { speaker: "Kest", text: "You brought the road home. Ashfall keeps its heart." },
+  { speaker: "Moon Night", text: "The echo is still. I keep the road." },
+  { speaker: "Kest", text: "Come on. Reed will want to know the kiln can rest. We walk out as people." }
 ];
 
 export function isPlayableMap(map: MapId): boolean {
