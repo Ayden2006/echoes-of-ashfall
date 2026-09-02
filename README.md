@@ -28,7 +28,7 @@ npm run build
 - `S` or down arrow: crouch
 - Tap `S` while moving: slide; faster entry speed creates a longer, faster slide
 - Left mouse button: sword attack toward the cursor
-- `E`: interact with portals, talk to people, study landmarks (kiln, vein, altar), and pick up animal cards
+- `E`: interact with portals, talk to people, study landmarks (plaque, dusk-shell, foxfire hollow, moonwell, kiln, coal-bed, vein, echo-stone, altar), and pick up animal cards
 - `Tab`: inventory
 - `M`: open the Ashfall world map; unreached regions stay hidden until unlocked
 - `1`–`5`: select a usable card slot
@@ -38,12 +38,12 @@ npm run build
 
 Moon Night follows a fading signal through Ashfall. The road runs castle → beach → hollow → cliffs → quiet ember → heart.
 
-- Map 1 — The Signal in the Rain (moonlit castle): Baby Dragon; Calen talks if you press `E`
-- Map 2 — Sunset Shore (sunset beach): Sunset Jackals; Sera talks if you press `E`
-- Map 3 — Ash Hollow (ember wood): Cinder Foxes; Bram talks if you press `E`
-- Map 4 — Moonwell Cliffs: Pale Stag; Calen can be met again; far gate opens into The Quiet Ember
-- Map 5 — The Quiet Ember (kiln terrace): Ember Lynx; Reed talks if you press `E`; Sera can be met again; the quiet kiln can be studied with `E`
-- Map 6 — Ashfall's Heart (inner chamber): Heart Wyrm; Kest talks if you press `E`; Bram can be met again; a cooled vein and the Ashfall Heart Altar both use `E` (the altar ends the campaign)
+- Map 1 — The Signal in the Rain (moonlit castle): Baby Dragon and an eastern roostling; Calen talks if you press `E`; a high rain-worn plaque can be studied with `E`
+- Map 2 — Sunset Shore (sunset beach): Sunset Jackals (including a road scout); Sera talks if you press `E`; a dusk-shell on a mid-beach ledge (step up from the sand) can be studied with `E`
+- Map 3 — Ash Hollow (ember wood): Cinder Foxes; Bram talks if you press `E`; a foxfire hollow on a stepped ledge can be studied with `E`
+- Map 4 — Moonwell Cliffs: Pale Stag; Calen can be met again; the moonwell can be studied with `E`; far gate opens into The Quiet Ember
+- Map 5 — The Quiet Ember (kiln terrace): Ember Lynx; Reed talks if you press `E`; Sera can be met again; the quiet kiln and a banked coal-bed can be studied with `E`
+- Map 6 — Ashfall's Heart (inner chamber): Heart Wyrm; Kest talks if you press `E`; Bram can be met again; a cooled vein, an echo-stone, and the Ashfall Heart Altar all use `E` (the altar ends the campaign)
 
 Maps 2 and 3 use multi-height terrain instead of a single flat strip, ground animals track the terrain surface they stand on, later maps use layered regional backdrops, and the world map only reveals regions the player has unlocked.
 

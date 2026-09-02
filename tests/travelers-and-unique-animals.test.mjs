@@ -48,7 +48,8 @@ test("named travelers reuse E-talk and change if you meet them again", () => {
   assert.match(bramHeart, /We meet at the last echo/);
 
   assert.match(game, /const npc=NPCS\.find\(n=>n\.map===map&&Math\.abs\(x-n\.x\)<n\.talkRadius\)/);
-  assert.match(game, /if\(!metNpcRef\.current\.has\(npc\.id\)\)\{metNpcRef\.current\.add\(npc\.id\);showDialogue\(npc\.firstTalk\);\}/);
+  assert.match(game, /const talkKey=npcTalkKey\(npc\)/);
+  assert.match(game, /if\(!metNpcRef\.current\.has\(talkKey\)\)\{metNpcRef\.current\.add\(talkKey\);showDialogue\(npc\.firstTalk\);\}/);
   assert.match(game, /else if\(hasCard\) showDialogue\(npc\.afterCaptureTalk\)/);
   assert.match(game, /else showDialogue\(npc\.againTalk\)/);
 });
@@ -73,7 +74,8 @@ test("Sera afterCapture treats any sunset jackal card, including PR 5 suffixes",
 test("this is not a dating sim and adds no relationship engine", () => {
   assert.doesNotMatch(game, /bondMeter|affectionMeter|loveInterest|heartMeter|romanceChoice|dialogueChoice/);
   assert.doesNotMatch(campaign, /bondMeter|loveInterest|romanceChoice/);
-  assert.match(game, /metNpcRef\.current\.has\(npc\.id\)/);
+  assert.match(game, /npcTalkKey=\(npc:\{id:string;map:MapId\}\)=>npc\.id\+":"\+npc\.map/);
+  assert.match(game, /metNpcRef\.current\.has\(talkKey\)/);
 });
 
 test("each map keeps a unique animal on the existing card + E/Q pattern", () => {
@@ -89,7 +91,7 @@ test("each map keeps a unique animal on the existing card + E/Q pattern", () => 
   assert.match(game, /createBeast\("pale-stag-a"/);
   assert.match(game, /createBeast\("ember-lynx-a"/);
   assert.match(game, /createBeast\("heart-wyrm"/);
-  assert.match(game, /wildPackFor=\(map:MapId\)=>map===2\?jackals:map===3\?foxes:map===4\?stags:map===5\?lynxes:map===6\?wyrmPack:null/);
+  assert.match(game, /wildPackFor=\(map:MapId\)=>map===1\?roosts:map===2\?jackals:map===3\?foxes:map===4\?stags:map===5\?lynxes:map===6\?wyrmPack:null/);
   assert.match(game, /wildCardFor=\(map:MapId\)=>map===2\?SUNSET_JACKAL_CARD:map===3\?CINDER_FOX_CARD:map===4\?PALE_STAG_CARD:map===5\?EMBER_LYNX_CARD:map===6\?HEART_WYRM_CARD:null/);
   assert.match(game, /"Pick up "\+otherWildCard\.name\+" card"/);
   assert.match(game, /k==="q"&&!e\.repeat/);
