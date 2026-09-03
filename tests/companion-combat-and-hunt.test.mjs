@@ -62,3 +62,11 @@ test("lock holds: Moon Night, no romance, no maps 7+, extras stay combat-only", 
   assert.doesNotMatch(game, /sunset-jackal-card-d/);
   assert.match(game, /The signal is not a road\. It is the animals/);
 });
+
+test("active companions survive map portals without stale draw state", () => {
+  assert.match(game, /if\(ally\.active&&ally\.itemId\)\{/);
+  assert.match(game, /ally\.attackUntil=0;ally\.attackLanded=false;ally\.recallStarted=0;ally\.targetX=ally\.x/);
+  assert.match(game, /if\(!ally\?\.active\|\|!ally\.itemId\|\|ally\.map!==mapRef\.current\)return/);
+  assert.match(game, /const frame=frames\[index\]\?\?DRAGON_FRAMES\.idle\[0\]/);
+  assert.match(game, /if\(!ally\?\.active\|\|!ally\.itemId\)return/);
+});

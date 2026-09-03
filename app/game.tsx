@@ -577,7 +577,15 @@ export default function AshfallGame() {
     }
     pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
     const ally=companionRef.current;
-    if(ally.active){const now=performance.now();ally.map=map;ally.x=pl.x-pl.facing*96;ally.y=pl.y+PH;ally.groundY=ally.y;ally.vx=0;ally.mode="idle";ally.modeStarted=now;ally.teleportAt=now;}
+    if(ally.active&&ally.itemId){
+      const now=performance.now();
+      const groundAlly=cardStats(ally.itemId).ground;
+      const arrivalGround=surfaceYAt(map,pl.x,pl.y+PH)??pl.y+PH;
+      ally.map=map;ally.x=pl.x-pl.facing*96;ally.groundY=arrivalGround;
+      ally.y=groundAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.facing=pl.facing;
+      ally.mode=groundAlly?"run":"fly";ally.modeStarted=now;ally.teleportAt=now;
+      ally.attackUntil=0;ally.attackLanded=false;ally.recallStarted=0;ally.targetX=ally.x;
+    }
     slideUntil.current=0;actionUntil.current=0;cameraReset.current=true;
     portalFlashUntil.current=performance.now()+430;
     tone(610,.25,.028);window.setTimeout(()=>tone(360,.2,.02),100);
@@ -951,7 +959,9 @@ export default function AshfallGame() {
       const duration=cast.kind==="recall"?COMPANION_RECALL_DURATION:780,progress=clamp((now-cast.started)/duration,0,1);
       if(progress>=1){cast.kind=null;return;}
       const eased=progress*progress*(3-2*progress),fade=1-clamp((progress-.72)/.28,0,1);
-      const ally=companionRef.current,palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??BABY_DRAGON_CARD.palette;
+      const ally=companionRef.current;
+      if(!ally)return;
+      const palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??BABY_DRAGON_CARD.palette;
       const direction=cast.direction,color=palette.glow;
       const handX=pl.x+direction*26,handY=pl.y+59-Math.sin(progress*Math.PI)*3;
       const pulse=.7+Math.sin(now*.018)*.3;
@@ -1434,7 +1444,7 @@ export default function AshfallGame() {
     };
     const updateCompanion=(dt:number,now:number)=>{
       const ally=companionRef.current;
-      if(!ally.active)return;
+      if(!ally?.active||!ally.itemId)return;
       const pl=player.current,map=mapRef.current;
       if(ally.recallStarted>0){
         ally.attackUntil=0;ally.vx+=(0-ally.vx)*(1-Math.exp(-12*dt));ally.x+=ally.vx*dt;
@@ -1667,21 +1677,21 @@ export default function AshfallGame() {
     };
     const drawCompanion=(now:number)=>{
       const ally=companionRef.current;
-      if(!ally.active||ally.map!==mapRef.current)return;
-      const isJackal=Boolean(ally.itemId&&GROUND_BEAST_CARD_IDS.has(ally.itemId));
+      if(!ally?.active||!ally.itemId||ally.map!==mapRef.current)return;
+      const isJackal=Boolean(GROUND_BEAST_CARD_IDS.has(ally.itemId));
       const wyrmTint=ally.itemId===HEART_WYRM_CARD.id;
       if(!isJackal&&!wyrmTint&&(!dragonImage.complete||!dragonImage.naturalWidth))return;
       const palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??(isJackal?SUNSET_JACKAL_CARD.palette:wyrmTint?HEART_WYRM_CARD.palette:BABY_DRAGON_CARD.palette);
       const companionName=cardDisplayName(ally.itemId);
       const companionTint=beastTintFor(ally.itemId),companionAntlers=beastAntlersFor(ally.itemId),companionTufts=beastTuftsFor(ally.itemId),companionKind=beastKindFor(ally.itemId);
-      const frames=DRAGON_FRAMES[ally.mode],elapsed=now-ally.modeStarted;
+      const frames=DRAGON_FRAMES[ally.mode]??DRAGON_FRAMES.idle,elapsed=now-ally.modeStarted;
       let index=0;
-      if(ally.mode==="idle")index=Math.floor(elapsed/520)%2;
-      else if(ally.mode==="walk")index=Math.floor(elapsed/180)%frames.length;
-      else if(ally.mode==="run")index=Math.floor(elapsed/100)%frames.length;
-      else if(ally.mode==="fly")index=Math.floor(elapsed/125)%frames.length;
-      else if(ally.mode==="attack")index=Math.min(frames.length-1,Math.floor(elapsed/175));
-      const frame=frames[index],size=108,spriteScale=size/DRAGON_CELL;
+      if(ally.mode==="idle")index=Math.floor(elapsed/520)%Math.max(1,frames.length);
+      else if(ally.mode==="walk")index=Math.floor(elapsed/180)%Math.max(1,frames.length);
+      else if(ally.mode==="run")index=Math.floor(elapsed/100)%Math.max(1,frames.length);
+      else if(ally.mode==="fly")index=Math.floor(elapsed/125)%Math.max(1,frames.length);
+      else if(ally.mode==="attack")index=Math.min(Math.max(0,frames.length-1),Math.floor(elapsed/175));
+      const frame=frames[index]??DRAGON_FRAMES.idle[0],size=108,spriteScale=size/DRAGON_CELL;
       const smooth=(value:number)=>value*value*(3-2*value);
       const summon=clamp((now-ally.summonedAt)/COMPANION_SUMMON_DURATION,0,1);
       const summonCreature=smooth(clamp((summon-.22)/.58,0,1));
