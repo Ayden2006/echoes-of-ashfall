@@ -53,6 +53,10 @@ test("extra E-talk secrets use the existing landmark pattern and keep kiln/vein/
   assert.match(game, /action:"Study the cooled vein"/);
   assert.match(game, /action:"Study the echo-stone"/);
   assert.match(game, /action:"Study the first-step stone"/);
+  assert.match(game, /action:"Study the rain-slick merlon"/);
+  assert.match(game, /action:"Study the tide-cut step"/);
+  assert.match(game, /action:"Study the charred nest"/);
+  assert.match(game, /action:"Study the pale lichen"/);
   assert.match(game, /Approach Ashfall's Heart/);
   assert.match(game, /const x=MAP6_HEART_X\+40,groundY=545/);
   assert.match(game, /PLAYER_NAME = "Moon Night"/);
@@ -95,6 +99,18 @@ test("high secrets have a stepping-stone ledge so a single jump can reach them",
   assert.match(game, /\{x:1480,y:440,w:170,h:18\}/);
   assert.match(game, /\{x:3980,y:490,w:150,h:18\}/);
   assert.match(game, /\{x:4120,y:430,w:180,h:18\}/);
+  assert.match(game, /\{x:4380,y:500,w:150,h:18\}/);
+  assert.match(game, /\{x:4520,y:430,w:170,h:18\}/);
+  assert.match(game, /\{x:3280,y:500,w:140,h:18\}/);
+  assert.match(game, /\{x:3380,y:432,w:160,h:18\}/);
+  assert.match(game, /\{x:2780,y:500,w:140,h:18\}/);
+  assert.match(game, /\{x:2900,y:430,w:160,h:18\}/);
+  assert.match(game, /\{x:2460,y:508,w:140,h:18\}/);
+  assert.match(game, /\{x:2580,y:440,w:170,h:18\}/);
+  assert.match(game, /\{x:3840,y:488,w:150,h:18\}/);
+  assert.match(game, /\{x:3980,y:422,w:160,h:18\}/);
+  assert.match(game, /\{x:4360,y:490,w:150,h:18\}/);
+  assert.match(game, /\{x:4500,y:430,w:160,h:18\}/);
 });
 
 test("prebuild still uses the Moon Night companion script, not moon-knight", () => {
