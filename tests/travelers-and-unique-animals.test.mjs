@@ -6,19 +6,10 @@ const game = await readFile(new URL("../app/game.tsx", import.meta.url), "utf8")
 const campaign = await readFile(new URL("../lib/campaign.ts", import.meta.url), "utf8");
 
 function npcBlock(id, map) {
-  const marker = `{id:"${id}",name:`;
-  const indexes = [];
-  for (let from = 0; from < game.length; ) {
-    const at = game.indexOf(marker, from);
-    if (at < 0) break;
-    indexes.push(at);
-    from = at + marker.length;
-  }
-  const block = indexes
-    .map((at) => game.slice(at, at + 1600))
-    .find((chunk) => chunk.includes(`map:${map},`));
-  assert.ok(block, `missing ${id} on map ${map}`);
-  return block;
+  const re = new RegExp(`\\{id:"${id}",name:"[^"]+",map:${map},`);
+  const at = game.search(re);
+  assert.ok(at >= 0, `missing ${id} on map ${map}`);
+  return game.slice(at, at + 1800);
 }
 
 test("named travelers reuse E-talk and change if you meet them again", () => {

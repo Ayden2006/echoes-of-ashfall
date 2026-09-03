@@ -40,18 +40,50 @@ test("existing unique animals stay on the card + E/Q pattern, with extra on-map 
 
 test("extra E-talk secrets use the existing landmark pattern and keep kiln/vein/altar", () => {
   assert.match(game, /action:"Study the rain-worn plaque"/);
+  assert.match(game, /action:"Study the rain-cut groove"/);
   assert.match(game, /action:"Study the dusk-shell"/);
+  assert.match(game, /action:"Study the drowned signal-post"/);
   assert.match(game, /action:"Study the foxfire hollow"/);
+  assert.match(game, /action:"Study the split cairn"/);
   assert.match(game, /action:"Study the moonwell"/);
+  assert.match(game, /action:"Study the cliff notch"/);
   assert.match(game, /action:"Study the quiet kiln"/);
   assert.match(game, /action:"Study the banked coal-bed"/);
+  assert.match(game, /action:"Study the quiet bellows"/);
   assert.match(game, /action:"Study the cooled vein"/);
   assert.match(game, /action:"Study the echo-stone"/);
+  assert.match(game, /action:"Study the first-step stone"/);
   assert.match(game, /Approach Ashfall's Heart/);
   assert.match(game, /const x=MAP6_HEART_X\+40,groundY=545/);
   assert.match(game, /PLAYER_NAME = "Moon Night"/);
   assert.match(campaign, /PLAYER_DISPLAY_NAME = "Moon Night"/);
   assert.doesNotMatch(game, /Moon Knight/);
+});
+
+test("mid-road twist and stronger altar ending stay on E-talk, no new engines", () => {
+  assert.match(game, /The signal is not a road\. It is the animals/);
+  assert.match(game, /I did not chase a signal east\. I carried it/);
+  assert.match(game, /each was a shard of the same fading call/);
+  assert.match(campaign, /CAMPAIGN_ENDING/);
+  assert.match(campaign, /I did not chase a signal east/);
+  assert.doesNotMatch(game, /bondMeter|affectionMeter|romanceChoice|dialogueChoice/);
+  assert.doesNotMatch(game, /map:\s*7|Map 7|MAP7_/);
+});
+
+test("after-capture lines tie each map animal to the fading signal", () => {
+  assert.match(game, /It was the first spark of the signal/);
+  assert.match(game, /That's the dusk of the signal walking with you/);
+  assert.match(game, /That's foxfire — the echo shedding heat/);
+  assert.match(game, /The moonwell poured the signal into that stag/);
+  assert.match(game, /That lynx was the last heat the echo could keep without going out/);
+  assert.match(game, /The wyrm is the last pulse/);
+});
+
+test("combat-only extras never flash a second card", () => {
+  assert.match(game, /COMBAT_ONLY_BEAST_IDS = new Set\(\["sunset-jackal-scout","ash-roost","cinder-fox-c","pale-stag-b","ember-lynx-d"\]\)/);
+  assert.match(game, /!isCombatOnlyBeast\(beast\.id\)/);
+  assert.match(game, /droppedJackalCard&&!jackalCardsCollected\.has\(droppedJackalCard\.id\)/);
+  assert.doesNotMatch(game, /sunset-jackal-card-d/);
 });
 
 test("high secrets have a stepping-stone ledge so a single jump can reach them", () => {
