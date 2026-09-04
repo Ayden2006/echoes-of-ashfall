@@ -933,10 +933,13 @@ const sleepPoseAmt = (mode:DragonMode, prevMode:DragonMode, blendAt:number, now:
   if(prevMode==="sleep") return 1-easeInOut(clamp((now-blendAt)/WAKE_BLEND_MS,0,1));
   return 0;
 };
+const gaitBlendAmt = (blendAt:number, now:number)=>easeInOut(clamp((now-blendAt)/MODE_BLEND_MS,0,1));
+const locoCadence = (mode:DragonMode, walk=180, run=110)=>mode==="run"?run:walk;
 const locoPoseMode = (animal:{mode:DragonMode;prevMode:DragonMode;modeBlendAt:number}, now:number):DragonMode => {
-  const blend=easeInOut(clamp((now-animal.modeBlendAt)/MODE_BLEND_MS,0,1));
+  const blend=gaitBlendAmt(animal.modeBlendAt,now);
   if(animal.mode==="sleep"||animal.prevMode==="sleep") return animal.mode;
   if(blend<0.5&&(animal.prevMode==="fly"||animal.prevMode==="run")&&(animal.mode==="idle"||animal.mode==="walk")) return animal.prevMode;
+  if(blend<0.42&&(animal.prevMode==="walk"||animal.prevMode==="run"||animal.prevMode==="attack")&&(animal.mode==="walk"||animal.mode==="run"||animal.mode==="attack"||animal.mode==="idle")) return animal.prevMode;
   return animal.mode;
 };
 const pixelHurtFlash = (now:number) => Math.floor(now/HURT_FLASH_MS)%2===0;
@@ -984,12 +987,14 @@ const keepCreatureOnRoad=(creature:{x:number;y:number;groundY:number},map:MapId)
   if(ground!==null){
     creature.groundY=ground;
     if(creature.y>ground+28)creature.y=ground;
+    if(creature.y>ground)creature.y=ground;
     return ground;
   }
   const floor=plantedFloorAt(map,creature.x);
   creature.x=creatureEdgeAt(map,floor.x);
   creature.groundY=floor.groundY;
   if(creature.y>floor.groundY+28)creature.y=floor.groundY;
+  if(creature.y>floor.groundY)creature.y=floor.groundY;
   return floor.groundY;
 };
 const atHeartAltar=(x:number)=>Math.abs(x-MAP6_HEART_X)<ALTAR_INTERACT_RANGE;
@@ -2203,11 +2208,12 @@ export default function AshfallGame() {
       const prevMode=variant?.prevMode??mode;
       const modeBlendAt=variant?.modeBlendAt??0;
       const loco=variant?.gait??elapsed;
-      const runCycle=(loco/(mode==="run"?110:180))%1;
+      const gaitBlend=gaitBlendAmt(modeBlendAt,now);
+      const runCycle=(loco/(locoCadence(prevMode)+(locoCadence(mode)-locoCadence(prevMode))*gaitBlend))%1;
       const gait=Math.sin(runCycle*Math.PI*2);
       const air=clamp((groundY-y)/52,0,1);
       const leap=air;
-      const attack=mode==="attack"?clamp(elapsed/920,0,1):0;
+      const attack=mode==="attack"?clamp(elapsed/920,0,1):prevMode==="attack"?(1-gaitBlend)*0.35:0;
       const pounce=attack>0?hopArc(attack,1):0;
       const sleepBlend=mode==="sleep"?easeInOut(clamp(elapsed/MODE_BLEND_MS,0,1)):0;
       const landSquash=prevMode==="fly"&&(mode==="idle"||mode==="walk"||mode==="run")?(1-easeInOut(clamp((now-modeBlendAt)/240,0,1)))*.12:0;
@@ -2258,8 +2264,16 @@ export default function AshfallGame() {
         ctx.fillStyle=eye;ctx.globalAlpha=hurt?ctx.globalAlpha:0.35;ctx.beginPath();ctx.ellipse(14,-14,2.2,1.2,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=hurt&&pixelHurtFlash(now)?.4:1;
         ctx.restore();return;
       }
-      const frontSwing=mode==="idle"?0.06+idleBreath*0.03:leap>0.12?0.85:mode==="attack"?0.2+lunge*0.9:gait*(mode==="run"?0.82:0.62);
-      const backSwing=mode==="idle"?-0.06-idleBreath*0.03:leap>0.12?-0.7:mode==="attack"?-0.15-lunge*0.4:-gait*(mode==="run"?0.82:0.62);
+      const swingFor=(pose:DragonMode, amt:number)=>{
+        if(pose==="idle")return {front:0.06+idleBreath*0.03,back:-0.06-idleBreath*0.03};
+        if(leap>0.12&&pose!=="attack"&&pose!=="sleep")return {front:0.85,back:-0.7};
+        if(pose==="attack")return {front:0.2+lunge*0.9,back:-0.15-lunge*0.4};
+        const span=pose==="run"?0.82:0.62;
+        return {front:amt*span,back:-amt*span};
+      };
+      const swingFrom=swingFor(prevMode,gait),swingTo=swingFor(mode,gait);
+      const frontSwing=swingFrom.front+(swingTo.front-swingFrom.front)*gaitBlend;
+      const backSwing=swingFrom.back+(swingTo.back-swingFrom.back)*gaitBlend;
       const legLen=kind==="stag"?22:kind==="lynx"?16:18;
       ctx.save();ctx.globalAlpha=.68;ctx.translate(-1.5,1.7);drawLimb(-12,8,kind==="lynx"?7:6,legLen,backSwing);drawLimb(-6,8,6,legLen-1,backSwing*0.7+0.15);ctx.restore();
       const bodyW=kind==="lynx"?22:kind==="fox"?16:20,bodyH=kind==="lynx"?15:kind==="stag"?14:13;
@@ -2319,10 +2333,11 @@ export default function AshfallGame() {
     const drawPixelWyrm=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean,gait?:number,prevMode?:DragonMode,modeBlendAt?:number)=>{
       const scale=size/150;
       const loco=gait??elapsed;
+      const gaitBlend=gaitBlendAmt(modeBlendAt??0,now);
       const flyAmt=clamp((groundY-y)/90,0,1);
       const wave=Math.sin(now*.006+loco*.01);
       const hover=8*flyAmt+Math.sin(now*.004)*6*flyAmt+Math.sin(now*.003)*2*(1-flyAmt);
-      const attack=mode==="attack"?clamp(elapsed/920,0,1):0;
+      const attack=mode==="attack"?clamp(elapsed/920,0,1):prevMode==="attack"?(1-gaitBlend)*0.28:0;
       const lunge=attack>0.32&&attack<.72?(attack-.32)/.4:0;
       const sleepPose=sleepPoseAmt(mode, prevMode??mode, modeBlendAt??0, now, elapsed);
       const landSquash=(prevMode??mode)==="fly"&&(mode==="idle"||mode==="walk"||mode==="run")?(1-easeInOut(clamp((now-(modeBlendAt??0))/240,0,1)))*.1:0;
@@ -2391,6 +2406,8 @@ export default function AshfallGame() {
       const poseFrames=DRAGON_FRAMES[poseMode]??frames;
       if(poseMode!==ally.mode&&poseMode==="fly")index=flapFrame(gait,poseFrames.length);
       else if(poseMode!==ally.mode&&poseMode==="run")index=Math.floor(gait/100)%Math.max(1,poseFrames.length);
+      else if(poseMode!==ally.mode&&poseMode==="walk")index=Math.floor(gait/180)%Math.max(1,poseFrames.length);
+      else if(poseMode!==ally.mode&&poseMode==="attack")index=Math.min(Math.max(0,poseFrames.length-1),Math.floor(elapsed/175));
       const frame=frames[index]??DRAGON_FRAMES.idle[0],size=108,spriteScale=size/DRAGON_CELL;
       const poseFrame=poseFrames[index]??frame;
       const smooth=(value:number)=>value*value*(3-2*value);
@@ -2630,7 +2647,13 @@ export default function AshfallGame() {
         else index=0;
       }
       else index=Math.min(frames.length-1,Math.floor(elapsed/235));
-      const frame=frames[index],size=DRAGON_RENDER_SIZE;
+      const poseMode=locoPoseMode(dragon,now);
+      const poseFrames=DRAGON_FRAMES[poseMode]??frames;
+      if(poseMode!==dragon.mode&&poseMode==="fly")index=flapFrame(gait,poseFrames.length);
+      else if(poseMode!==dragon.mode&&poseMode==="run")index=Math.floor(gait/95)%poseFrames.length;
+      else if(poseMode!==dragon.mode&&poseMode==="walk")index=Math.floor(gait/220)%poseFrames.length;
+      else if(poseMode!==dragon.mode&&poseMode==="attack")index=Math.min(poseFrames.length-1,Math.floor(elapsed/235));
+      const frame=poseFrames[Math.min(index,poseFrames.length-1)]??frames[index],size=DRAGON_RENDER_SIZE;
       const spriteScale=size/DRAGON_CELL;
       const airHeight=clamp((dragon.groundY-dragon.y)/125,0,1),shadowScale=1-airHeight*.46;
       const hurtActive=dragon.hurtUntil>now;
@@ -2640,10 +2663,10 @@ export default function AshfallGame() {
       const hitSquash=hurtPulse*.08;
       ctx.save();ctx.fillStyle="rgba(1,4,5,"+(.58-airHeight*.22)+")";ctx.beginPath();ctx.ellipse(dragon.x,dragon.groundY+3,35*shadowScale,7*shadowScale,0,0,Math.PI*2);ctx.fill();ctx.restore();
       ctx.save();ctx.translate(dragon.x+recoilX,dragon.y);
-      if(dragon.mode==="fly"){
+      if(dragon.mode==="fly"||poseMode==="fly"){
         const beat=flapPhase(gait);
         const bank=Math.sin(gait*.0055)*.03;
-        ctx.rotate((bank+beat.tilt)*dragon.facing);
+        ctx.rotate((bank+beat.tilt)*dragon.facing*(poseMode==="fly"&&dragon.mode!=="fly"?1-gaitBlendAmt(dragon.modeBlendAt,now):1));
       }
       const breatheScale=dragon.mode==="sleep"&&index===3?1+Math.sin(now*.0032)*.012:dragon.mode==="idle"?1+Math.sin(now*.0024)*.006:dragon.mode==="fly"?1+flapPhase(gait).lift*.02:1;
       ctx.scale(dragon.facing*(1+hitSquash),breatheScale-hitSquash);ctx.imageSmoothingEnabled=true;
@@ -3382,9 +3405,11 @@ export default function AshfallGame() {
             if(ally.recallStarted===0){const direction:1|-1=ally.x>=pl.x?1:-1;ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;companionCastRef.current={started:now,kind:"recall",direction};pl.facing=direction;tone(470,.16,.022);window.setTimeout(()=>tone(280,.22,.024),180);window.setTimeout(()=>tone(135,.34,.022),610);}
           }else{
             const summonX=creatureEdgeAt(map,pl.x+pl.facing*COMPANION_DEPLOY_DISTANCE);
-            const summonGround=companionSurfaceAt(summonX,pl.y+PH,map)??surfaceYAt(map,summonX,pl.y+PH)??pl.y+PH;
-            ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=summonX;ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.prevMode="idle";ally.modeBlendAt=now;ally.gait=0;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.recallStarted=0;ally.teleportAt=0;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;
+            const summonFloor=plantedFloorAt(map,summonX);
+            const summonGround=companionSurfaceAt(summonFloor.x,pl.y+PH,map)??surfaceYAt(map,summonFloor.x,pl.y+PH)??summonFloor.groundY;
+            ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=creatureEdgeAt(map,summonFloor.x);ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.prevMode="idle";ally.modeBlendAt=now;ally.gait=0;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.recallStarted=0;ally.teleportAt=0;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;
             keepCreatureOnRoad(ally,map);
+            if(ally.y>ally.groundY)ally.y=ally.groundY;
             ally.maxHealth=cardStats(item.id).hp;ally.health=ally.maxHealth;
             const direction:1|-1=summonX>=pl.x?1:-1;companionCastRef.current={started:now,kind:"summon",direction};pl.facing=direction;setDeployedItemId(item.id);tone(330,.18,.024);window.setTimeout(()=>tone(620,.22,.022),170);window.setTimeout(()=>tone(940,.28,.02),420);
           }
