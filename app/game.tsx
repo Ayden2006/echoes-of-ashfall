@@ -984,7 +984,13 @@ const plantedFloorAt=(map:MapId,x:number)=>{
   const worldW=worldWidthFor(map);
   let px=clamp(x,48,worldW-48);
   const hit=(nx:number)=>surfaceYAt(map,nx,590);
-  const clear=(nx:number)=>{const g=hit(nx);return g!==null&&!cardBlockedAt(map,nx)?g:null;};
+  const clear=(nx:number)=>{
+    const g=hit(nx);
+    if(g===null||cardBlockedAt(map,nx))return null;
+    const head=g-PH;
+    if(platformsFor(map).some(p=>p.h<=24&&nx+PW*.5>p.x&&nx-PW*.5<p.x+p.w&&p.y<g-2&&p.y+p.h>head+2))return null;
+    return g;
+  };
   const first=clear(px);
   if(first!==null)return {x:px,groundY:first};
   for(let d=8;d<=420;d+=8){
@@ -1031,12 +1037,12 @@ const lateObjectiveFor=(map:MapId,held:string[],ended:boolean)=>{
 const hudLockFor=(map:MapId,held:string[],ended:boolean)=>({name:MAP_STORY[map].name,objective:lateObjectiveFor(map,held,ended)});
 const sixMapWorldPolishApplied=true;
 const spawnFor = (map:MapId, from:MapId|null) => {
-  if(from===null) return {x:230,y:plantedYAt(1,230),facing:1 as 1|-1};
-  if(map===1) return {x:6860,y:plantedYAt(1,6860),facing:-1 as 1|-1};
+  if(from===null){const floor=plantedFloorAt(1,230);return {x:floor.x,y:plantedYAt(1,floor.x),facing:1 as 1|-1};}
+  if(map===1){const floor=plantedFloorAt(1,6860);return {x:floor.x,y:plantedYAt(1,floor.x),facing:-1 as 1|-1};}
   const arrivingFromPrev = (map===2&&from===1)||(map===3&&from===2)||(map===4&&from===3)||(map===5&&from===4)||(map===6&&from===5);
-  if(arrivingFromPrev) return {x:340,y:plantedYAt(map,340),facing:1 as 1|-1};
+  if(arrivingFromPrev){const floor=plantedFloorAt(map,340);return {x:floor.x,y:plantedYAt(map,floor.x),facing:1 as 1|-1};}
   const x=Math.max(240,worldWidthFor(map)-340);
-  return {x,y:plantedYAt(map,x),facing:-1 as 1|-1};
+  const floor=plantedFloorAt(map,x);return {x:floor.x,y:plantedYAt(map,floor.x),facing:-1 as 1|-1};
 };
 const respawnXFor = (map:MapId) => map===1?230:340;
 
@@ -1189,6 +1195,7 @@ export default function AshfallGame() {
       ally.y=groundAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.facing=pl.facing;
       ally.mode=groundAlly?"run":"fly";ally.modeStarted=now;ally.modeBlendAt=now;ally.teleportAt=now;
       ally.attackUntil=0;ally.attackLanded=false;ally.recallStarted=0;ally.targetX=ally.x;
+      keepCreatureOnRoad(ally,map);
     }
     slideUntil.current=0;actionUntil.current=0;cameraReset.current=true;
     portalFlashUntil.current=performance.now()+430; // portal flash still fires after companion reseat
@@ -1908,7 +1915,7 @@ export default function AshfallGame() {
       keepCreatureOnRoad(dragon,1);
 
       if(playerRespawnAt&&now>=playerRespawnAt){
-        pl.health=pl.maxHealth;pl.x=respawnXFor(mapRef.current);pl.y=plantedYAt(mapRef.current,pl.x);pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
+        pl.health=pl.maxHealth;const floor=plantedFloorAt(mapRef.current,respawnXFor(mapRef.current));pl.x=floor.x;pl.y=plantedYAt(mapRef.current,pl.x);pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
         staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;
         playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
       }
@@ -2090,7 +2097,7 @@ export default function AshfallGame() {
         keepCreatureOnRoad(jackal,mapRef.current);
       }
       if(playerRespawnAt&&now>=playerRespawnAt){
-        pl.health=pl.maxHealth;pl.x=respawnXFor(mapRef.current);pl.y=plantedYAt(mapRef.current,pl.x);pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
+        pl.health=pl.maxHealth;const floor=plantedFloorAt(mapRef.current,respawnXFor(mapRef.current));pl.x=floor.x;pl.y=plantedYAt(mapRef.current,pl.x);pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
         staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;
         playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
       }
@@ -2138,8 +2145,10 @@ export default function AshfallGame() {
       const playerGround=pl.y+PH;
       const stayForHunt=hunted&&Math.abs(pl.x-hunted.x)<COMPANION_HUNT_RANGE+140&&Math.abs(ally.x-hunted.x)<COMPANION_TELEPORT_DISTANCE;
       if(Math.abs(pl.x-ally.x)>COMPANION_TELEPORT_DISTANCE&&!stayForHunt){
-        const arrivalGround=companionSurfaceAt(followX,playerGround,map)??surfaceYAt(map,followX,590)??playerGround;
-        ally.x=followX;ally.groundY=arrivalGround;ally.y=groundAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.attackUntil=0;ally.teleportAt=now;ally.facing=pl.facing;setCompanionMode(groundAlly?"run":"fly",now);
+        const seat=!hunting?plantedFloorAt(map,followX):null;
+        const arrivalX=seat?creatureEdgeAt(map,seat.x):followX;
+        const arrivalGround=seat?seat.groundY:(companionSurfaceAt(followX,playerGround,map)??surfaceYAt(map,followX,590)??playerGround);
+        ally.x=arrivalX;ally.groundY=arrivalGround;ally.y=groundAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.attackUntil=0;ally.teleportAt=now;ally.facing=pl.facing;setCompanionMode(groundAlly?"run":"fly",now);
         keepCreatureOnRoad(ally,map);
       }
       const targetX=hunting?hunted!.x:followX;
@@ -2202,7 +2211,9 @@ export default function AshfallGame() {
         ally.y+=(targetY-ally.y)*(1-Math.exp(-(followMode==="fly"?5:12)*dt));
       }else{
         setCompanionMode("idle",now);ally.vx+=(0-ally.vx)*(1-Math.exp(-9*dt));ally.x+=ally.vx*dt;
-        const idleGround=companionSurfaceAt(ally.x,ally.groundY,map)??surfaceYAt(map,ally.x,590);
+        const idleSeat=!hunting?plantedFloorAt(map,ally.x):null;
+        if(idleSeat){ally.x=creatureEdgeAt(map,idleSeat.x);ally.groundY=idleSeat.groundY;}
+        const idleGround=idleSeat?idleSeat.groundY:(companionSurfaceAt(ally.x,ally.groundY,map)??surfaceYAt(map,ally.x,590));
         if(idleGround!==null)ally.groundY=idleGround;
         ally.y+=(ally.groundY-ally.y)*(1-Math.exp(-12*dt));
         if(ally.y>ally.groundY+28)ally.y=ally.groundY;
@@ -2220,19 +2231,21 @@ export default function AshfallGame() {
     const drawHuntMark=(x:number,y:number,now:number,marked:boolean)=>{
       if(!marked)return;
       const pulse=.55+Math.sin(now*.01)*.28;
+      const late=lateMapContactShade(mapRef.current);
       ctx.save();ctx.translate(x,y);ctx.textAlign="center";ctx.textBaseline="bottom";
       ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";
-      ctx.lineWidth=3;ctx.strokeStyle="rgba(4,10,6,.9)";ctx.strokeText("HUNT",0,-10);
-      ctx.fillStyle="rgba(185,255,99,"+pulse+")";ctx.fillText("HUNT",0,-10);
-      ctx.fillStyle="rgba(185,255,99,"+(.35+pulse*.35)+")";ctx.strokeStyle="rgba(185,255,99,.85)";ctx.lineWidth=2;
+      ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(4,10,6,.9)";ctx.strokeText("HUNT",0,-10);
+      ctx.fillStyle=(late?"rgba(220,255,140,":"rgba(185,255,99,")+pulse+")";ctx.fillText("HUNT",0,-10);
+      ctx.fillStyle=(late?"rgba(220,255,140,":"rgba(185,255,99,")+(.35+pulse*.35)+")";ctx.strokeStyle=late?"rgba(220,255,140,.9)":"rgba(185,255,99,.85)";ctx.lineWidth=2;
       ctx.beginPath();ctx.moveTo(0,-6);ctx.lineTo(7,2);ctx.lineTo(0,7);ctx.lineTo(-7,2);ctx.closePath();ctx.fill();ctx.stroke();
       ctx.restore();
     };
     const drawHurtNumber=(x:number,y:number,dmg:number,progress:number,fill:string)=>{
+      const late=lateMapContactShade(mapRef.current);
       ctx.save();ctx.globalAlpha=Math.max(0,1-progress);ctx.textAlign="center";ctx.textBaseline="middle";
       ctx.font="900 15px ui-monospace, SFMono-Regular, Menlo, monospace";
-      ctx.lineWidth=4;ctx.strokeStyle="rgba(8,4,8,.92)";ctx.strokeText("-"+dmg,x,y);
-      ctx.fillStyle=fill;ctx.shadowColor="rgba(255,240,180,.7)";ctx.shadowBlur=6;ctx.fillText("-"+dmg,x,y);
+      ctx.lineWidth=late?5:4;ctx.strokeStyle=late?"rgba(4,2,6,.96)":"rgba(8,4,8,.92)";ctx.strokeText("-"+dmg,x,y);
+      ctx.fillStyle=fill;ctx.shadowColor=late?"rgba(255,248,210,.95)":"rgba(255,240,180,.7)";ctx.shadowBlur=late?8:6;ctx.fillText("-"+dmg,x,y);
       ctx.restore();
     };
     const drawPixelJackal=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean,variant?:{tint?:BeastTint;antlers?:boolean;tufts?:boolean;kind?:BeastKind;gait?:number;prevMode?:DragonMode;modeBlendAt?:number})=>{
