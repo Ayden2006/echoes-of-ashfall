@@ -250,11 +250,11 @@ const NPCS:Npc[] = [
     firstTalk:[
       {speaker:"Kest",text:"I heard you in the signal days ago. So the rain-walker made it."},
       {speaker:"Moon Night",text:"You walked this road ahead of me."},
-      {speaker:"Kest",text:"Someone had to. The Heart Wyrm is the last pulse — long-bodied, ribbon-finned, not the castle's baby dragon."},
+      {speaker:"Kest",text:"I did. Rain, then this heart. The wyrm is the last pulse — not the castle's baby dragon."},
       {speaker:"Kest",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
       {speaker:"Kest",text:"The gate behind you still heals. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Kest",text:"I'm still here. The wyrm hunts farther in. I'm not leaving you to it."},{speaker:"Kest",text:"Bind the wyrm if you still need the pulse. The gate behind you still heals."},{speaker:"Kest",text:"Press E at the heart altar. That ends the campaign."}],
+    againTalk:[{speaker:"Kest",text:"Still here, Moon Night. Rain to this heart. The wyrm hunts farther in."},{speaker:"Kest",text:"Bind the wyrm if you still need the pulse. The gate behind you still heals."},{speaker:"Kest",text:"Press E at the heart altar. That ends the campaign."}],
     afterCaptureTalk:[
       {speaker:"Kest",text:"The wyrm is the last pulse. Rest it at the altar and the whole road can go quiet."},
       {speaker:"Kest",text:"The cards you carry are the echo's memory. Lay them down as a road, not a cage."},
@@ -778,11 +778,11 @@ const NPCS:Npc[] = [
     firstTalk:[
       {speaker:"Edan",text:"I wait by the last stone. Nobody turns around this close."},
       {speaker:"Moon Night",text:"Kest walked ahead."},
-      {speaker:"Edan",text:"The cooled vein is east. Walk it. The last stone is farther."},
+      {speaker:"Edan",text:"He waited west. I keep the last stone. The cooled vein is east."},
       {speaker:"Edan",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
       {speaker:"Edan",text:"The gate behind you still heals. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Edan",text:"Still here. Bind the wyrm if you still need the pulse. Walk east."},{speaker:"Edan",text:"Press E at the altar. The campaign ends when the signal rests."},{speaker:"Edan",text:"An echo-stone sits past the cooled vein. Press E there if the pulse feels loud."}],
+    againTalk:[{speaker:"Edan",text:"Still by the last stone, Moon Night. Bind the wyrm if you still need the pulse. Walk east."},{speaker:"Edan",text:"Press E at the altar. The campaign ends when the signal rests."},{speaker:"Edan",text:"An echo-stone sits past the cooled vein. Press E there if the pulse feels loud."}],
     afterCaptureTalk:[
       {speaker:"Edan",text:"You bound the last pulse. That's every shard, still in one place."},
       {speaker:"Edan",text:"Walk east. Press E at the heart altar. That ends the campaign."}
@@ -809,11 +809,11 @@ const NPCS:Npc[] = [
     firstTalk:[
       {speaker:"Hale",text:"This kiln forgets the quiet cliff. I'm still Hale."},
       {speaker:"Moon Night",text:"Reed keeps the fire."},
-      {speaker:"Hale",text:"He does. Lynx-shaped coals, not pale antlers."},
+      {speaker:"Hale",text:"He does. Cliff quiet, then this kiln. Lynx-shaped coals, not pale antlers."},
       {speaker:"Hale",text:"The animals are the echo. Bind a lynx if you still need the heat."},
       {speaker:"Hale",text:"The east gate heals you. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Hale",text:"We meet again. Cliff quiet, then this kiln."}],
+    againTalk:[{speaker:"Hale",text:"We meet again. Cliff quiet, then this kiln."},{speaker:"Hale",text:"The kiln can forget the cliff, Moon Night. I still keep this stretch."}],
     afterCaptureTalk:[
       {speaker:"Hale",text:"You bound the coal shard. That's why this kiln heat can hold."},
       {speaker:"Hale",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
