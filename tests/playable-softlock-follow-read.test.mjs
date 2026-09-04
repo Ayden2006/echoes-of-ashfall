@@ -207,9 +207,9 @@ test("softlock markers and PR #10 / #19–#36 helpers stay put; E-talk tables st
   assert.doesNotMatch(game, /Moon Knight|bondMeter|dating sim|affectionMeter|romanceChoice|MAP7_/);
   assert.doesNotMatch(game, /radio encounter|tune the radio|drawPixelHouse|drawCastleKeep/i);
   assert.doesNotMatch(game, /map:\s*7|Map 7/);
-  assert.equal((game.match(/firstTalk:\[/g) || []).length, 35);
-  assert.equal((game.match(/againTalk:\[/g) || []).length, 35);
-  assert.equal((game.match(/afterCaptureTalk:\[/g) || []).length, 35);
+  assert.equal((game.match(/firstTalk:\[/g) || []).length, 37);
+  assert.equal((game.match(/againTalk:\[/g) || []).length, 37);
+  assert.equal((game.match(/afterCaptureTalk:\[/g) || []).length, 37);
   assert.match(game, /You named the whole road in shards\. The pulse is the last name/);
   assert.match(game, /The rain I watched since dusk is quieter now\. That is the first shard/);
 });

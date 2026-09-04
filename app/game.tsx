@@ -804,6 +804,22 @@ const NPCS:Npc[] = [
       {speaker:"Hale",text:"I keep the stretch the wind forgets. The pool can rest now."}
     ],
     palette:{skin:"#d2a890",cloak:"#3a2432",trim:"#c87888",accent:"#f0c8d0"}
+  },
+  {id:"hale",name:"Hale",map:5,x:4040,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
+    firstTalk:[
+      {speaker:"Hale",text:"This kiln forgets the quiet cliff. I'm still Hale."},
+      {speaker:"Moon Night",text:"Reed keeps the fire."},
+      {speaker:"Hale",text:"He does. Lynx-shaped coals, not pale antlers."},
+      {speaker:"Hale",text:"The animals are the echo. Bind a lynx if you still need the heat."},
+      {speaker:"Hale",text:"The east gate heals you. Press E at the heart altar. That ends the campaign."}
+    ],
+    againTalk:[{speaker:"Hale",text:"We meet again. Cliff quiet, then this kiln."}],
+    afterCaptureTalk:[
+      {speaker:"Hale",text:"You bound the coal shard. That's why this kiln heat can hold."},
+      {speaker:"Hale",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Hale",text:"The wind can forget the cliff now. The heat remembers."}
+    ],
+    palette:{skin:"#d2a890",cloak:"#3a2432",trim:"#c87888",accent:"#f0c8d0"}
   }
 ];
 const talkTargetAt=(map:MapId,x:number,footY:number)=>{

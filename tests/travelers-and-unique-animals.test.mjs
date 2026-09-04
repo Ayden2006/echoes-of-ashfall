@@ -68,8 +68,9 @@ test("named travelers reuse E-talk and change if you meet them again", () => {
   const rynEmber = npcBlock("ryn", 5);
   const edanHeart = npcBlock("edan", 6);
   const haleCliffs = npcBlock("hale", 4);
+  const haleEmber = npcBlock("hale", 5);
 
-  for (const block of [calenCastle, calenCliffs, seraShore, seraEmber, bramHollow, bramHeart, orrinCastle, orrinCliffs, niaShore, niaHeart, vessHollow, vessEmber, tamsinCastle, tamsinEmber, liraShore, liraCliffs, holtHollow, holtHeart, maerCastle, maerEmber, perrinShore, perrinEmber, wrenCastle, wrenCliffs, dellShore, dellHeart, iskHollow, iskEmber, rowanCastle, rowanHeart, rynCliffs, rynEmber, edanHeart, haleCliffs]) {
+  for (const block of [calenCastle, calenCliffs, seraShore, seraEmber, bramHollow, bramHeart, orrinCastle, orrinCliffs, niaShore, niaHeart, vessHollow, vessEmber, tamsinCastle, tamsinEmber, liraShore, liraCliffs, holtHollow, holtHeart, maerCastle, maerEmber, perrinShore, perrinEmber, wrenCastle, wrenCliffs, dellShore, dellHeart, iskHollow, iskEmber, rowanCastle, rowanHeart, rynCliffs, rynEmber, edanHeart, haleCliffs, haleEmber]) {
     assert.match(block, /firstTalk:\[/);
     assert.match(block, /againTalk:\[/);
     assert.match(block, /afterCaptureTalk:\[/);
@@ -97,6 +98,8 @@ test("named travelers reuse E-talk and change if you meet them again", () => {
   assert.match(edanHeart, /Press E at the altar\. The campaign ends when the signal rests/);
   assert.match(haleCliffs, /The wind forgets you between watches/);
   assert.match(haleCliffs, /cardId:PALE_STAG_CARD\.id/);
+  assert.match(haleEmber, /We meet again\. Cliff quiet, then this kiln/);
+  assert.match(haleEmber, /cardId:EMBER_LYNX_CARD\.id/);
   assert.match(liraShore, /cardId:SUNSET_JACKAL_CARD\.id/);
   assert.match(wrenCastle, /cardId:BABY_DRAGON_CARD\.id/);
   assert.match(dellShore, /cardId:SUNSET_JACKAL_CARD\.id/);
@@ -196,6 +199,7 @@ test("player is Moon Night, never Moon Knight, and Reed/Kest stay", () => {
   assert.match(game, /id:"ryn",name:"Ryn",map:5/);
   assert.match(game, /id:"edan",name:"Edan",map:6/);
   assert.match(game, /id:"hale",name:"Hale",map:4/);
+  assert.match(game, /id:"hale",name:"Hale",map:5/);
 });
 
 test("E-talk still keys first/again/afterCapture per id:map with no extra engine", () => {
@@ -265,6 +269,13 @@ test("E-talk still keys first/again/afterCapture per id:map with no extra engine
   assert.equal(talk(rynEmber, ["ember-lynx-card"]), "after");
   assert.equal(talk(edanHeart, []), "first");
   assert.equal(talk(edanHeart, ["heart-wyrm-card"]), "after");
+  const haleCliffs = { id: "hale", map: 4, cardId: "pale-stag-card" };
+  const haleEmber = { id: "hale", map: 5, cardId: "ember-lynx-card" };
+  assert.equal(talk(haleCliffs, []), "first");
+  assert.equal(talk(haleCliffs, ["pale-stag-card"]), "after");
+  assert.equal(talk(haleEmber, ["pale-stag-card"]), "first");
+  assert.equal(talk(haleEmber, ["pale-stag-card"]), "again");
+  assert.equal(talk(haleEmber, ["ember-lynx-card"]), "after");
   assert.equal(npcTalkKey(orrinCastle), "orrin:1");
   assert.equal(npcTalkKey(orrinCliffs), "orrin:4");
   assert.equal(npcTalkKey(liraShore), "lira:2");
@@ -282,6 +293,8 @@ test("E-talk still keys first/again/afterCapture per id:map with no extra engine
   assert.equal(npcTalkKey(rynCliffs), "ryn:4");
   assert.equal(npcTalkKey(rynEmber), "ryn:5");
   assert.equal(npcTalkKey(edanHeart), "edan:6");
+  assert.equal(npcTalkKey(haleCliffs), "hale:4");
+  assert.equal(npcTalkKey(haleEmber), "hale:5");
   assert.notEqual(npcTalkKey(orrinCastle), npcTalkKey(orrinCliffs));
   assert.notEqual(npcTalkKey(liraShore), npcTalkKey(liraCliffs));
   assert.notEqual(npcTalkKey(holtHollow), npcTalkKey(holtHeart));
@@ -290,6 +303,7 @@ test("E-talk still keys first/again/afterCapture per id:map with no extra engine
   assert.notEqual(npcTalkKey(iskHollow), npcTalkKey(iskEmber));
   assert.notEqual(npcTalkKey(rowanCastle), npcTalkKey(rowanHeart));
   assert.notEqual(npcTalkKey(rynCliffs), npcTalkKey(rynEmber));
+  assert.notEqual(npcTalkKey(haleCliffs), npcTalkKey(haleEmber));
 });
 
 test("new road people stand on existing maps without overlapping talks", () => {
@@ -330,6 +344,7 @@ test("new road people stand on existing maps without overlapping talks", () => {
     { id: "ryn", map: 5, x: 5300 },
     { id: "edan", map: 6, x: 4900 },
     { id: "hale", map: 4, x: 4080 },
+    { id: "hale", map: 5, x: 4040 },
   ];
   for (const npc of placements) {
     assert.match(game, new RegExp(`id:"${npc.id}",name:"[^"]+",map:${npc.map},x:${npc.x},talkRadius:150`));
@@ -398,7 +413,7 @@ test("late-map E-talk guides the finish and does not block portals or the altar"
     { map: 2, x: 480 }, { map: 2, x: 2480 }, { map: 2, x: 3680 }, { map: 2, x: 4000 }, { map: 2, x: 4360 },
     { map: 3, x: 480 }, { map: 3, x: 1820 }, { map: 3, x: 3800 }, { map: 3, x: 5140 },
     { map: 4, x: 650 }, { map: 4, x: 3180 }, { map: 4, x: 4080 }, { map: 4, x: 4480 }, { map: 4, x: 5200 }, { map: 4, x: 5565 },
-    { map: 5, x: 760 }, { map: 5, x: 1770 }, { map: 5, x: 2960 }, { map: 5, x: 3260 }, { map: 5, x: 3600 }, { map: 5, x: 5000 }, { map: 5, x: 5300 }, { map: 5, x: 5720 },
+    { map: 5, x: 760 }, { map: 5, x: 1770 }, { map: 5, x: 2960 }, { map: 5, x: 3260 }, { map: 5, x: 3600 }, { map: 5, x: 4040 }, { map: 5, x: 5000 }, { map: 5, x: 5300 }, { map: 5, x: 5720 },
     { map: 6, x: 920 }, { map: 6, x: 1480 }, { map: 6, x: 3280 }, { map: 6, x: 3580 }, { map: 6, x: 3880 }, { map: 6, x: 4180 }, { map: 6, x: 4900 },
   ];
   const gates = {
@@ -416,7 +431,7 @@ test("late-map E-talk guides the finish and does not block portals or the altar"
   }
 
   const lateGuides = [
-    ["reed", 5], ["sera", 5], ["vess", 5], ["tamsin", 5], ["isk", 5], ["maer", 5], ["perrin", 5], ["ryn", 5],
+    ["reed", 5], ["sera", 5], ["vess", 5], ["tamsin", 5], ["isk", 5], ["maer", 5], ["perrin", 5], ["hale", 5], ["ryn", 5],
     ["kest", 6], ["bram", 6], ["holt", 6], ["rowan", 6], ["nia", 6], ["dell", 6], ["edan", 6],
   ];
   for (const [id, map] of lateGuides) {
@@ -483,7 +498,7 @@ test("E-talk radii stay clear of high secrets and each other", () => {
   const npcs = [...game.matchAll(/\{id:"([^"]+)",name:"[^"]+",map:(\d+),x:(\d+),talkRadius:(\d+)/g)].map((m) => ({
     id: m[1], map: Number(m[2]), x: Number(m[3]), r: Number(m[4]),
   }));
-  assert.equal(npcs.length, 36);
+  assert.equal(npcs.length, 37);
   for (const npc of npcs) assert.equal(npc.r, 150, `${npc.id}:${npc.map} talkRadius must stay 150`);
 
   const highSecrets = [
@@ -622,6 +637,7 @@ test("maps 4–6 reunion againTalk remembers the last crossing without the finis
     ["perrin", 5, /Late shore, then kiln road/],
     ["isk", 5, /Cairn twist, then kiln heat/],
     ["ryn", 5, /Cliff wind, then kiln gate/],
+    ["hale", 5, /Cliff quiet, then this kiln/],
     ["bram", 6, /Cairn twist, then this heart/],
     ["nia", 6, /Shore dusk, then this heart/],
     ["holt", 6, /Cairn twist, then heart/],
@@ -685,6 +701,7 @@ test("firstTalk openings keep one distinct tell per traveler", () => {
     ["ryn", 5, /still keep the gate/i],
     ["edan", 6, /wait by the last stone/i],
     ["hale", 4, /forgets you between watches/i],
+    ["hale", 5, /kiln forgets the quiet cliff/i],
   ];
 
   const openings = [];
@@ -729,7 +746,7 @@ test("firstTalk openings keep one distinct tell per traveler", () => {
 
 test("afterCaptureTalk treats bound animals as echo shards, not quarry", () => {
   const afterBlocks = [...game.matchAll(/afterCaptureTalk:\[([\s\S]*?)\],\n\s*palette:/g)].map((m) => m[1]);
-  assert.equal(afterBlocks.length, 36);
+  assert.equal(afterBlocks.length, 37);
   for (const block of afterBlocks) {
     assert.doesNotMatch(block, /\bhunt(?:ing|s)?\b|\bkill(?:ed|s|ing)?\b/i);
     assert.doesNotMatch(block, /Castle rain, shore|the animals are the echo —|Spark, dusk, leftover|cairn twist —/);
@@ -750,7 +767,7 @@ test("afterCaptureTalk gives each map bind a distinct echo-shard flavor", () => 
     [2, ["sera", "nia", "lira", "perrin", "dell"], /dusk/i, /dusk shard|dusk of the signal|took the dusk/i],
     [3, ["bram", "vess", "holt", "isk"], /leftover fire|foxfire|cairn/i, /leftover fire|foxfire/i],
     [4, ["calen", "orrin", "hale", "lira", "wren", "ryn"], /pool|moonwell/i, /pool|moonwell/i],
-    [5, ["reed", "sera", "vess", "tamsin", "maer", "perrin", "isk", "ryn"], /kiln heat|last heat|coal shard|coal pelt/i, /heat|coal/i],
+    [5, ["reed", "sera", "vess", "tamsin", "maer", "perrin", "isk", "ryn", "hale"], /kiln heat|last heat|coal shard|coal pelt/i, /heat|coal/i],
     [6, ["kest", "bram", "nia", "holt", "dell", "rowan", "edan"], /pulse/i, /last pulse|Heart Wyrm/i],
   ];
   const endingDump = /ends the campaign|Press E at the (heart )?altar/;
