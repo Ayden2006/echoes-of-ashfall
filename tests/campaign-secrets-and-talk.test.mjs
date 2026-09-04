@@ -5,6 +5,7 @@ import test from "node:test";
 const game = await readFile(new URL("../app/game.tsx", import.meta.url), "utf8");
 const campaign = await readFile(new URL("../lib/campaign.ts", import.meta.url), "utf8");
 const pkg = await readFile(new URL("../package.json", import.meta.url), "utf8");
+const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
 
 test("Map 1 HUD title is the intended castle chapter, not leftover radio copy", () => {
   assert.match(game, /1:\{name:"The Signal in the Rain"/);
@@ -42,18 +43,44 @@ test("later-map traveler talk is keyed per map so first/again/afterCapture all p
   assert.match(game, /Bind it, then go east\. The east portal heals you/);
 });
 
+const talkLinesFrom = (src) => [...src.matchAll(/\{(?:speaker|"speaker"):\s*"([^"]+)",\s*(?:text|"text"):\s*"((?:\\.|[^"\\])*)"\s*\}/g)].map((m) => ({
+  speaker: m[1],
+  text: m[2].replace(/\\"/g, '"'),
+}));
+
 test("NPC E-talk speaker lines stay short enough to read on the canvas", () => {
   const npcStart = game.indexOf("const NPCS:Npc[] = [");
   const npcEnd = game.indexOf("];\nconst talkTargetAt=");
   assert.ok(npcStart >= 0 && npcEnd > npcStart, "NPC talk table should stay in game.tsx");
   const block = game.slice(npcStart, npcEnd);
-  const lines = [...block.matchAll(/\{speaker:"([^"]+)",text:"((?:\\.|[^"\\])*)"\}/g)].map((m) => ({
-    speaker: m[1],
-    text: m[2].replace(/\\"/g, '"'),
-  }));
+  const lines = talkLinesFrom(block);
   assert.ok(lines.length >= 300, "NPC talk should still have a full road of speaker lines");
   const overlong = lines.filter((line) => line.text.length > 110);
   assert.deepEqual(overlong, [], "each speaker line should stay at or under 110 characters");
+});
+
+test("E-talk stays Moon Night, never Moon Knight, with leftover knight and softlock copy cut", () => {
+  const walkTalk = [
+    game.slice(game.indexOf("const CAMPAIGN_OPENING"), game.indexOf("type LandmarkKind")),
+    game.slice(game.indexOf("const NPCS:Npc[] = ["), game.indexOf("];\nconst talkTargetAt=")),
+    campaign.slice(campaign.indexOf("export const CAMPAIGN_OPENING"), campaign.indexOf("export const PLAYABLE_MAPS")),
+  ].join("\n");
+  assert.match(walkTalk, /speaker:"Moon Night"|speaker: "Moon Night"/);
+  assert.doesNotMatch(walkTalk, /Moon Knight/);
+  assert.doesNotMatch(walkTalk, /\b[Kk]nights?\b/);
+  assert.doesNotMatch(walkTalk, /road goes dark|must capture|have to bind|Don't go in cold|Don't go into the heart cold|the echo dies/i);
+
+  const allowed = new Set([
+    "Moon Night", "Reed", "Kest", "Calen", "Sera", "Bram", "Orrin", "Nia", "Vess",
+    "Tamsin", "Lira", "Holt", "Maer", "Perrin", "Wren", "Dell", "Isk", "Rowan", "Ryn", "Edan",
+  ]);
+  const walkLines = talkLinesFrom(walkTalk).filter((line) => !/each was a shard of the same fading call/.test(line.text));
+  assert.ok(walkLines.length >= 330, "walk talk should still cover opening, maps, people, and studyables");
+  assert.ok(walkLines.every((line) => line.speaker === "Moon Night" || allowed.has(line.speaker)));
+  assert.ok(walkLines.some((line) => line.speaker === "Moon Night"), "player replies should stay labeled Moon Night");
+  assert.ok(walkLines.every((line) => line.speaker !== "Moon Knight"));
+  const overlong = walkLines.filter((line) => line.text.length > 110);
+  assert.deepEqual(overlong, [], "walk-talk speaker lines should stay at or under 110 characters");
 });
 
 test("existing unique animals stay on the card + E/Q pattern, with extra on-map fights", () => {
@@ -187,4 +214,6 @@ test("prebuild still uses the Moon Night companion script, not moon-knight", () 
   assert.match(pkg, /apply-moon-night-companion-animation\.mjs/);
   assert.doesNotMatch(pkg, /moon-knight/);
   assert.doesNotMatch(game, /Moon Knight|dating sim|bondMeter/);
+  assert.doesNotMatch(readme, /Moon Knight|travelers and knights/);
+  assert.match(readme, /Named travelers stand on the road/);
 });
