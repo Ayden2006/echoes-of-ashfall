@@ -38,10 +38,10 @@ const walkableGaps = (plats, width) => {
 
 test("portal X and both-direction spawns stay on solid walkable ground", () => {
   assert.match(game, /const plantedYAt=\(map:MapId,x:number\)=>\(surfaceYAt\(map,x,590\)\?\?590\)-PH/);
-  assert.match(game, /if\(from===null\) return \{x:230,y:plantedYAt\(1,230\),facing:1/);
-  assert.match(game, /if\(map===1\) return \{x:6860,y:plantedYAt\(1,6860\),facing:-1/);
-  assert.match(game, /if\(arrivingFromPrev\) return \{x:340,y:plantedYAt\(map,340\),facing:1/);
-  assert.match(game, /return \{x,y:plantedYAt\(map,x\),facing:-1/);
+  assert.match(game, /if\(from===null\)\{const floor=plantedFloorAt\(1,230\);return \{x:floor\.x,y:plantedYAt\(1,floor\.x\),facing:1/);
+  assert.match(game, /if\(map===1\)\{const floor=plantedFloorAt\(1,6860\);return \{x:floor\.x,y:plantedYAt\(1,floor\.x\),facing:-1/);
+  assert.match(game, /if\(arrivingFromPrev\)\{const floor=plantedFloorAt\(map,340\);return \{x:floor\.x,y:plantedYAt\(map,floor\.x\),facing:1/);
+  assert.match(game, /const floor=plantedFloorAt\(map,x\);return \{x:floor\.x,y:plantedYAt\(map,floor\.x\),facing:-1/);
   assert.match(game, /pl\.y=plantedYAt\(mapRef\.current,pl\.x\)/);
   assert.match(game, /const arrivalGround=surfaceYAt\(map,ally\.x,pl\.y\+PH\)\?\?surfaceYAt\(map,pl\.x,590\)\?\?pl\.y\+PH/);
   assert.match(game, /const reseatGround=companionSurfaceAt\(ally\.x,pl\.y\+PH,map\)\?\?surfaceYAt\(map,ally\.x,590\)\?\?pl\.y\+PH/);
