@@ -631,6 +631,94 @@ test("maps 4–6 reunion againTalk remembers the last crossing without the finis
   }
 });
 
+test("firstTalk openings keep one distinct tell per traveler", () => {
+  const openingOf = (id, map) => {
+    const block = npcBlock(id, map);
+    const firstTalk = block.slice(block.indexOf("firstTalk:["), block.indexOf("againTalk:["));
+    const match = firstTalk.match(/\{speaker:"([^"]+)",text:"((?:\\.|[^"\\])*)"\}/);
+    assert.ok(match, `${id}:${map} should open firstTalk with a speaker line`);
+    assert.equal(match[1], id[0].toUpperCase() + id.slice(1), `${id}:${map} should open as themselves`);
+    assert.ok(match[2].length <= 110, `${id}:${map} opening should stay readable`);
+    return match[2];
+  };
+
+  const roster = [
+    ["reed", 5, /coals.*bite|bite.*coals/i],
+    ["kest", 6, /heard you in the signal/i],
+    ["calen", 1, /rain since dusk/i],
+    ["calen", 4, /cliff wind.*watch/i],
+    ["sera", 2, /threes on the sand/i],
+    ["sera", 5, /three on the shore/i],
+    ["bram", 3, /ash in the lungs/i],
+    ["bram", 6, /ash in the lungs/i],
+    ["orrin", 1, /rain writes|copy it/i],
+    ["orrin", 4, /writes in moonwater|copy that line/i],
+    ["nia", 2, /light dies slow/i],
+    ["nia", 6, /last light I followed/i],
+    ["vess", 3, /ash in the writing|read the cairn/i],
+    ["vess", 5, /read the ash/i],
+    ["tamsin", 1, /east wall still watches|merlon/i],
+    ["tamsin", 5, /merlon standing/i],
+    ["lira", 2, /I count dusk/i],
+    ["lira", 4, /I count this pool/i],
+    ["holt", 3, /twist stays honest/i],
+    ["holt", 6, /stay honest/i],
+    ["maer", 1, /leftover rain|rain keeps walking/i],
+    ["maer", 5, /leftover rain walked me/i],
+    ["perrin", 2, /late sand|does not strand/i],
+    ["perrin", 5, /late coals|nobody strands/i],
+    ["wren", 1, /rain speaks if you stand still/i],
+    ["wren", 4, /well still speaks if you stand still/i],
+    ["dell", 2, /gold thins and then holds/i],
+    ["dell", 6, /gold holds even here/i],
+    ["isk", 3, /ash in the breath/i],
+    ["isk", 5, /banked breath/i],
+    ["rowan", 1, /leftover road/i],
+    ["rowan", 6, /leftover road/i],
+    ["ryn", 4, /keep this last cliff gate/i],
+    ["ryn", 5, /still keep the gate/i],
+    ["edan", 6, /wait by the last stone/i],
+  ];
+
+  const openings = [];
+  for (const [id, map, tell] of roster) {
+    const opening = openingOf(id, map);
+    assert.match(opening, tell, `${id}:${map} opening should keep their tell`);
+    assert.doesNotMatch(opening, /The \w+ ended\. The \w+ didn't/, `${id}:${map} should not reuse the ended/didn't template`);
+    openings.push(opening);
+  }
+
+  assert.equal(new Set(openings).size, openings.length, "each firstTalk opening should be a distinct line");
+
+  const tells = {
+    reed: /bite/i,
+    kest: /signal/i,
+    calen: /watch|rain|wind/i,
+    sera: /three/i,
+    bram: /lungs/i,
+    orrin: /writ|copy/i,
+    nia: /light/i,
+    vess: /read/i,
+    tamsin: /wall|merlon/i,
+    lira: /count/i,
+    holt: /honest/i,
+    maer: /leftover rain/i,
+    perrin: /late |strand/i,
+    wren: /stand still/i,
+    dell: /holds/i,
+    isk: /breath/i,
+    rowan: /leftover road/i,
+    ryn: /gate/i,
+    edan: /last stone/i,
+  };
+  for (const [id, tell] of Object.entries(tells)) {
+    const theirs = roster.filter((row) => row[0] === id);
+    for (const [name, map] of theirs) {
+      assert.match(openingOf(name, map), tell, `${name}:${map} should keep the same tell`);
+    }
+  }
+});
+
 test("afterCaptureTalk treats bound animals as echo shards, not quarry", () => {
   const afterBlocks = [...game.matchAll(/afterCaptureTalk:\[([\s\S]*?)\],\n\s*palette:/g)].map((m) => m[1]);
   assert.equal(afterBlocks.length, 35);

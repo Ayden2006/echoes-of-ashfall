@@ -229,7 +229,7 @@ type Npc = {id:string; name:string; map:MapId; x:number; talkRadius:number; firs
 const NPCS:Npc[] = [
   {id:"reed",name:"Reed",map:5,x:760,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
     firstTalk:[
-      {speaker:"Reed",text:"Easy. The coals here bite if you rush them."},
+      {speaker:"Reed",text:"Don't rush the coals. They bite. I keep this quiet fire."},
       {speaker:"Moon Night",text:"I followed the signal from the moonwell."},
       {speaker:"Reed",text:"Then you're like me. I used to keep the castle kilns. Now I keep this quiet fire alive."},
       {speaker:"Reed",text:"The lynx wear the last heat of the echo — coal pelts, tufted ears, bobbed tails. Not jackals."},
@@ -249,7 +249,7 @@ const NPCS:Npc[] = [
   },
   {id:"kest",name:"Kest",map:6,x:920,talkRadius:150,cardId:HEART_WYRM_CARD.id,
     firstTalk:[
-      {speaker:"Kest",text:"So the rain-walker made it. I heard you in the signal days ago."},
+      {speaker:"Kest",text:"I heard you in the signal days ago. So the rain-walker made it."},
       {speaker:"Moon Night",text:"You walked this road ahead of me."},
       {speaker:"Kest",text:"Someone had to. The Heart Wyrm is the last pulse — long-bodied, ribbon-finned, not the castle's baby dragon."},
       {speaker:"Kest",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
@@ -268,7 +268,7 @@ const NPCS:Npc[] = [
   },
   {id:"calen",name:"Calen",map:1,x:820,talkRadius:150,cardId:BABY_DRAGON_CARD.id,helm:true,
     firstTalk:[
-      {speaker:"Calen",text:"Hold. The rain has carried a signal since dusk."},
+      {speaker:"Calen",text:"Hold. Rain since dusk has been carrying the signal I watch."},
       {speaker:"Moon Night",text:"I came for that echo."},
       {speaker:"Calen",text:"Then keep your sword ready. A young ash dragon hunts the moonlit stone ahead."},
       {speaker:"Calen",text:"I thought the rain was the call. Listen closer — the animals are the echo. The spark is in the beast."},
@@ -287,7 +287,7 @@ const NPCS:Npc[] = [
   },
   {id:"calen",name:"Calen",map:4,x:3180,talkRadius:150,cardId:PALE_STAG_CARD.id,helm:true,
     firstTalk:[
-      {speaker:"Calen",text:"Cliff wind. I left the castle rain for this watch."},
+      {speaker:"Calen",text:"This cliff wind is the same watch. I left the castle rain for it."},
       {speaker:"Moon Night",text:"The signal pooled here."},
       {speaker:"Calen",text:"Aye. Pale antlers, not a castle dragon. The animals are the echo."},
       {speaker:"Calen",text:"The well is trying to bottle what you already carry."},
@@ -309,7 +309,7 @@ const NPCS:Npc[] = [
   },
   {id:"sera",name:"Sera",map:2,x:480,talkRadius:150,cardId:SUNSET_JACKAL_CARD.id,
     firstTalk:[
-      {speaker:"Sera",text:"Easy on the sand. Jackals hunt in threes here."},
+      {speaker:"Sera",text:"Threes on the sand. That's how the jackals hunt here."},
       {speaker:"Moon Night",text:"Then I'll take the dusk road with one of them."},
       {speaker:"Sera",text:"Sunset Jackals. Dusk-born, four-legged, not the castle dragon. The animals are the echo."},
       {speaker:"Sera",text:"Bind one, then go east. The east portal heals you. Push on before the light dies."}
@@ -326,7 +326,7 @@ const NPCS:Npc[] = [
   },
   {id:"sera",name:"Sera",map:5,x:5720,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
     firstTalk:[
-      {speaker:"Sera",text:"The coals here wait. I'm Sera. I walked the shore until the light died."},
+      {speaker:"Sera",text:"Three on the shore. One heat here. I still count before I walk."},
       {speaker:"Moon Night",text:"Reed keeps the kiln."},
       {speaker:"Sera",text:"He does. The lynx wear coal pelts — tufted ears, bobbed tails. Not jackals."},
       {speaker:"Sera",text:"The animals are the echo. Bind a lynx if you still need the heat."},
@@ -363,7 +363,7 @@ const NPCS:Npc[] = [
   },
   {id:"bram",name:"Bram",map:6,x:1480,talkRadius:150,cardId:HEART_WYRM_CARD.id,
     firstTalk:[
-      {speaker:"Bram",text:"So this is the heart. I tracked the hollow this far."},
+      {speaker:"Bram",text:"Ash in the lungs even here. I tracked the hollow this far."},
       {speaker:"Moon Night",text:"Kest walked ahead."},
       {speaker:"Bram",text:"He's west of the wyrm. Long-bodied, ribbon-finned. Not a fox. Then the echo can stop running."},
       {speaker:"Bram",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
@@ -396,7 +396,7 @@ const NPCS:Npc[] = [
   },
   {id:"orrin",name:"Orrin",map:4,x:650,talkRadius:150,cardId:PALE_STAG_CARD.id,
     firstTalk:[
-      {speaker:"Orrin",text:"Cliff wind. I left the castle rain to copy the well."},
+      {speaker:"Orrin",text:"The well writes in moonwater now. I left the castle rain to copy that line."},
       {speaker:"Moon Night",text:"The stag is holding the pool."},
       {speaker:"Orrin",text:"That's the line I came for. Pale antlers, not castle rain. The animals are the echo."},
       {speaker:"Orrin",text:"Bind the stag, then go east. The east gate heals you."},
@@ -428,7 +428,7 @@ const NPCS:Npc[] = [
   },
   {id:"nia",name:"Nia",map:6,x:3280,talkRadius:150,cardId:HEART_WYRM_CARD.id,
     firstTalk:[
-      {speaker:"Nia",text:"So this is the last gold. I'm Nia. I walked the shore until the light died."},
+      {speaker:"Nia",text:"The last light I followed ends here. Shore dusk walked this far."},
       {speaker:"Moon Night",text:"Kest walked ahead."},
       {speaker:"Nia",text:"The pulse is not dusk. We were never chasing a gate."},
       {speaker:"Nia",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
@@ -459,7 +459,7 @@ const NPCS:Npc[] = [
   },
   {id:"vess",name:"Vess",map:5,x:2960,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
     firstTalk:[
-      {speaker:"Vess",text:"The cairn sent me here. I'm Vess. I read ash until the kiln."},
+      {speaker:"Vess",text:"I still read the ash. The cairn sent me as far as this kiln."},
       {speaker:"Moon Night",text:"Reed keeps the fire."},
       {speaker:"Vess",text:"He does. Lynx-shaped coals, not foxes. Same echo, later heat."},
       {speaker:"Vess",text:"The animals are the echo. Bind a lynx if you still need the heat."},
@@ -491,7 +491,7 @@ const NPCS:Npc[] = [
   },
   {id:"tamsin",name:"Tamsin",map:5,x:5000,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
     firstTalk:[
-      {speaker:"Tamsin",text:"The wall ended. The kiln road didn't. I'm Tamsin. I left the merlon for this heat."},
+      {speaker:"Tamsin",text:"I left the merlon standing. This kiln road still needs that wall."},
       {speaker:"Moon Night",text:"Reed keeps the fire."},
       {speaker:"Tamsin",text:"He does. Lynx-shaped coals, not castle rain."},
       {speaker:"Tamsin",text:"The animals are the echo. Bind a lynx if you still need the heat."},
@@ -523,7 +523,7 @@ const NPCS:Npc[] = [
   },
   {id:"lira",name:"Lira",map:4,x:4480,talkRadius:150,cardId:PALE_STAG_CARD.id,
     firstTalk:[
-      {speaker:"Lira",text:"The gold ended. The well didn't. I'm Lira. I left the shore to count this pool."},
+      {speaker:"Lira",text:"I count this pool now. Shore gold ended; the well still holds a number."},
       {speaker:"Moon Night",text:"The stag is holding the signal."},
       {speaker:"Lira",text:"Pale antlers, not dusk fur. Same echo, later shard. The animals are the echo."},
       {speaker:"Lira",text:"Bind the pool, then go east. The east gate heals you. Calen keeps the east watch. Orrin copies the well."}
@@ -554,7 +554,7 @@ const NPCS:Npc[] = [
   },
   {id:"holt",name:"Holt",map:6,x:3580,talkRadius:150,cardId:HEART_WYRM_CARD.id,
     firstTalk:[
-      {speaker:"Holt",text:"So the cairn road ends here. I'm Holt. I walked the ash this far."},
+      {speaker:"Holt",text:"The last stones still have to stay honest. I walked the ash this far."},
       {speaker:"Moon Night",text:"Kest walked ahead."},
       {speaker:"Holt",text:"He's west of the wyrm. Long-bodied, ribbon-finned. Not leftover fire. We were never chasing a gate."},
       {speaker:"Holt",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
@@ -571,7 +571,7 @@ const NPCS:Npc[] = [
   },
   {id:"maer",name:"Maer",map:1,x:5480,talkRadius:150,cardId:BABY_DRAGON_CARD.id,
     firstTalk:[
-      {speaker:"Maer",text:"The rain keeps walking after the wall gives up. I'm Maer. I follow that leftover road."},
+      {speaker:"Maer",text:"Leftover rain keeps walking after the wall gives up. I'm Maer."},
       {speaker:"Moon Night",text:"The spark is in the dragon, not the stone."},
       {speaker:"Maer",text:"Then you heard Calen and Tamsin. I keep the stretch after the merlon so nobody turns back."},
       {speaker:"Maer",text:"The animals are the echo."},
@@ -587,7 +587,7 @@ const NPCS:Npc[] = [
   },
   {id:"maer",name:"Maer",map:5,x:3600,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
     firstTalk:[
-      {speaker:"Maer",text:"The leftover rain ended. The kiln road didn't. I'm Maer. I left the castle for this heat."},
+      {speaker:"Maer",text:"Leftover rain walked me here. I left the castle for this kiln heat."},
       {speaker:"Moon Night",text:"Reed keeps the fire."},
       {speaker:"Maer",text:"He does. Lynx-shaped coals, not castle rain."},
       {speaker:"Maer",text:"The animals are the echo. Bind a lynx if you still need the heat."},
@@ -619,7 +619,7 @@ const NPCS:Npc[] = [
   },
   {id:"perrin",name:"Perrin",map:5,x:3260,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
     firstTalk:[
-      {speaker:"Perrin",text:"The late sand ended. The coals didn't. I'm Perrin. I left the shore for this kiln road."},
+      {speaker:"Perrin",text:"Late coals now. I left the shore so nobody strands on this kiln road."},
       {speaker:"Moon Night",text:"Reed keeps the kiln."},
       {speaker:"Perrin",text:"He does. Lynx-shaped coals, not dusk fur."},
       {speaker:"Perrin",text:"The animals are the echo. Bind a lynx if you still need the heat."},
@@ -652,7 +652,7 @@ const NPCS:Npc[] = [
   },
   {id:"wren",name:"Wren",map:4,x:5200,talkRadius:150,cardId:PALE_STAG_CARD.id,
     firstTalk:[
-      {speaker:"Wren",text:"The rain ended. The well didn't. I'm Wren. I left the castle to listen here."},
+      {speaker:"Wren",text:"The well still speaks if you stand still. I left the castle to listen."},
       {speaker:"Moon Night",text:"The stag is holding the pool."},
       {speaker:"Wren",text:"Pale antlers, not castle rain. Same echo, later shard. The animals are the echo."},
       {speaker:"Wren",text:"Bind the pool, then go east. The east gate heals you. Lira counts the light. Orrin copies the well."}
@@ -685,7 +685,7 @@ const NPCS:Npc[] = [
   },
   {id:"dell",name:"Dell",map:6,x:4180,talkRadius:150,cardId:HEART_WYRM_CARD.id,
     firstTalk:[
-      {speaker:"Dell",text:"So the gold ends here. I'm Dell. I walked the shore this far."},
+      {speaker:"Dell",text:"The gold holds even here. I walked the shore this far."},
       {speaker:"Moon Night",text:"Kest walked ahead."},
       {speaker:"Dell",text:"He's west of the wyrm. Long-bodied, ribbon-finned. Not dusk fur. We were never chasing a gate."},
       {speaker:"Dell",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
@@ -719,7 +719,7 @@ const NPCS:Npc[] = [
   },
   {id:"isk",name:"Isk",map:5,x:1770,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
     firstTalk:[
-      {speaker:"Isk",text:"The leftover fire banked. I'm Isk. I left the cairn for this kiln heat."},
+      {speaker:"Isk",text:"Banked breath. I left the cairn so this kiln heat doesn't lie."},
       {speaker:"Moon Night",text:"Reed keeps the fire."},
       {speaker:"Isk",text:"He does. Lynx-shaped coals, not foxes."},
       {speaker:"Isk",text:"The animals are the echo. Bind a lynx if you still need the heat."},
@@ -753,7 +753,7 @@ const NPCS:Npc[] = [
   },
   {id:"rowan",name:"Rowan",map:6,x:3880,talkRadius:150,cardId:HEART_WYRM_CARD.id,
     firstTalk:[
-      {speaker:"Rowan",text:"The leftover rain ended here. I'm Rowan. I walked the castle this far."},
+      {speaker:"Rowan",text:"The leftover road ends here. I walked the castle so nobody turns back."},
       {speaker:"Moon Night",text:"Kest walked ahead."},
       {speaker:"Rowan",text:"He's west of the wyrm. Long-bodied, ribbon-finned. Not castle rain."},
       {speaker:"Rowan",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
@@ -771,7 +771,7 @@ const NPCS:Npc[] = [
   },
   {id:"ryn",name:"Ryn",map:4,x:5565,talkRadius:150,cardId:PALE_STAG_CARD.id,
     firstTalk:[
-      {speaker:"Ryn",text:"Last cliff before the kiln. I'm Ryn. I keep this gate so the kiln road stays open."},
+      {speaker:"Ryn",text:"I keep this last cliff gate. The kiln road stays open if I stand here."},
       {speaker:"Moon Night",text:"Reed keeps the quiet fire."},
       {speaker:"Ryn",text:"He does. The animals are the echo. Bind the stag if you still need the pool, then go east."},
       {speaker:"Ryn",text:"The east gate heals you."},
@@ -787,7 +787,7 @@ const NPCS:Npc[] = [
   },
   {id:"ryn",name:"Ryn",map:5,x:5300,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
     firstTalk:[
-      {speaker:"Ryn",text:"Last coals before the heart. I'm Ryn. I left the cliff for this gate."},
+      {speaker:"Ryn",text:"I still keep the gate. Last coals before the heart stay open."},
       {speaker:"Moon Night",text:"Reed keeps the kiln."},
       {speaker:"Ryn",text:"West of here. Kest is through the east gate."},
       {speaker:"Ryn",text:"The animals are the echo. Bind a lynx if you still need the heat."},
@@ -804,7 +804,7 @@ const NPCS:Npc[] = [
   },
   {id:"edan",name:"Edan",map:6,x:4900,talkRadius:150,cardId:HEART_WYRM_CARD.id,
     firstTalk:[
-      {speaker:"Edan",text:"The altar is close. I'm Edan. I keep the last stretch so nobody turns around."},
+      {speaker:"Edan",text:"I wait by the last stone. Nobody turns around this close."},
       {speaker:"Moon Night",text:"Kest walked ahead."},
       {speaker:"Edan",text:"The cooled vein is east. Walk it. The last stone is farther."},
       {speaker:"Edan",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
