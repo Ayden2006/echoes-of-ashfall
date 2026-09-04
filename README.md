@@ -28,7 +28,7 @@ npm run build
 - `S` or down arrow: crouch
 - Tap `S` while moving: slide; faster entry speed creates a longer, faster slide
 - Left mouse button: sword attack toward the cursor
-- `E`: interact with portals, talk to people, study landmarks (plaque, dusk-shell, foxfire hollow, moonwell, kiln, coal-bed, vein, echo-stone, altar), and pick up animal cards
+- `E`: interact with portals, talk to people, study landmarks (plaque, merlon, dusk-shell, tide-cut step, foxfire hollow, charred nest, moonwell, pale lichen, kiln, coal-bed, vein, echo-stone, altar), and pick up animal cards
 - `Tab`: inventory
 - `M`: open the Ashfall world map; unreached regions stay hidden until unlocked
 - `1`–`5`: select a usable card slot
@@ -47,7 +47,7 @@ Moon Night follows a fading signal through Ashfall. The road runs castle → bea
 
 Maps 2 and 3 use multi-height terrain instead of a single flat strip, ground animals track the terrain surface they stand on, later maps use layered regional backdrops, and the world map only reveals regions the player has unlocked.
 
-Moon Night has 100 health and 15 sword damage. Defeat an animal to form its magical card, press `E` to collect it, equip it, then press `Q` to deploy or recall the companion. Animals keep chasing and attacking whoever hurt them until that target is defeated or escapes sight range. Every unique animal uses that same card + Q pattern. Extra road fights stay combat-only: they do not drop a second card.
+Moon Night has 100 health and 15 sword damage. Defeat an animal to form its magical card, press `E` to collect it, equip it, then press `Q` to deploy or recall the companion. A deployed companion hunts nearby hostile animals on the current map and keeps attacking until they fall or leave sight. Extra combat-only animals (scout, roostling, third fox, second stag, fourth lynx) chase and attack the same way, but they do not drop cards. Animals keep chasing and attacking whoever hurt them until that target is defeated or escapes sight range. Every unique animal uses that same card + Q pattern. Extra road fights stay combat-only: they do not drop a second card.
 
 Named travelers and knights stand on the road and talk if you press `E` — the same talk used by Reed and Kest. First words, a later talk, and talk after you bind that map's animal all change. After-capture lines name each bound creature as a shard of the fading signal. Meet Calen, Sera, or Bram again farther east and they remember the last crossing. This is not a dating sim: there are no bond meters, romance choices, or extra relationship systems.
 

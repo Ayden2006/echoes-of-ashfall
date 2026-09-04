@@ -49,8 +49,27 @@ const MAP3_CAIRN_X = 2140;
 const MAP4_NOTCH_X = 980;
 const MAP5_BELLOWS_X = 2680;
 const MAP6_STEP_X = 1980;
+const MAP1_MERLON_X = 4520;
+const MAP2_TIDE_X = 3380;
+const MAP3_NEST_X = 2900;
+const MAP4_LICHEN_X = 2580;
 const COMBAT_ONLY_BEAST_IDS = new Set(["sunset-jackal-scout","ash-roost","cinder-fox-c","pale-stag-b","ember-lynx-d"]);
 const isCombatOnlyBeast = (id:string) => COMBAT_ONLY_BEAST_IDS.has(id);
+const COMPANION_HUNT_RANGE = 680;
+const COMPANION_STRIKE_RANGE = 132;
+const COMPANION_STRIKE_DAMAGE = 8;
+const COMBAT_ONLY_AGGRO_RANGE = 390;
+type HuntTarget = {x:number; health:number};
+const nearestHuntTarget = <T extends HuntTarget>(fromX:number, hostiles:T[], range:number):T|null => {
+  let best:T|null=null, bestDist=range;
+  for(const hostile of hostiles){
+    if(hostile.health<=0)continue;
+    const dist=Math.abs(hostile.x-fromX);
+    if(dist<=bestDist){best=hostile;bestDist=dist;}
+  }
+  return best;
+};
+const chaseBounds = (angry:boolean, patrolMin:number, patrolMax:number, mapW:number) => angry?{min:48,max:mapW-48}:{min:patrolMin,max:patrolMax};
 const MAX_HEALTH = 100;
 const SWORD_DAMAGE = 15;
 const MAX_STAMINA = 100;
@@ -140,7 +159,11 @@ const COAL_LINES:Line[] = [{speaker:"Moon Night",text:"A banked coal-bed. Someon
 const BELLOWS_LINES:Line[] = [{speaker:"Moon Night",text:"Quiet bellows, long unused. Reed kept the breath of the kiln without asking it to roar."},{speaker:"Moon Night",text:"The lynx wear that same held breath. Bind one and the heart will still have heat to receive."}];
 const ECHO_LINES:Line[] = [{speaker:"Moon Night",text:"A cracked echo-stone. The pulse is quieter on this side of the vein."},{speaker:"Moon Night",text:"Every shard I carried is here in the quiet — spark, dusk, heat, pool, coal, pulse."},{speaker:"Moon Night",text:"The altar is still east. I will not rush the last step."}];
 const STEP_LINES:Line[] = [{speaker:"Moon Night",text:"A first-step stone. Kest stood here long enough to wear the clinker smooth."},{speaker:"Moon Night",text:"Beyond it the Heart Wyrm hunts. The wyrm is the pulse itself, not another watch-beast."},{speaker:"Moon Night",text:"Speak with Kest if I have not. Then finish the road."}];
-type LandmarkKind = "plaque"|"groove"|"shell"|"post"|"hollow"|"cairn"|"moonwell"|"notch"|"kiln"|"coal"|"bellows"|"vein"|"echo"|"step";
+const MERLON_LINES:Line[] = [{speaker:"Moon Night",text:"A rain-slick merlon. The east wall still watches a road that already left."},{speaker:"Moon Night",text:"The spark is not in the stone. It is already walking with me, or it is gone."},{speaker:"Moon Night",text:"The roostling hunts this last stretch. Then the shore."}];
+const TIDE_LINES:Line[] = [{speaker:"Moon Night",text:"A tide-cut step. Four sets of prints, then only three."},{speaker:"Moon Night",text:"The scout is extra dusk. Bind one shard. Leave the rest to the sand."},{speaker:"Moon Night",text:"The hollow is through that gate. The heat will be older there."}];
+const NEST_LINES:Line[] = [{speaker:"Moon Night",text:"A charred nest in the ash. Foxfire slept here and left the heat behind."},{speaker:"Moon Night",text:"The cairn was right. The signal is the animals, not the next gate."},{speaker:"Moon Night",text:"Bind the leftover fire. The moonwell will try to bottle it."}];
+const LICHEN_LINES:Line[] = [{speaker:"Moon Night",text:"Pale lichen on a cliff perch. Overflow from the well, not a second pool."},{speaker:"Moon Night",text:"The stag is the pool that walks. This glow is only what spilled."},{speaker:"Moon Night",text:"East the quiet ember waits. Carry the pool, do not leave it bottled."}];
+type LandmarkKind = "plaque"|"groove"|"shell"|"post"|"hollow"|"cairn"|"moonwell"|"notch"|"kiln"|"coal"|"bellows"|"vein"|"echo"|"step"|"merlon"|"tide"|"nest"|"lichen";
 type Landmark = {map:MapId; x:number; groundY:number; radius:number; action:string; lines:Line[]; kind:LandmarkKind};
 const LANDMARKS:Landmark[] = [
   {map:1,x:MAP1_PLAQUE_X,groundY:382,radius:120,action:"Study the rain-worn plaque",lines:PLAQUE_LINES,kind:"plaque"},
@@ -156,7 +179,11 @@ const LANDMARKS:Landmark[] = [
   {map:5,x:MAP5_BELLOWS_X,groundY:565,radius:130,action:"Study the quiet bellows",lines:BELLOWS_LINES,kind:"bellows"},
   {map:6,x:MAP6_VEIN_X,groundY:545,radius:140,action:"Study the cooled vein",lines:VEIN_LINES,kind:"vein"},
   {map:6,x:MAP6_ECHO_X,groundY:430,radius:120,action:"Study the echo-stone",lines:ECHO_LINES,kind:"echo"},
-  {map:6,x:MAP6_STEP_X,groundY:590,radius:130,action:"Study the first-step stone",lines:STEP_LINES,kind:"step"}
+  {map:6,x:MAP6_STEP_X,groundY:590,radius:130,action:"Study the first-step stone",lines:STEP_LINES,kind:"step"},
+  {map:1,x:MAP1_MERLON_X,groundY:430,radius:120,action:"Study the rain-slick merlon",lines:MERLON_LINES,kind:"merlon"},
+  {map:2,x:MAP2_TIDE_X,groundY:432,radius:120,action:"Study the tide-cut step",lines:TIDE_LINES,kind:"tide"},
+  {map:3,x:MAP3_NEST_X,groundY:430,radius:120,action:"Study the charred nest",lines:NEST_LINES,kind:"nest"},
+  {map:4,x:MAP4_LICHEN_X,groundY:440,radius:120,action:"Study the pale lichen",lines:LICHEN_LINES,kind:"lichen"}
 ];
 const landmarkAt=(map:MapId,x:number,footY:number)=>LANDMARKS.find(mark=>mark.map===map&&Math.abs(x-mark.x)<mark.radius&&Math.abs(footY-mark.groundY)<56);
 const npcTalkKey=(npc:{id:string;map:MapId})=>npc.id+":"+npc.map;
@@ -359,38 +386,47 @@ const map1Platforms: Platform[] = [
   {x:0,y:590,w:782,h:180},{x:758,y:610,w:644,h:160},{x:1378,y:570,w:664,h:200},
   {x:2018,y:600,w:544,h:170},{x:2538,y:550,w:594,h:220},{x:3108,y:590,w:564,h:180},
   {x:3648,y:535,w:534,h:235},{x:4158,y:575,w:1042,h:195},
-  {x:1020,y:475,w:170,h:18},{x:2260,y:470,w:160,h:18},{x:2448,y:428,w:150,h:18},
-  {x:2588,y:382,w:210,h:18},{x:3320,y:455,w:180,h:18},{x:3780,y:430,w:170,h:18}
+  {x:1020,y:475,w:170,h:18},{x:1600,y:490,w:150,h:18},{x:1740,y:430,w:140,h:18},
+  {x:2260,y:470,w:160,h:18},{x:2448,y:428,w:150,h:18},
+  {x:2588,y:382,w:210,h:18},{x:3320,y:455,w:180,h:18},{x:3780,y:430,w:170,h:18},
+  {x:4380,y:500,w:150,h:18},{x:4520,y:430,w:170,h:18}
 ];
 const map2Platforms: Platform[] = [
   {x:0,y:590,w:535,h:180},{x:500,y:568,w:470,h:202},{x:940,y:588,w:410,h:182},
   {x:1320,y:562,w:455,h:208},{x:1740,y:538,w:430,h:232},{x:2140,y:560,w:430,h:210},
   {x:2540,y:585,w:420,h:185},{x:2925,y:558,w:405,h:212},{x:3295,y:578,w:305,h:192},
   {x:610,y:466,w:150,h:18},{x:1140,y:472,w:180,h:18},{x:1418,y:498,w:160,h:18},{x:1515,y:430,w:155,h:18},
-  {x:2245,y:445,w:200,h:18},{x:2360,y:448,w:155,h:18},{x:2750,y:468,w:165,h:18},{x:3140,y:438,w:150,h:18}
+  {x:2245,y:445,w:200,h:18},{x:2360,y:448,w:155,h:18},{x:2750,y:468,w:165,h:18},{x:3140,y:438,w:150,h:18},
+  {x:3280,y:500,w:140,h:18},{x:3380,y:432,w:160,h:18}
 ];
 const map3Platforms: Platform[] = [
   {x:0,y:590,w:560,h:180},{x:520,y:566,w:520,h:204},{x:1000,y:600,w:470,h:170},
   {x:1430,y:548,w:520,h:222},{x:1910,y:575,w:500,h:195},{x:2370,y:535,w:520,h:235},
   {x:2850,y:580,w:500,h:190},{x:3310,y:548,w:690,h:222},
   {x:620,y:448,w:180,h:18},{x:1170,y:475,w:170,h:18},{x:1400,y:488,w:150,h:18},{x:1510,y:418,w:200,h:18},
-  {x:2160,y:446,w:180,h:18},{x:1780,y:400,w:170,h:18},{x:2520,y:410,w:190,h:18},{x:3150,y:452,w:175,h:18},{x:3540,y:420,w:190,h:18}
+  {x:2160,y:446,w:180,h:18},{x:1780,y:400,w:170,h:18},{x:2520,y:410,w:190,h:18},
+  {x:2780,y:500,w:140,h:18},{x:2900,y:430,w:160,h:18},
+  {x:3150,y:452,w:175,h:18},{x:3540,y:420,w:190,h:18}
 ];
 const map4Platforms: Platform[] = [
   {x:0,y:590,w:1180,h:180},{x:1140,y:560,w:980,h:210},{x:2080,y:575,w:900,h:195},{x:2940,y:545,w:1260,h:225},
-  {x:720,y:455,w:160,h:18},{x:1760,y:430,w:180,h:18},{x:2860,y:420,w:190,h:18},{x:3480,y:400,w:170,h:18}
+  {x:720,y:455,w:160,h:18},{x:1080,y:500,w:140,h:18},{x:1220,y:435,w:160,h:18},
+  {x:1760,y:430,w:180,h:18},{x:2460,y:508,w:140,h:18},{x:2580,y:440,w:170,h:18},
+  {x:2860,y:420,w:190,h:18},{x:3480,y:400,w:170,h:18},{x:3720,y:480,w:150,h:18},{x:3880,y:418,w:160,h:18}
 ];
 const map5Platforms: Platform[] = [
   {x:0,y:590,w:1280,h:180},{x:1180,y:570,w:820,h:200},{x:1900,y:590,w:780,h:180},
   {x:2560,y:565,w:720,h:205},{x:3160,y:575,w:640,h:195},{x:3700,y:555,w:700,h:215},
   {x:720,y:455,w:160,h:18},{x:1360,y:508,w:140,h:18},{x:1480,y:440,w:170,h:18},
-  {x:2180,y:455,w:180,h:18},{x:1760,y:430,w:160,h:18},{x:2880,y:430,w:160,h:18},{x:3480,y:420,w:150,h:18}
+  {x:2180,y:455,w:180,h:18},{x:1760,y:430,w:160,h:18},{x:2880,y:430,w:160,h:18},{x:3480,y:420,w:150,h:18},
+  {x:3840,y:488,w:150,h:18},{x:3980,y:422,w:160,h:18}
 ];
 const map6Platforms: Platform[] = [
   {x:0,y:590,w:1180,h:180},{x:1140,y:560,w:780,h:210},{x:1920,y:590,w:1160,h:180},
   {x:2960,y:565,w:840,h:205},{x:3660,y:545,w:1140,h:225},
   {x:720,y:455,w:160,h:18},{x:1680,y:425,w:180,h:18},{x:2680,y:415,w:190,h:18},
-  {x:3380,y:430,w:180,h:18},{x:3480,y:400,w:200,h:18},{x:3980,y:490,w:150,h:18},{x:4120,y:430,w:180,h:18}
+  {x:3380,y:430,w:180,h:18},{x:3480,y:400,w:200,h:18},{x:3980,y:490,w:150,h:18},{x:4120,y:430,w:180,h:18},
+  {x:4360,y:490,w:150,h:18},{x:4500,y:430,w:160,h:18}
 ];
 const clamp = (n:number,a:number,b:number) => Math.max(a,Math.min(b,n));
 const rgbaFromHex = (hex:string,alpha:number) => {const value=parseInt(hex.replace("#",""),16);return `rgba(${value>>16},${value>>8&255},${value&255},${alpha})`;};
@@ -541,7 +577,15 @@ export default function AshfallGame() {
     }
     pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
     const ally=companionRef.current;
-    if(ally.active){const now=performance.now();ally.map=map;ally.x=pl.x-pl.facing*96;ally.y=pl.y+PH;ally.groundY=ally.y;ally.vx=0;ally.mode="idle";ally.modeStarted=now;ally.teleportAt=now;}
+    if(ally.active&&ally.itemId){
+      const now=performance.now();
+      const groundAlly=cardStats(ally.itemId).ground;
+      const arrivalGround=surfaceYAt(map,pl.x,pl.y+PH)??pl.y+PH;
+      ally.map=map;ally.x=pl.x-pl.facing*96;ally.groundY=arrivalGround;
+      ally.y=groundAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.facing=pl.facing;
+      ally.mode=groundAlly?"run":"fly";ally.modeStarted=now;ally.teleportAt=now;
+      ally.attackUntil=0;ally.attackLanded=false;ally.recallStarted=0;ally.targetX=ally.x;
+    }
     slideUntil.current=0;actionUntil.current=0;cameraReset.current=true;
     portalFlashUntil.current=performance.now()+430;
     tone(610,.25,.028);window.setTimeout(()=>tone(360,.2,.02),100);
@@ -652,25 +696,25 @@ export default function AshfallGame() {
     const jackals:Jackal[]=[
       createJackal("sunset-jackal-a",980,720,1280),
       createJackal("sunset-jackal-b",1880,1580,2280),
-      createJackal("sunset-jackal-scout",2400,2300,2500),
+      createJackal("sunset-jackal-scout",2400,2080,2740),
       createJackal("sunset-jackal-c",2860,2520,3320)
     ];
     const createBeast=(id:string,x:number,patrolMin:number,patrolMax:number,health:number,damage:number):Jackal=>({...createJackal(id,x,patrolMin,patrolMax),health,maxHealth:health,attackDamage:damage,y:590,groundY:590});
     const roosts:Jackal[]=[
-      createBeast("ash-roost",3820,3480,4180,80,8)
+      createBeast("ash-roost",3820,3280,4560,80,8)
     ];
     const foxes:Jackal[]=[
       createBeast("cinder-fox-a",920,620,1480,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE),
-      createBeast("cinder-fox-c",1780,1520,2050,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE),
+      createBeast("cinder-fox-c",1780,1360,2280,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE),
       createBeast("cinder-fox-b",2480,2100,3300,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE)
     ];
     const stags:Jackal[]=[
       createBeast("pale-stag-a",1760,1180,2680,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE),
-      createBeast("pale-stag-b",3600,3380,3920,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE)
+      createBeast("pale-stag-b",3600,3040,4040,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE)
     ];
     const lynxes:Jackal[]=[
       createBeast("ember-lynx-a",1280,980,1680,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE),
-      createBeast("ember-lynx-d",1820,1700,1940,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE),
+      createBeast("ember-lynx-d",1820,1480,2360,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE),
       createBeast("ember-lynx-b",2140,1960,2480,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE),
       createBeast("ember-lynx-c",3120,2760,3580,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE)
     ];
@@ -915,7 +959,9 @@ export default function AshfallGame() {
       const duration=cast.kind==="recall"?COMPANION_RECALL_DURATION:780,progress=clamp((now-cast.started)/duration,0,1);
       if(progress>=1){cast.kind=null;return;}
       const eased=progress*progress*(3-2*progress),fade=1-clamp((progress-.72)/.28,0,1);
-      const ally=companionRef.current,palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??BABY_DRAGON_CARD.palette;
+      const ally=companionRef.current;
+      if(!ally)return;
+      const palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??BABY_DRAGON_CARD.palette;
       const direction=cast.direction,color=palette.glow;
       const handX=pl.x+direction*26,handY=pl.y+59-Math.sin(progress*Math.PI)*3;
       const pulse=.7+Math.sin(now*.018)*.3;
@@ -1056,9 +1102,9 @@ export default function AshfallGame() {
     };
     const commandCompanionAttack=(targetX:number,now:number)=>{
       const ally=companionRef.current;
-      if(!ally.active||ally.map!==mapRef.current)return;
-      ally.targetX=targetX;ally.attackUntil=now+900;ally.attackLanded=false;
-      if(Math.abs(targetX-ally.x)<145){ally.mode="attack";ally.modeStarted=now;ally.facing=targetX>=ally.x?1:-1;}
+      if(!ally.active||ally.map!==mapRef.current||ally.recallStarted>0)return;
+      ally.targetX=targetX;ally.attackUntil=now+2400;ally.attackLanded=false;
+      if(Math.abs(targetX-ally.x)<COMPANION_STRIKE_RANGE+16){ally.mode="attack";ally.modeStarted=now;ally.facing=targetX>=ally.x?1:-1;}
     };
     const updateDragon=(dt:number,now:number)=>{
       if(!startedRef.current||mapRef.current!==1)return;
@@ -1299,6 +1345,9 @@ export default function AshfallGame() {
         const playerDistance=Math.abs(pl.x-jackal.x);
         const sightDistance=Math.hypot(pl.x-jackal.x,(pl.y+PH*.45)-(jackal.y-24));
         const startled=playerDistance<110&&(pl.x-jackal.x)*pl.vx<0&&Math.abs(pl.vx)>140;
+        if(!jackal.angry&&isCombatOnlyBeast(jackal.id)&&pl.health>0&&playerDistance<COMBAT_ONLY_AGGRO_RANGE){
+          jackal.angry=true;jackal.awarenessUntil=now+7000;
+        }
         if(jackal.angry&&(pl.health<=0||sightDistance>JACKAL_SIGHT_RANGE)){
           jackal.angry=false;
           if(jackal.mode!=="attack")beginJackalMode(jackal,"idle",now,1400);
@@ -1332,7 +1381,7 @@ export default function AshfallGame() {
           if(now>=jackal.modeUntil){
             if(jackal.angry&&pl.health>0&&sightDistance<=JACKAL_SIGHT_RANGE){
               if(playerDistance<=JACKAL_ATTACK_RANGE+12)jackalCounterAttack(jackal,now);
-              else{jackal.targetX=clamp(pl.x,jackal.patrolMin,jackal.patrolMax);beginJackalMode(jackal,"run",now,800);jackal.facing=pl.x>=jackal.x?1:-1;}
+              else{const bounds=chaseBounds(true,jackal.patrolMin,jackal.patrolMax,worldWidthFor(mapRef.current));jackal.targetX=clamp(pl.x,bounds.min,bounds.max);beginJackalMode(jackal,"run",now,800);jackal.facing=pl.x>=jackal.x?1:-1;}
             }else{jackal.angry=false;beginJackalMode(jackal,"idle",now,1200);jackal.facing=pl.x>=jackal.x?1:-1;}
           }
           continue;
@@ -1340,7 +1389,8 @@ export default function AshfallGame() {
         if(jackal.angry){
           if(playerDistance>16)jackal.facing=pl.x>=jackal.x?1:-1;
           if(playerDistance<=JACKAL_ATTACK_RANGE){jackalCounterAttack(jackal,now);continue;}
-          jackal.targetX=clamp(pl.x,jackal.patrolMin,jackal.patrolMax);
+          const bounds=chaseBounds(true,jackal.patrolMin,jackal.patrolMax,worldWidthFor(mapRef.current));
+          jackal.targetX=clamp(pl.x,bounds.min,bounds.max);
           if(jackal.mode!=="run"&&jackal.mode!=="fly")beginJackalMode(jackal,"run",now,800);
           else jackal.modeUntil=now+800;
         }else if(jackal.mode==="fly"&&now>=jackal.modeUntil){
@@ -1358,8 +1408,9 @@ export default function AshfallGame() {
             const targetSpeed=jackal.facing*(jackal.mode==="fly"&&jackal.landing?speed*.4:speed);
             jackal.vx+=(targetSpeed-jackal.vx)*(1-Math.exp(-(jackal.mode==="run"?6:4)*dt));
             jackal.x+=jackal.vx*dt;
-            if(jackal.x<=jackal.patrolMin){jackal.x=jackal.patrolMin;jackal.targetX=jackal.patrolMax;jackal.facing=1;}
-            if(jackal.x>=jackal.patrolMax){jackal.x=jackal.patrolMax;jackal.targetX=jackal.patrolMin;jackal.facing=-1;}
+            const move=chaseBounds(jackal.angry,jackal.patrolMin,jackal.patrolMax,worldWidthFor(mapRef.current));
+            if(jackal.x<=move.min){jackal.x=move.min;jackal.targetX=jackal.angry?clamp(pl.x,move.min,move.max):jackal.patrolMax;jackal.facing=1;}
+            if(jackal.x>=move.max){jackal.x=move.max;jackal.targetX=jackal.angry?clamp(pl.x,move.min,move.max):jackal.patrolMin;jackal.facing=-1;}
             const wyrmFly=jackal.mode==="fly"&&(jackal.id.startsWith("heart-wyrm")||jackal.id.startsWith("ash-roost"));
             const flyLeap=wyrmFly?Math.sin(clamp((now-jackal.modeStarted)/(jackal.modeUntil-jackal.modeStarted||1),0,1)*Math.PI)*110:0;
             const hopT=jackal.leapUntil>jackal.leapStarted?clamp((now-jackal.leapStarted)/(jackal.leapUntil-jackal.leapStarted),0,1):0;
@@ -1393,7 +1444,7 @@ export default function AshfallGame() {
     };
     const updateCompanion=(dt:number,now:number)=>{
       const ally=companionRef.current;
-      if(!ally.active)return;
+      if(!ally?.active||!ally.itemId)return;
       const pl=player.current,map=mapRef.current;
       if(ally.recallStarted>0){
         ally.attackUntil=0;ally.vx+=(0-ally.vx)*(1-Math.exp(-12*dt));ally.x+=ally.vx*dt;
@@ -1403,55 +1454,60 @@ export default function AshfallGame() {
       const groundAlly=cardStats(ally.itemId).ground;
       if(ally.map!==map){ally.map=map;ally.x=pl.x-pl.facing*96;ally.groundY=pl.y+PH;ally.y=groundAlly?ally.groundY:ally.groundY-52;ally.vx=0;ally.mode=groundAlly?"run":"fly";ally.modeStarted=now;ally.teleportAt=now;}
 
-      const livePack=wildPackFor(map);
-      const huntedWild=livePack?livePack.reduce((best:Jackal|null,beast)=>{
-        if(beast.health<=0)return best;
-        const dist=Math.abs(beast.x-(ally.targetX||ally.x));
-        if(!best||dist<Math.abs(best.x-(ally.targetX||ally.x)))return beast;
-        return best;
-      },null):null;
-      const hostileActive=(map===1&&dragon.health>0&&now<ally.attackUntil)||(Boolean(huntedWild)&&now<ally.attackUntil);
+      const livePack=wildPackFor(map)??[];
+      const mapHostiles:HuntTarget[]=map===1&&dragon.health>0?[dragon,...livePack]:livePack;
+      const hunted=nearestHuntTarget(ally.x,mapHostiles,COMPANION_HUNT_RANGE);
+      const hunting=Boolean(hunted);
+      if(hunting&&hunted){ally.targetX=hunted.x;ally.attackUntil=now+1600;}
       const followX=clamp(pl.x-pl.facing*104,28,worldWidthFor(map)-28);
       const playerGround=pl.y+PH;
-      if(Math.abs(pl.x-ally.x)>COMPANION_TELEPORT_DISTANCE){
+      const stayForHunt=hunted&&Math.abs(pl.x-hunted.x)<COMPANION_HUNT_RANGE+140;
+      if(Math.abs(pl.x-ally.x)>COMPANION_TELEPORT_DISTANCE&&!stayForHunt){
         const arrivalGround=companionSurfaceAt(followX,playerGround,map)??playerGround;
         ally.x=followX;ally.groundY=arrivalGround;ally.y=groundAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.attackUntil=0;ally.teleportAt=now;ally.facing=pl.facing;setCompanionMode(groundAlly?"run":"fly",now);
       }
-      const targetX=now<ally.attackUntil?ally.targetX:followX;
-      const delta=targetX-ally.x,distance=Math.abs(delta);
+      const targetX=hunting?hunted!.x:followX;
+      const holdX=hunting?targetX-(targetX>=ally.x?1:-1)*96:targetX;
+      const delta=holdX-ally.x,distance=Math.abs(delta);
+      const strikeDistance=hunted?Math.abs(hunted.x-ally.x):distance;
       if(distance>18)ally.facing=delta>=0?1:-1;
+      else if(hunting&&hunted)ally.facing=hunted.x>=ally.x?1:-1;
 
-      if(now<ally.attackUntil&&distance<(groundAlly?118:138)){
+      if(hunting&&strikeDistance<COMPANION_STRIKE_RANGE){
         setCompanionMode("attack",now);
-        ally.vx+=(0-ally.vx)*(1-Math.exp(-10*dt));ally.x+=ally.vx*dt;
+        ally.vx+=(0-ally.vx)*(1-Math.exp(-10*dt));
+        ally.x+=ally.vx*dt;
+        if(strikeDistance<78)ally.x+=(holdX-ally.x)*(1-Math.exp(-8*dt));
         const pounceHeight=groundAlly?8+Math.sin(clamp((now-ally.modeStarted)/720,0,1)*Math.PI)*22:50;
+        const plantedGround=companionSurfaceAt(ally.x,ally.groundY,map);
+        if(plantedGround!==null)ally.groundY+=(plantedGround-ally.groundY)*(1-Math.exp(-12*dt));
         ally.y+=(ally.groundY-pounceHeight-ally.y)*(1-Math.exp(-10*dt));
         const attackElapsed=now-ally.modeStarted;
         if(!ally.attackLanded&&attackElapsed>390){
           ally.attackLanded=true;
-          if(map===1&&hostileActive&&Math.abs(dragon.x-ally.x)<155){
-            dragon.health=Math.max(0,dragon.health-8);dragon.hurtStarted=now;dragon.hurtUntil=now+420;dragon.lastDamage=8;dragon.hitDirection=dragon.x>=ally.x?1:-1;
+          const strike=hunted!;
+          if(map===1&&strike===dragon&&Math.abs(dragon.x-ally.x)<COMPANION_STRIKE_RANGE+20){
+            dragon.health=Math.max(0,dragon.health-COMPANION_STRIKE_DAMAGE);dragon.hurtStarted=now;dragon.hurtUntil=now+420;dragon.lastDamage=COMPANION_STRIKE_DAMAGE;dragon.hitDirection=dragon.x>=ally.x?1:-1;
             if(dragon.health===0){dragon.angry=false;dragon.awarenessUntil=0;dragon.vx*=.3;beginDragonMode("sleep",now,999999999);}
             else{dragon.angry=true;dragon.awarenessUntil=now+8000;}
             tone(112,.1,.022);
-          }else if(huntedWild&&Math.abs(huntedWild.x-ally.x)<150){
-            huntedWild.health=Math.max(0,huntedWild.health-8);huntedWild.hurtStarted=now;huntedWild.hurtUntil=now+400;huntedWild.lastDamage=8;huntedWild.hitDirection=huntedWild.x>=ally.x?1:-1;
-            if(huntedWild.health===0){huntedWild.angry=false;huntedWild.awarenessUntil=0;huntedWild.vx*=.25;beginJackalMode(huntedWild,"sleep",now,999999999);}
-            else{huntedWild.angry=true;huntedWild.awarenessUntil=now+7000;}
+          }else if(strike!==dragon&&Math.abs(strike.x-ally.x)<COMPANION_STRIKE_RANGE+18){
+            const prey=strike as Jackal;
+            prey.health=Math.max(0,prey.health-COMPANION_STRIKE_DAMAGE);prey.hurtStarted=now;prey.hurtUntil=now+400;prey.lastDamage=COMPANION_STRIKE_DAMAGE;prey.hitDirection=prey.x>=ally.x?1:-1;
+            if(prey.health===0){prey.angry=false;prey.awarenessUntil=0;prey.vx*=.25;beginJackalMode(prey,"sleep",now,999999999);}
+            else{prey.angry=true;prey.awarenessUntil=now+7000;}
             tone(118,.1,.02);
           }
         }
-        if(attackElapsed>720){
-          if(now<ally.attackUntil-100){ally.modeStarted=now;ally.attackLanded=false;}
-          else{ally.attackUntil=0;setCompanionMode("idle",now);}
-        }
+        if(attackElapsed>720){ally.modeStarted=now;ally.attackLanded=false;}
         return;
       }
 
       const currentSurface=companionSurfaceAt(ally.x,ally.groundY,map);
       if(currentSurface!==null)ally.groundY+=(currentSurface-ally.groundY)*(1-Math.exp(-11*dt));
       const noGroundAhead=companionSurfaceAt(ally.x+ally.facing*48,ally.groundY,map)===null;
-      const needsFlight=!groundAlly&&(Math.abs(playerGround-ally.groundY)>34||noGroundAhead);
+      const huntHeight=hunted&&"groundY" in hunted?Math.abs((hunted as Dragon).groundY-ally.groundY):Math.abs(playerGround-ally.groundY);
+      const needsFlight=!groundAlly&&(huntHeight>34||noGroundAhead);
       if(distance>46){
         const followMode:DragonMode=needsFlight?"fly":distance>170?"run":"walk";
         setCompanionMode(followMode,now);
@@ -1465,8 +1521,11 @@ export default function AshfallGame() {
         const targetY=followMode==="fly"?Math.min(playerGround-68,ally.groundY-76):ally.groundY-hop;
         ally.y+=(targetY-ally.y)*(1-Math.exp(-(followMode==="fly"?5:12)*dt));
       }else{
-        setCompanionMode("idle",now);ally.vx+=(0-ally.vx)*(1-Math.exp(-9*dt));ally.x+=ally.vx*dt;ally.y+=(ally.groundY-ally.y)*(1-Math.exp(-12*dt));
-        ally.facing=pl.x>=ally.x?1:-1;
+        setCompanionMode("idle",now);ally.vx+=(0-ally.vx)*(1-Math.exp(-9*dt));ally.x+=ally.vx*dt;
+        const idleGround=companionSurfaceAt(ally.x,ally.groundY,map);
+        if(idleGround!==null)ally.groundY=idleGround;
+        ally.y+=(ally.groundY-ally.y)*(1-Math.exp(-12*dt));
+        ally.facing=hunting&&hunted?(hunted.x>=ally.x?1:-1):(pl.x>=ally.x?1:-1);
       }
     };
     const drawPixelJackal=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean,variant?:{tint?:BeastTint;antlers?:boolean;tufts?:boolean;kind?:BeastKind})=>{
@@ -1618,21 +1677,21 @@ export default function AshfallGame() {
     };
     const drawCompanion=(now:number)=>{
       const ally=companionRef.current;
-      if(!ally.active||ally.map!==mapRef.current)return;
-      const isJackal=Boolean(ally.itemId&&GROUND_BEAST_CARD_IDS.has(ally.itemId));
+      if(!ally?.active||!ally.itemId||ally.map!==mapRef.current)return;
+      const isJackal=Boolean(GROUND_BEAST_CARD_IDS.has(ally.itemId));
       const wyrmTint=ally.itemId===HEART_WYRM_CARD.id;
       if(!isJackal&&!wyrmTint&&(!dragonImage.complete||!dragonImage.naturalWidth))return;
       const palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??(isJackal?SUNSET_JACKAL_CARD.palette:wyrmTint?HEART_WYRM_CARD.palette:BABY_DRAGON_CARD.palette);
       const companionName=cardDisplayName(ally.itemId);
       const companionTint=beastTintFor(ally.itemId),companionAntlers=beastAntlersFor(ally.itemId),companionTufts=beastTuftsFor(ally.itemId),companionKind=beastKindFor(ally.itemId);
-      const frames=DRAGON_FRAMES[ally.mode],elapsed=now-ally.modeStarted;
+      const frames=DRAGON_FRAMES[ally.mode]??DRAGON_FRAMES.idle,elapsed=now-ally.modeStarted;
       let index=0;
-      if(ally.mode==="idle")index=Math.floor(elapsed/520)%2;
-      else if(ally.mode==="walk")index=Math.floor(elapsed/180)%frames.length;
-      else if(ally.mode==="run")index=Math.floor(elapsed/100)%frames.length;
-      else if(ally.mode==="fly")index=Math.floor(elapsed/125)%frames.length;
-      else if(ally.mode==="attack")index=Math.min(frames.length-1,Math.floor(elapsed/175));
-      const frame=frames[index],size=108,spriteScale=size/DRAGON_CELL;
+      if(ally.mode==="idle")index=Math.floor(elapsed/520)%Math.max(1,frames.length);
+      else if(ally.mode==="walk")index=Math.floor(elapsed/180)%Math.max(1,frames.length);
+      else if(ally.mode==="run")index=Math.floor(elapsed/100)%Math.max(1,frames.length);
+      else if(ally.mode==="fly")index=Math.floor(elapsed/125)%Math.max(1,frames.length);
+      else if(ally.mode==="attack")index=Math.min(Math.max(0,frames.length-1),Math.floor(elapsed/175));
+      const frame=frames[index]??DRAGON_FRAMES.idle[0],size=108,spriteScale=size/DRAGON_CELL;
       const smooth=(value:number)=>value*value*(3-2*value);
       const summon=clamp((now-ally.summonedAt)/COMPANION_SUMMON_DURATION,0,1);
       const summonCreature=smooth(clamp((summon-.22)/.58,0,1));
@@ -2350,6 +2409,34 @@ export default function AshfallGame() {
           ctx.fillStyle="#3a2030";ctx.fillRect(x-22,groundY-16,44,6);
           ctx.fillStyle="rgba(224,120,150,"+(.24+pulse*.2)+")";ctx.fillRect(x-12,groundY-14,24,3);
           ctx.globalAlpha=.34+pulse*.16;ctx.fillStyle="#ffc8a0";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("STEP",x,groundY-28);
+        }else if(mark.kind==="merlon"){
+          const glow=ctx.createRadialGradient(x,groundY-24,4,x,groundY-24,70);
+          glow.addColorStop(0,"rgba(116,230,226,"+(.16+pulse*.12)+")");glow.addColorStop(1,"rgba(116,230,226,0)");
+          ctx.fillStyle=glow;ctx.fillRect(x-80,groundY-90,160,100);
+          ctx.fillStyle="#2a3848";ctx.fillRect(x-18,groundY-48,36,48);
+          ctx.fillStyle="#71869e";ctx.fillRect(x-22,groundY-56,14,10);ctx.fillRect(x+8,groundY-56,14,10);
+          ctx.fillStyle="rgba(200,220,230,.35)";ctx.fillRect(x-8,groundY-36,16,3);
+          ctx.globalAlpha=.34+pulse*.16;ctx.fillStyle="#c8e4ff";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("MERLON",x,groundY-66);
+        }else if(mark.kind==="tide"){
+          const glow=ctx.createRadialGradient(x,groundY-10,4,x,groundY-10,54);
+          glow.addColorStop(0,"rgba(255,210,122,"+(.2+pulse*.14)+")");glow.addColorStop(1,"rgba(255,210,122,0)");
+          ctx.fillStyle=glow;ctx.fillRect(x-60,groundY-60,120,70);
+          ctx.fillStyle="#85584d";ctx.fillRect(x-22,groundY-12,44,12);
+          ctx.fillStyle="#d49a68";ctx.fillRect(x-16,groundY-18,32,6);
+          ctx.fillStyle="#ffe1a3";ctx.fillRect(x-10,groundY-8,20,3);
+          ctx.globalAlpha=.5+pulse*.25;ctx.fillStyle="#ffd27a";ctx.font="900 11px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("TIDE",x,groundY-32);
+        }else if(mark.kind==="nest"){
+          ctx.fillStyle="#1b0d08";ctx.beginPath();ctx.ellipse(x,groundY-6,20,8,0,0,Math.PI*2);ctx.fill();
+          ctx.fillStyle="#3e2010";ctx.beginPath();ctx.ellipse(x,groundY-10,14,6,0,0,Math.PI*2);ctx.fill();
+          ctx.fillStyle="rgba(255,104,40,"+(.22+pulse*.2)+")";ctx.beginPath();ctx.ellipse(x,groundY-14,7,5,0,0,Math.PI*2);ctx.fill();
+          ctx.globalAlpha=.5+pulse*.25;ctx.fillStyle="#ffc08a";ctx.font="900 11px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("NEST",x,groundY-36);
+        }else if(mark.kind==="lichen"){
+          const glow=ctx.createRadialGradient(x,groundY-12,4,x,groundY-12,60);
+          glow.addColorStop(0,"rgba(142,231,255,"+(.18+pulse*.12)+")");glow.addColorStop(1,"rgba(142,231,255,0)");
+          ctx.fillStyle=glow;ctx.fillRect(x-70,groundY-70,140,80);
+          ctx.fillStyle="#294856";ctx.beginPath();ctx.ellipse(x,groundY-4,18,7,0,0,Math.PI*2);ctx.fill();
+          ctx.fillStyle="rgba(142,231,255,"+(.32+pulse*.22)+")";ctx.beginPath();ctx.ellipse(x+2,groundY-8,10,5,0,0,Math.PI*2);ctx.fill();
+          ctx.globalAlpha=.34+pulse*.16;ctx.fillStyle="#d7fbff";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("LICHEN",x,groundY-28);
         }
         ctx.restore();
       }
