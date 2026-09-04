@@ -379,6 +379,14 @@ test("late-map E-talk guides the finish and does not block portals or the altar"
   }
   assert.match(reed, /east gate heals/);
   assert.match(kest, /That ends the campaign/);
+  assert.match(npcBlock("isk", 5), /The east gate heals you/);
+  assert.match(npcBlock("vess", 5), /The east gate heals you/);
+  assert.match(npcBlock("maer", 5), /The east gate heals you/);
+  assert.match(npcBlock("perrin", 5), /The east gate heals you/);
+  assert.match(npcBlock("calen", 4), /The east gate heals you/);
+  assert.match(npcBlock("orrin", 4), /The east gate heals you/);
+  assert.match(npcBlock("lira", 4), /The east gate heals you/);
+  assert.match(npcBlock("wren", 4), /The east gate heals you/);
   const people = [
     { map: 1, x: 820 }, { map: 1, x: 1550 }, { map: 1, x: 2280 }, { map: 1, x: 3980 }, { map: 1, x: 4730 }, { map: 1, x: 5480 },
     { map: 2, x: 480 }, { map: 2, x: 1180 }, { map: 2, x: 2480 }, { map: 2, x: 3240 }, { map: 2, x: 4000 },

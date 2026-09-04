@@ -109,6 +109,7 @@ test("after-capture lines tie each map animal to the fading signal", () => {
   assert.match(game, /You bound the last pulse\. That's every leftover step I walked/);
   assert.match(game, /Press E at the heart altar\. That ends the campaign/);
   assert.match(game, /The east gate heals you\. Talk to Kest/);
+  assert.match(game, /The east gate heals you\. Reed's kiln is through it/);
 });
 
 test("combat-only extras never flash a second card", () => {
