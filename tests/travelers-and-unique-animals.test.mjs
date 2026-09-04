@@ -761,7 +761,7 @@ test("ending-stretch Kest, Edan, and Hale map5 talks keep one last-crossing and 
   }
 });
 
-test("Reed, Kest, and Edan again/afterCapture walk out as people without dating or dump", () => {
+test("Reed, Kest, Edan, Hale, and Ryn again/afterCapture walk out as people without dating or dump", () => {
   const againOf = (id, map) => {
     const block = npcBlock(id, map);
     return block.slice(block.indexOf("againTalk:["), block.indexOf("afterCaptureTalk:["));
@@ -777,6 +777,7 @@ test("Reed, Kest, and Edan again/afterCapture walk out as people without dating 
   const dating = /bondMeter|dating|affection|romance|love you|stay with me|walk out together/;
   const campaignDump = /spark, dusk|Castle rain, shore dusk, cairn/;
   const softlock = /road goes dark|must capture|have to bind|Don't go in cold|Don't go into the heart cold|the echo dies|\bstuck\b/;
+  const finishDump = /ends the campaign|Press E at the (heart )?altar|Bind the (stag|wyrm)|The east gate heals you|The gate behind you still heals/;
 
   assert.match(againOf("reed", 5), /When the kiln can rest, we walk out as people/);
   assert.match(afterOf("reed", 5), /When that kiln can rest, we walk out as people/);
@@ -784,8 +785,17 @@ test("Reed, Kest, and Edan again/afterCapture walk out as people without dating 
   assert.match(afterOf("kest", 6), /Come on\. We walk out as people/);
   assert.match(againOf("edan", 6), /When the signal rests, we walk out as people/);
   assert.match(afterOf("edan", 6), /Then we walk out as people\. The last stone can stay empty/);
+  assert.match(againOf("hale", 5), /When this kiln can rest, we walk out as people/);
+  assert.match(againOf("hale", 5), /We meet again\. Cliff quiet, then this kiln/);
+  assert.match(againOf("hale", 5), /The quiet kiln still sits west\. Press E there if the coals feel thin/);
+  assert.doesNotMatch(againOf("hale", 5), finishDump);
+  assert.match(afterOf("hale", 5), /Then we walk out as people\. This stretch can stay quiet/);
+  assert.match(afterOf("hale", 5), /You bound the coal shard\. That's kiln heat the heart can take/);
+  assert.match(afterOf("ryn", 5), /Then we walk out as people\. I'll keep this last gate/);
+  assert.match(afterOf("ryn", 5), /You bound the coal shard/);
+  assert.doesNotMatch(againOf("ryn", 5), /we walk out as people/i);
 
-  for (const [id, map] of [["reed", 5], ["kest", 6], ["edan", 6]]) {
+  for (const [id, map] of [["reed", 5], ["kest", 6], ["edan", 6], ["hale", 5]]) {
     for (const [label, talk] of [["again", againOf(id, map)], ["after", afterOf(id, map)]]) {
       assert.match(talk, /we walk out as people/i, `${id}:${map} ${label}Talk should walk out as people`);
       assert.doesNotMatch(talk, dating, `${id}:${map} ${label}Talk should stay off dating/bond`);
@@ -796,6 +806,12 @@ test("Reed, Kest, and Edan again/afterCapture walk out as people without dating 
     }
     assert.match(npcBlock(id, map), /Moon Night/);
   }
+  const rynAfter = afterOf("ryn", 5);
+  assert.match(rynAfter, /we walk out as people/i);
+  assert.doesNotMatch(rynAfter, dating);
+  assert.doesNotMatch(rynAfter, campaignDump);
+  assert.doesNotMatch(rynAfter, softlock);
+  assert.deepEqual(talkLinesFrom(rynAfter).filter((line) => line.text.length > 110), []);
 });
 
 test("firstTalk openings keep one distinct tell per traveler", () => {
