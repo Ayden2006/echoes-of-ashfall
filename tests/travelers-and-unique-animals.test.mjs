@@ -604,6 +604,7 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
     ["reed", 5, /quiet kiln/, /Press E there/],
     ["isk", 5, /banked coal-bed/, /Press E there/],
     ["vess", 5, /Quiet bellows/, /Press E there/],
+    ["hale", 5, /quiet kiln/, /Press E there/],
     ["edan", 6, /echo-stone/, /Press E there/],
     ["kest", 6, /heart altar/, /Press E at the heart altar/],
   ];
@@ -614,18 +615,23 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
     const named = [
       /rain-cut groove/i, /plaque/i, /dusk-shell/i, /drowned post/i,
       /foxfire hollow/i, /split cairn|the cairn/i, /cliff notch/i, /moonwell/i,
-      /quiet kiln/i, /coal-bed/i, /bellows/i, /echo-stone/i,
+      /quiet kiln/i, /coal-bed/i, /bellows/i, /echo-stone/i, /cooled vein/i, /first-step stone/i,
     ].filter((re) => re.test(again));
     assert.ok(named.length <= 2, `${id}:${map} againTalk should not dump every secret at once`);
   }
 
   assert.match(againOf("reed", 5), /Bind a lynx if you still need the heat/);
   assert.match(againOf("kest", 6), /Bind the wyrm if you still need the pulse/);
+  assert.match(againOf("kest", 6), /first-step stone/);
+  assert.match(againOf("kest", 6), /Press E there if the pulse feels thin/);
   assert.match(againOf("edan", 6), /Bind the wyrm if you still need the pulse/);
+  assert.match(againOf("edan", 6), /Press E at the cooled vein/);
+  assert.match(againOf("hale", 5), /The quiet kiln still sits west\. Press E there if the coals feel thin/);
   assert.doesNotMatch(againOf("calen", 4), /ends the campaign|Bind the (stag|wyrm)|The east gate heals you/);
   assert.doesNotMatch(againOf("orrin", 4), /ends the campaign|Bind the (stag|wyrm)|The east gate heals you/);
   assert.doesNotMatch(againOf("isk", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
   assert.doesNotMatch(againOf("vess", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
+  assert.doesNotMatch(againOf("hale", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
 });
 
 test("maps 4–6 reunion againTalk remembers the last crossing without the finish dump", () => {
