@@ -310,7 +310,7 @@ test("late-map HUNT, ALLY · HUNT, hurt, and portal tags keep the #48 late strok
   assert.match(game, /ctx\.lineWidth=late\?5:4;ctx\.strokeStyle=late\?"rgba\(4,2,6,\.96\)":"rgba\(8,4,8,\.92\)";ctx\.strokeText\("-"\+dmg,x,y\)/);
   assert.match(game, /ctx\.lineWidth=late\?5:4;ctx\.strokeStyle=late\?"rgba\(6,2,4,\.96\)":"rgba\(6,8,10,\.88\)";ctx\.strokeText\(label,cx,groundY-188\)/);
   assert.match(game, /ctx\.strokeText\("PRESS E",cx,groundY-174\)/);
-  assert.match(game, /ctx\.fillStyle=near\|\|late\?"#fff6d2":"rgba\("\+portalColor\+","\+\(\.55\+tagPulse\*\.25\)\+"\)"/);
+  assert.match(game, /ctx\.fillStyle="#fff6d2";ctx\.fillText\("PRESS E",cx,groundY-174\)/);
   assert.match(game, /drawHuntMark\(wyrm\.x\+recoilX,barY-28,now,currentHuntTarget\(\)===wyrm\)/);
   assert.match(game, /drawHuntMark\(beast\.x\+recoilX,barY-26,now,currentHuntTarget\(\)===beast\); \/\/ fox\/stag\/lynx keep HUNT \+ stroked hurt/);
   assert.doesNotMatch(game, /ctx\.lineWidth=3;ctx\.strokeStyle="rgba\(2,6,8,\.92\)";ctx\.strokeText\(`ALLY · \$\{companionName\}/);
