@@ -235,7 +235,7 @@ const NPCS:Npc[] = [
       {speaker:"Reed",text:"The lynx wear the last heat of the echo — coal pelts, tufted ears, bobbed tails. Not jackals."},
       {speaker:"Reed",text:"The animals are the echo. Bind a lynx if you still need the heat. The east gate heals you. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Reed",text:"Still walking, Moon Night. The heart is east."},{speaker:"Reed",text:"Bind a lynx if you still need the heat. The east gate heals you. Press E at the heart altar. That ends the campaign."}],
+    againTalk:[{speaker:"Reed",text:"Still walking, Moon Night. The quiet kiln is east. Press E there if the coals feel thin."},{speaker:"Reed",text:"Bind a lynx if you still need the heat. The east gate heals you. Press E at the heart altar. That ends the campaign."}],
     afterCaptureTalk:[
       {speaker:"Reed",text:"That lynx was the last heat the echo could keep without going out."},
       {speaker:"Reed",text:"You are not keeping a pet. You are carrying the signal so the heart still has warmth to receive."},
@@ -290,7 +290,7 @@ const NPCS:Npc[] = [
     ],
     againTalk:[
       {speaker:"Calen",text:"We meet again. I left the castle rain for this watch."},
-      {speaker:"Calen",text:"Same spark, later wind. The well still tries to bottle what we already carry."}
+      {speaker:"Calen",text:"Same spark, later wind. The moonwell still tries to bottle what we already carry. Press E there if the cliff feels thin."}
     ],
     afterCaptureTalk:[
       {speaker:"Calen",text:"Pale antlers. The moonwell poured the signal into that stag."},
@@ -308,7 +308,7 @@ const NPCS:Npc[] = [
       {speaker:"Sera",text:"Sunset Jackals. Dusk-born, four-legged, not the castle dragon. The animals are the echo."},
       {speaker:"Sera",text:"Bind one, then go east. The east portal heals you. Push on before the light dies."}
     ],
-    againTalk:[{speaker:"Sera",text:"Still here, Moon Night. Bind a jackal if you haven't, then go east. The east portal heals you."},{speaker:"Sera",text:"A drowned post stands mid-beach. Three scratches. That's the pack, and the call."}],
+    againTalk:[{speaker:"Sera",text:"Still here, Moon Night. Bind a jackal if you haven't, then go east. The east portal heals you."},{speaker:"Sera",text:"A dusk-shell sits on a mid-beach ledge. Press E there if the gold feels thin."}],
     afterCaptureTalk:[
       {speaker:"Sera",text:"You took a jackal card. That's the dusk of the signal walking with you."},
       {speaker:"Sera",text:"Leave the extra scout to the sand. One shard is enough to carry."},
@@ -374,7 +374,7 @@ const NPCS:Npc[] = [
       {speaker:"Orrin",text:"Aye. Calen watches the spark. I watch the writing. The animals are the echo."},
       {speaker:"Orrin",text:"Bind the dragon, then go east. The east portal heals you. The rain still writes after that. The road just has a name walking it."}
     ],
-    againTalk:[{speaker:"Orrin",text:"Still copying, Moon Night. Bind the dragon if you haven't, then go east. The east portal heals you."},{speaker:"Orrin",text:"The plaque higher up says the same thing in older stone. The well is farther east."}],
+    againTalk:[{speaker:"Orrin",text:"Still copying, Moon Night. Bind the dragon if you haven't, then go east. The east portal heals you."},{speaker:"Orrin",text:"The plaque higher up says the same thing in older stone. Press E there if the rain feels thin."}],
     afterCaptureTalk:[
       {speaker:"Orrin",text:"You took the first spark. The rain I copy is quieter now."},
       {speaker:"Orrin",text:"The east portal heals you. If the well still pools light, I'll meet you there. I want the same line in moonwater."}
@@ -388,7 +388,7 @@ const NPCS:Npc[] = [
       {speaker:"Orrin",text:"That's the line I came for. Pale antlers, not castle rain. The animals are the echo."},
       {speaker:"Orrin",text:"Bind the stag, then go east. The east gate heals you. Calen keeps the later watch. I keep the words so the well does not lie."}
     ],
-    againTalk:[{speaker:"Orrin",text:"We meet again. Castle rain, then cliff wind. Same road."},{speaker:"Orrin",text:"The rain I copied is quieter here. Same line, later water."}],
+    againTalk:[{speaker:"Orrin",text:"We meet again. Castle rain, then cliff wind. Same road."},{speaker:"Orrin",text:"A cliff notch sits east, cut to listen. Press E there if the wind feels thin."}],
     afterCaptureTalk:[
       {speaker:"Orrin",text:"You bound the pool I came to copy. The well looks dimmer, and the rain I wrote is finally still."},
       {speaker:"Orrin",text:"Castle rain, then this well. Spark shard, then pool shard. The kiln will want the next line."},
@@ -447,7 +447,7 @@ const NPCS:Npc[] = [
       {speaker:"Vess",text:"He does. Lynx-shaped coals, not foxes. Same echo, later heat."},
       {speaker:"Vess",text:"The animals are the echo. Bind a lynx if you still need the heat. The east gate heals you. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Vess",text:"We meet where the ash learned to wait. Cairn twist, then kiln."},{speaker:"Vess",text:"Same leftover fire, later heat."}],
+    againTalk:[{speaker:"Vess",text:"We meet where the ash learned to wait. Cairn twist, then kiln."},{speaker:"Vess",text:"Quiet bellows sit west of the kiln road. Press E there if the breath feels thin."}],
     afterCaptureTalk:[
       {speaker:"Vess",text:"Coal pelt, not foxfire. You bound the last heat the cairn promised."},
       {speaker:"Vess",text:"Cairn twist to kiln. Leftover-fire shard, then coal shard. The heart is the last page."},
@@ -616,7 +616,7 @@ const NPCS:Npc[] = [
       {speaker:"Wren",text:"Calen watches the spark. Orrin copies the line. I listen so we don't chase the wall. The animals are the echo."},
       {speaker:"Wren",text:"Bind the first spark, then go east. The east portal heals you. The shore dusk is longer than this rain looks."}
     ],
-    againTalk:[{speaker:"Wren",text:"Still listening, Moon Night. Bind the spark if you haven't, then go east. The east portal heals you."},{speaker:"Wren",text:"There is a rain-cut groove farther along the floor if the signal feels thin."}],
+    againTalk:[{speaker:"Wren",text:"Still listening, Moon Night. Bind the spark if you haven't, then go east. The east portal heals you."},{speaker:"Wren",text:"There is a rain-cut groove farther along the floor. Press E there if the signal feels thin."}],
     afterCaptureTalk:[
       {speaker:"Wren",text:"You took the first spark. That's why the rain I listen to is quieter."},
       {speaker:"Wren",text:"Castle rain starts here. Shore dusk, then the cairn twist — the animals are the echo — then kiln heat and the heart altar."},
@@ -677,7 +677,7 @@ const NPCS:Npc[] = [
       {speaker:"Isk",text:"That's the cairn twist. The animals are the echo. Bram scouts west. Holt walks the later stones."},
       {speaker:"Isk",text:"Bind leftover heat, then go east. The east portal heals you. The well is through that gate."}
     ],
-    againTalk:[{speaker:"Isk",text:"Still in the early ash, Moon Night. Bind leftover heat if you haven't, then go east. The east portal heals you."},{speaker:"Isk",text:"The split cairn is east. Press E on it. The animals are the echo."}],
+    againTalk:[{speaker:"Isk",text:"Still in the early ash, Moon Night. Bind leftover heat if you haven't, then go east. The east portal heals you."},{speaker:"Isk",text:"A foxfire hollow sits on a stepped ledge west. Press E there if the ash feels thin."}],
     afterCaptureTalk:[
       {speaker:"Isk",text:"You took the leftover-fire shard. That's foxfire — the echo shedding what the shore dropped."},
       {speaker:"Isk",text:"Castle rain, shore dusk, then this cairn twist: the animals are the echo. Kiln heat and the heart altar come after."},
@@ -692,7 +692,7 @@ const NPCS:Npc[] = [
       {speaker:"Isk",text:"He does. Lynx-shaped coals, not foxes."},
       {speaker:"Isk",text:"The animals are the echo. Bind a lynx if you still need the heat. The east gate heals you. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Isk",text:"We meet again. Cairn twist, then kiln heat. Same leftover walk, later fire."}],
+    againTalk:[{speaker:"Isk",text:"We meet again. Cairn twist, then kiln heat. Same leftover walk, later fire."},{speaker:"Isk",text:"A banked coal-bed sits west. Press E there if the heat feels thin."}],
     afterCaptureTalk:[
       {speaker:"Isk",text:"You bound the coal shard. The leftover fire I walked in the hollow banked here."},
       {speaker:"Isk",text:"Castle rain, shore dusk, cairn twist — the animals are the echo — then this kiln heat. The heart altar is the last page."},
@@ -768,7 +768,7 @@ const NPCS:Npc[] = [
       {speaker:"Edan",text:"The cooled vein is east. Walk it. The last stone is farther."},
       {speaker:"Edan",text:"The animals are the echo. Bind the wyrm if you still need the pulse. The gate behind you still heals. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Edan",text:"Still here. Bind the wyrm if you still need the pulse. Walk east. Press E at the altar. The campaign ends when the signal rests."},{speaker:"Edan",text:"Animals were the echo the whole road. The altar is where it can stop running."}],
+    againTalk:[{speaker:"Edan",text:"Still here. Bind the wyrm if you still need the pulse. Walk east. Press E at the altar. The campaign ends when the signal rests."},{speaker:"Edan",text:"An echo-stone sits past the cooled vein. Press E there if the pulse feels loud."}],
     afterCaptureTalk:[
       {speaker:"Edan",text:"You bound the last pulse. That's every shard, still in one place."},
       {speaker:"Edan",text:"Castle rain, shore dusk, cairn twist — the animals are the echo — kiln heat, then this heart altar."},
