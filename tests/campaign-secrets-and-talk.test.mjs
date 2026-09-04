@@ -166,8 +166,11 @@ test("high secrets have a stepping-stone ledge so a single jump can reach them",
   assert.match(game, /\{x:1480,y:440,w:170,h:18\}/);
   assert.match(game, /\{x:5780,y:490,w:150,h:18\}/);
   assert.match(game, /\{x:5920,y:430,w:180,h:18\}/);
+  assert.match(game, /\{x:2320,y:508,w:140,h:18\}/);
+  assert.match(game, /\{x:2448,y:428,w:150,h:18\}/);
   assert.match(game, /\{x:6380,y:500,w:150,h:18\}/);
   assert.match(game, /\{x:6520,y:430,w:170,h:18\}/);
+  assert.match(game, /\{x:5460,y:500,w:140,h:18\}/);
   assert.match(game, /\{x:5080,y:500,w:140,h:18\}/);
   assert.match(game, /\{x:5180,y:432,w:160,h:18\}/);
   assert.match(game, /\{x:4380,y:500,w:140,h:18\}/);

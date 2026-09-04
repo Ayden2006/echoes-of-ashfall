@@ -171,6 +171,8 @@ test("gait blends cover walk↔run↔attack↔sleep without a new animation syst
   assert.match(game, /const gaitBlendAmt = \(blendAt:number, now:number\)=>easeInOut\(clamp\(\(now-blendAt\)\/MODE_BLEND_MS,0,1\)\)/);
   assert.match(game, /const locoCadence = \(mode:DragonMode, walk=180, run=110\)=>mode==="run"\?run:walk/);
   assert.match(game, /const locoPoseMode = \(animal:\{mode:DragonMode;prevMode:DragonMode;modeBlendAt:number\}, now:number\)/);
+  assert.match(game, /if\(blend<0\.58&&animal\.prevMode==="fly"&&\(animal\.mode==="idle"\|\|animal\.mode==="walk"\|\|animal\.mode==="run"\)\) return animal\.prevMode/);
+  assert.match(game, /if\(blend<0\.5&&\(animal\.prevMode==="walk"\|\|animal\.prevMode==="idle"\|\|animal\.prevMode==="run"\)&&animal\.mode==="fly"\) return animal\.prevMode/);
   assert.match(game, /if\(blend<0\.42&&\(animal\.prevMode==="walk"\|\|animal\.prevMode==="run"\|\|animal\.prevMode==="attack"\)&&\(animal\.mode==="walk"\|\|animal\.mode==="run"\|\|animal\.mode==="attack"\|\|animal\.mode==="idle"\)\) return animal\.prevMode/);
   assert.match(game, /const gaitBlend=gaitBlendAmt\(modeBlendAt,now\)/);
   assert.match(game, /const runCycle=\(loco\/\(locoCadence\(prevMode\)\+\(locoCadence\(mode\)-locoCadence\(prevMode\)\)\*gaitBlend\)\)%1/);
@@ -194,6 +196,8 @@ test("gait blends cover walk↔run↔attack↔sleep without a new animation syst
   const locoPoseMode = (animal, now) => {
     const blend = gaitBlendAmt(animal.modeBlendAt, now);
     if (animal.mode === "sleep" || animal.prevMode === "sleep") return animal.mode;
+    if (blend < 0.58 && animal.prevMode === "fly" && (animal.mode === "idle" || animal.mode === "walk" || animal.mode === "run")) return animal.prevMode;
+    if (blend < 0.5 && (animal.prevMode === "walk" || animal.prevMode === "idle" || animal.prevMode === "run") && animal.mode === "fly") return animal.prevMode;
     if (blend < 0.5 && (animal.prevMode === "fly" || animal.prevMode === "run") && (animal.mode === "idle" || animal.mode === "walk")) return animal.prevMode;
     if (blend < 0.42 && (animal.prevMode === "walk" || animal.prevMode === "run" || animal.prevMode === "attack") && (animal.mode === "walk" || animal.mode === "run" || animal.mode === "attack" || animal.mode === "idle")) return animal.prevMode;
     return animal.mode;
@@ -203,6 +207,9 @@ test("gait blends cover walk↔run↔attack↔sleep without a new animation syst
   assert.equal(locoPoseMode({ mode: "walk", prevMode: "run", modeBlendAt: 0 }, 80), "run");
   assert.equal(locoPoseMode({ mode: "sleep", prevMode: "walk", modeBlendAt: 0 }, 40), "sleep");
   assert.equal(locoPoseMode({ mode: "run", prevMode: "walk", modeBlendAt: 0 }, 260), "run");
+  assert.equal(locoPoseMode({ mode: "fly", prevMode: "walk", modeBlendAt: 0 }, 80), "walk");
+  assert.equal(locoPoseMode({ mode: "walk", prevMode: "fly", modeBlendAt: 0 }, 100), "fly");
+  assert.equal(locoPoseMode({ mode: "fly", prevMode: "walk", modeBlendAt: 0 }, 260), "fly");
   const mid = locoCadence("walk") + (locoCadence("run") - locoCadence("walk")) * gaitBlendAmt(0, 130);
   assert.ok(mid > 110 && mid < 180, "walk↔run cadence should ease through MODE_BLEND");
 });
