@@ -22,6 +22,9 @@ const SCENERY_PROP_XS = [380,760,1110,1490,1810,2190,2570,2940,3310,3710,4100,45
 const CARD_FLOOR_INSET = 22;
 const CARD_WALL_CLEAR = 28;
 
+const PH = 92;
+const PW = 46;
+
 const cardBlockedAt = (plats, map, x) => {
   if (SCENERY_PROP_XS.some((px) => Math.abs(px - x) < CARD_WALL_CLEAR)) return true;
   if (map === 6) {
@@ -34,10 +37,20 @@ const cardBlockedAt = (plats, map, x) => {
   return x < plat.x + CARD_FLOOR_INSET || x > plat.x + plat.w - CARD_FLOOR_INSET;
 };
 
+const standingInsideStone = (plats, x, ground) => {
+  const head = ground - PH;
+  return plats.some((p) => p.h <= 24 && x + PW * 0.5 > p.x && x - PW * 0.5 < p.x + p.w && p.y < ground - 2 && p.y + p.h > head + 2);
+};
+
 const plantedFloorAt = (plats, width, x, map = 0) => {
   let px = Math.max(48, Math.min(width - 48, x));
   const hit = (nx) => surfaceAt(plats, nx);
-  const clear = (nx) => hit(nx) != null && !cardBlockedAt(plats, map, nx) ? hit(nx) : null;
+  const clear = (nx) => {
+    const g = hit(nx);
+    if (g == null || cardBlockedAt(plats, map, nx)) return null;
+    if (standingInsideStone(plats, nx, g)) return null;
+    return g;
+  };
   if (clear(px) != null) return { x: px, groundY: clear(px) };
   for (let d = 8; d <= 420; d += 8) {
     const left = px - d, right = px + d;
@@ -120,6 +133,7 @@ test("card floors plant onto solid ground and stay inside the map for E pickup",
       assert.notEqual(surfaceAt(map.plats, floor.x), null, `map ${drop.map} planted card x=${floor.x} needs road`);
       assert.ok(Math.abs(floor.x - x) < 400 || surfaceAt(map.plats, x) == null, `map ${drop.map} plant should stay near the fall`);
       assert.equal(cardBlockedAt(map.plats, drop.map, floor.x), false, `map ${drop.map} planted card x=${floor.x} stays off walls and perch lips`);
+      assert.equal(standingInsideStone(map.plats, floor.x, floor.groundY), false, `map ${drop.map} planted card x=${floor.x} clears thin stones`);
     }
   }
 
