@@ -239,7 +239,7 @@ test("locks hold: Moon Night, planted helpers, PR #10 numbers, no dating, no map
 test("maps 5–6 studyable tags keep stroked PRESS E out of late shade", () => {
   assert.match(game, /const drawCardPressE=\(x:number,y:number\)=>\{/);
   assert.match(game, /const drawLateStudyableTag=\(x:number,y:number,label:string\)=>\{/);
-  assert.match(game, /ctx\.strokeStyle="rgba\(7,3,16,\.9\)";ctx\.strokeText\(label,x,y\)/);
+  assert.match(game, /ctx\.lineWidth=late\?4:3;ctx\.strokeStyle=late\?"rgba\(6,2,4,\.96\)":"rgba\(7,3,16,\.9\)";ctx\.strokeText\(label,x,y\)/);
   assert.match(game, /ctx\.fillStyle="#fff6d2";ctx\.fillText\(label,x,y\)/);
   assert.match(game, /drawCardPressE\(x,y\+3\)/);
   assert.match(game, /if\(labeled\)drawLateStudyableTag\(x,groundY-78\*scale,"KILN"\)/);
