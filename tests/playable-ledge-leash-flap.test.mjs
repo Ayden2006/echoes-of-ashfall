@@ -182,7 +182,7 @@ test("softlock markers and PR #10 / #19–#34 helpers stay put", () => {
   assert.match(game, /const drawCardPressE=\(x:number,y:number\)=>\{/);
   assert.match(game, /const lateMapContactShade = \(map:MapId\) => map===5/);
   assert.match(game, /if\(ally\.y>ally\.groundY\+28\)ally\.y=ally\.groundY/);
-  assert.match(game, /if\(pl\.y>WORLD_H\+80\)\{pl\.x=Math\.max\(120,pl\.x-180\);pl\.y=240/);
+  assert.match(game, /if\(pl\.y>WORLD_H\+80\)\{const floor=plantedFloorAt\(map,Math\.max\(120,pl\.x-180\)\);pl\.x=floor\.x;pl\.y=plantedYAt\(map,floor\.x\)/);
   assert.match(game, /const COMPANION_HUNT_RANGE = 520/);
   assert.match(game, /const COMPANION_STRIKE_RANGE = 132/);
   assert.match(game, /const COMPANION_STRIKE_DAMAGE = 5/);

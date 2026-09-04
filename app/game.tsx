@@ -1229,8 +1229,10 @@ export default function AshfallGame() {
     if(ally.active&&ally.itemId){
       const now=performance.now();
       const groundAlly=cardStats(ally.itemId).ground;
-      ally.map=map;ally.x=creatureEdgeAt(map,pl.x-pl.facing*96);
-      const arrivalGround=surfaceYAt(map,ally.x,pl.y+PH)??surfaceYAt(map,pl.x,590)??pl.y+PH;
+      ally.map=map;
+      const seat=plantedFloorAt(map,pl.x-pl.facing*96);
+      ally.x=creatureEdgeAt(map,seat.x);
+      const arrivalGround=seat.groundY; // companion portal reseat still plants after #38 floors
       rememberModeChange(ally,groundAlly?"run":"fly",now);
       ally.groundY=arrivalGround;
       ally.y=groundAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.facing=pl.facing;
@@ -2171,8 +2173,10 @@ export default function AshfallGame() {
       }
       const groundAlly=cardStats(ally.itemId).ground;
       if(ally.map!==map){
-        ally.map=map;ally.x=creatureEdgeAt(map,pl.x-pl.facing*96);
-        const reseatGround=companionSurfaceAt(ally.x,pl.y+PH,map)??surfaceYAt(map,ally.x,590)??pl.y+PH;
+        ally.map=map;
+        const seat=plantedFloorAt(map,pl.x-pl.facing*96);
+        ally.x=creatureEdgeAt(map,seat.x);
+        const reseatGround=seat.groundY; // companion portal reseat still plants after #38 floors
         ally.groundY=reseatGround;ally.y=groundAlly?reseatGround:reseatGround-52;ally.vx=0;
         setCompanionMode(groundAlly?"run":"fly",now);ally.teleportAt=now;
       }
@@ -3492,7 +3496,7 @@ export default function AshfallGame() {
         pl.vy+=1180*dt;const oldBottom=pl.y+PH;const nextX=clamp(pl.x+pl.vx*dt,PLAYER_EDGE_MARGIN,activeWorldW-PLAYER_EDGE_MARGIN);if(!pl.grounded||groundAt(nextX,oldBottom)<Infinity)pl.x=nextX;pl.y+=pl.vy*dt;const newBottom=pl.y+PH,ground=groundAt(pl.x,oldBottom);
         if(pl.vy>=0&&ground<Infinity&&oldBottom<=ground+STEP_HEIGHT&&newBottom>=ground){pl.y=ground-PH;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;}else{pl.grounded=false;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
         if(wasGrounded&&!didJump&&!pl.grounded)pl.jumpsLeft=Math.min(pl.jumpsLeft,1);
-        if(pl.y>WORLD_H+80){pl.x=Math.max(120,pl.x-180);pl.y=240;pl.vy=0;pl.grounded=false;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}pl.step+=Math.abs(pl.vx)*dt*.048;
+        if(pl.y>WORLD_H+80){const floor=plantedFloorAt(map,Math.max(120,pl.x-180));pl.x=floor.x;pl.y=plantedYAt(map,floor.x);pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}pl.step+=Math.abs(pl.vx)*dt*.048;
       }else{pl.vx*=.82;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
       const castState=companionCastRef.current;
       const castDuration=castState.kind==="recall"?COMPANION_RECALL_DURATION:COMPANION_SUMMON_DURATION;

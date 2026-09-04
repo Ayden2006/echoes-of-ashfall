@@ -117,7 +117,7 @@ test("softlock markers: maps 1–6 stay gapless after stones/east scenery, porta
   assert.match(game, /const MAP6_PULSE_X = 4400/);
   assert.match(game, /const MAP5_EAST_SCENERY_XS = \[5720,5935\] as const/);
   assert.match(game, /const MAP6_EAST_SCENERY_XS = \[6220,6395\] as const/);
-  assert.match(game, /if\(pl\.y>WORLD_H\+80\)\{pl\.x=Math\.max\(120,pl\.x-180\);pl\.y=240/);
+  assert.match(game, /if\(pl\.y>WORLD_H\+80\)\{const floor=plantedFloorAt\(map,Math\.max\(120,pl\.x-180\)\);pl\.x=floor\.x;pl\.y=plantedYAt\(map,floor\.x\)/);
   assert.match(game, /if\(ally\.y>ally\.groundY\+28\)ally\.y=ally\.groundY/);
   assert.match(game, /if\(creature\.y>ground\+28\)creature\.y=ground/);
   assert.match(game, /if\(creature\.y>ground\)creature\.y=ground/);
