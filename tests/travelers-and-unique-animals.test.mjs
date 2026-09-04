@@ -597,10 +597,12 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
     ["orrin", 1, /plaque higher up/, /Press E there/],
     ["sera", 2, /dusk-shell/, /Press E there/],
     ["lira", 2, /drowned post/, /Press E there/],
-    ["bram", 3, /cairn/, /Press E on it/],
+    ["bram", 3, /cairn/, /Press E there if the stones feel thin/],
+    ["vess", 3, /cairn/, /Press E there if the stones feel thin/],
+    ["holt", 3, /split cairn/, /Press E there if the stones feel thin/],
     ["isk", 3, /foxfire hollow/, /Press E there/],
     ["orrin", 4, /cliff notch/, /Press E there/],
-    ["calen", 4, /moonwell/, /Press E there/],
+    ["calen", 4, /moonwell/, /Press E there if the pool feels thin/],
     ["reed", 5, /quiet kiln/, /Press E there/],
     ["isk", 5, /banked coal-bed/, /Press E there/],
     ["vess", 5, /Quiet bellows/, /Press E there/],
@@ -627,6 +629,13 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
   assert.match(againOf("edan", 6), /Bind the wyrm if you still need the pulse/);
   assert.match(againOf("edan", 6), /Press E at the cooled vein/);
   assert.match(againOf("hale", 5), /The quiet kiln still sits west\. Press E there if the coals feel thin/);
+  assert.match(againOf("calen", 1), /Press E there if the road feels thin/);
+  assert.match(againOf("orrin", 1), /Press E there if the rain feels thin/);
+  assert.match(againOf("sera", 2), /Press E there if the gold feels thin/);
+  assert.match(againOf("lira", 2), /Press E there if the light feels thin/);
+  assert.match(againOf("isk", 3), /Press E there if the ash feels thin/);
+  assert.match(againOf("orrin", 4), /Press E there if the wind feels thin/);
+  assert.doesNotMatch(againOf("bram", 3), /Press E on it/);
   assert.doesNotMatch(againOf("calen", 4), /ends the campaign|Bind the (stag|wyrm)|The east gate heals you/);
   assert.doesNotMatch(againOf("orrin", 4), /ends the campaign|Bind the (stag|wyrm)|The east gate heals you/);
   assert.doesNotMatch(againOf("isk", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
