@@ -2605,7 +2605,8 @@ export default function AshfallGame() {
       if(summon>.72&&recall<.46){
         const healthRatio=clamp(ally.health/ally.maxHealth,0,1),barY=ally.y-112;
         const huntTag=currentHuntTarget()?" · HUNT":"";
-        ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.92)";ctx.strokeText(`ALLY · ${companionName}${huntTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle=isJackal?"#ffe1b0":wyrmTint?"#ffc8d8":"#d9ffb0";ctx.fillText(`ALLY · ${companionName}${huntTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);
+        const late=lateMapContactShade(mapRef.current);
+        ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(2,6,8,.92)";ctx.strokeText(`ALLY · ${companionName}${huntTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle=isJackal?"#ffe1b0":wyrmTint?"#ffc8d8":"#d9ffb0";ctx.fillText(`ALLY · ${companionName}${huntTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);
         ctx.fillStyle="rgba(2,7,8,.84)";ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.fill();
         const healthGradient=ctx.createLinearGradient(ally.x-46,0,ally.x+46,0);healthGradient.addColorStop(0,"#5ed52d");healthGradient.addColorStop(1,"#b7ff57");ctx.fillStyle=healthGradient;ctx.beginPath();ctx.roundRect(ally.x-46,barY+2,92*healthRatio,3,1.5);ctx.fill();ctx.strokeStyle="rgba(190,255,132,.72)";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.stroke();ctx.restore();
       }
