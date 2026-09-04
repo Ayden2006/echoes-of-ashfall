@@ -117,19 +117,19 @@ test("after-capture lines tie each map animal to the fading signal", () => {
   assert.match(game, /That lynx was the last heat the echo could keep without going out/);
   assert.match(game, /The wyrm is the last pulse/);
   assert.match(game, /Each bound animal is a shard/);
-  assert.match(game, /You named the whole road in shards/);
-  assert.match(game, /Castle rain, shore, cairn twist, kiln, then this heart/);
+  assert.match(game, /You named the whole road in shards\. The pulse is the last name/);
   assert.match(game, /You took the dusk shard/);
   assert.match(game, /You took the leftover-fire shard/);
   assert.match(game, /You took the first spark\. The leftover road I walk is quieter now/);
   assert.match(game, /You bound the coal shard/);
-  assert.match(game, /the animals are the echo — then kiln heat and the heart altar/);
   assert.match(game, /You bound the pool shard\. The rain I listened to in the castle is finally still/);
   assert.match(game, /You took the dusk shard\. That's why this gold looks thinner/);
   assert.match(game, /You bound the last pulse\. That's every leftover step I walked/);
   assert.match(game, /Press E at the heart altar\. That ends the campaign/);
   assert.match(game, /The east gate heals you\. Talk to Kest/);
   assert.match(game, /The east gate heals you\. Reed's kiln is through it/);
+  assert.doesNotMatch(game, /Castle rain, shore, cairn twist, kiln, then this heart/);
+  assert.doesNotMatch(game, /the animals are the echo — then kiln heat and the heart altar/);
 });
 
 test("combat-only extras never flash a second card", () => {

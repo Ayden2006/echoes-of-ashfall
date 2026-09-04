@@ -724,9 +724,46 @@ test("afterCaptureTalk treats bound animals as echo shards, not quarry", () => {
   assert.equal(afterBlocks.length, 35);
   for (const block of afterBlocks) {
     assert.doesNotMatch(block, /\bhunt(?:ing|s)?\b|\bkill(?:ed|s|ing)?\b/i);
+    assert.doesNotMatch(block, /Castle rain, shore|the animals are the echo —|Spark, dusk, leftover|cairn twist —/);
   }
   assert.match(game, /That dragon wasn't quarry\. It was the first spark of the signal/);
   assert.match(game, /the signal isn't quarry\. We're carrying it/);
   assert.match(game, /Shards, not quarry/);
   assert.match(game, /Each bound animal is a shard/);
+});
+
+test("afterCaptureTalk gives each map bind a distinct echo-shard flavor", () => {
+  const afterOf = (id, map) => {
+    const block = npcBlock(id, map);
+    return block.slice(block.indexOf("afterCaptureTalk:["), block.indexOf("palette:"));
+  };
+  const roster = [
+    [1, ["calen", "orrin", "tamsin", "maer", "wren", "rowan"], /first spark/i, /rain/i],
+    [2, ["sera", "nia", "lira", "perrin", "dell"], /dusk/i, /dusk shard|dusk of the signal|took the dusk/i],
+    [3, ["bram", "vess", "holt", "isk"], /leftover fire|foxfire|cairn/i, /leftover fire|foxfire/i],
+    [4, ["calen", "orrin", "lira", "wren", "ryn"], /pool|moonwell/i, /pool|moonwell/i],
+    [5, ["reed", "sera", "vess", "tamsin", "maer", "perrin", "isk", "ryn"], /kiln heat|last heat|coal shard|coal pelt/i, /heat|coal/i],
+    [6, ["kest", "bram", "nia", "holt", "dell", "rowan", "edan"], /pulse/i, /last pulse|Heart Wyrm/i],
+  ];
+  const endingDump = /ends the campaign|Press E at the (heart )?altar/;
+  const otherShards = {
+    1: /dusk shard|leftover-fire shard|pool shard|coal shard|last pulse/,
+    2: /first spark|leftover-fire shard|pool shard|coal shard|last pulse/,
+    3: /first spark|dusk shard|pool shard|coal shard|last pulse/,
+    4: /first spark|dusk shard|leftover-fire shard|coal shard|last pulse/,
+    5: /first spark|dusk shard|pool shard|last pulse/,
+    6: /first spark|dusk shard|leftover-fire shard|pool shard|coal shard/,
+  };
+
+  for (const [map, ids, flavor, shard] of roster) {
+    for (const id of ids) {
+      const after = afterOf(id, map);
+      assert.match(after, flavor, `${id}:${map} afterCapture should keep this bind's flavor`);
+      assert.match(after, shard, `${id}:${map} afterCapture should name this bind's shard`);
+      assert.doesNotMatch(after, otherShards[map], `${id}:${map} afterCapture should not borrow other binds' shards`);
+      if (map <= 4) {
+        assert.doesNotMatch(after, endingDump, `${id}:${map} afterCapture should not dump the heart-altar ending`);
+      }
+    }
+  }
 });
