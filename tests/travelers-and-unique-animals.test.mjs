@@ -292,10 +292,10 @@ test("new road people stand on existing maps without overlapping talks", () => {
     { id: "calen", map: 1, x: 820 },
     { id: "orrin", map: 1, x: 2280 },
     { id: "sera", map: 2, x: 480 },
-    { id: "nia", map: 2, x: 1180 },
+    { id: "nia", map: 2, x: 4360 },
     { id: "bram", map: 3, x: 480 },
     { id: "vess", map: 3, x: 5140 },
-    { id: "orrin", map: 4, x: 1680 },
+    { id: "orrin", map: 4, x: 650 },
     { id: "calen", map: 4, x: 3180 },
     { id: "reed", map: 5, x: 760 },
     { id: "vess", map: 5, x: 2380 },
@@ -307,15 +307,15 @@ test("new road people stand on existing maps without overlapping talks", () => {
     { id: "nia", map: 6, x: 3280 },
     { id: "lira", map: 2, x: 2480 },
     { id: "lira", map: 4, x: 4480 },
-    { id: "holt", map: 3, x: 2640 },
+    { id: "holt", map: 3, x: 3800 },
     { id: "holt", map: 6, x: 2260 },
     { id: "maer", map: 1, x: 5480 },
     { id: "maer", map: 5, x: 3600 },
     { id: "perrin", map: 2, x: 4000 },
     { id: "perrin", map: 5, x: 3080 },
-    { id: "wren", map: 1, x: 1550 },
+    { id: "wren", map: 1, x: 1200 },
     { id: "wren", map: 4, x: 5200 },
-    { id: "dell", map: 2, x: 3240 },
+    { id: "dell", map: 2, x: 3680 },
     { id: "dell", map: 6, x: 4180 },
     { id: "isk", map: 3, x: 1820 },
     { id: "isk", map: 5, x: 1770 },
@@ -388,10 +388,10 @@ test("late-map E-talk guides the finish and does not block portals or the altar"
   assert.match(npcBlock("lira", 4), /The east gate heals you/);
   assert.match(npcBlock("wren", 4), /The east gate heals you/);
   const people = [
-    { map: 1, x: 820 }, { map: 1, x: 1550 }, { map: 1, x: 2280 }, { map: 1, x: 3980 }, { map: 1, x: 4730 }, { map: 1, x: 5480 },
-    { map: 2, x: 480 }, { map: 2, x: 1180 }, { map: 2, x: 2480 }, { map: 2, x: 3240 }, { map: 2, x: 4000 },
-    { map: 3, x: 480 }, { map: 3, x: 1820 }, { map: 3, x: 2640 }, { map: 3, x: 5140 },
-    { map: 4, x: 1680 }, { map: 4, x: 3180 }, { map: 4, x: 4480 }, { map: 4, x: 5200 }, { map: 4, x: 5565 },
+    { map: 1, x: 820 }, { map: 1, x: 1200 }, { map: 1, x: 2280 }, { map: 1, x: 3980 }, { map: 1, x: 4730 }, { map: 1, x: 5480 },
+    { map: 2, x: 480 }, { map: 2, x: 2480 }, { map: 2, x: 3680 }, { map: 2, x: 4000 }, { map: 2, x: 4360 },
+    { map: 3, x: 480 }, { map: 3, x: 1820 }, { map: 3, x: 3800 }, { map: 3, x: 5140 },
+    { map: 4, x: 650 }, { map: 4, x: 3180 }, { map: 4, x: 4480 }, { map: 4, x: 5200 }, { map: 4, x: 5565 },
     { map: 5, x: 760 }, { map: 5, x: 1770 }, { map: 5, x: 2380 }, { map: 5, x: 3080 }, { map: 5, x: 3600 }, { map: 5, x: 4880 }, { map: 5, x: 5300 }, { map: 5, x: 5720 },
     { map: 6, x: 920 }, { map: 6, x: 1480 }, { map: 6, x: 2260 }, { map: 6, x: 2770 }, { map: 6, x: 3280 }, { map: 6, x: 4180 }, { map: 6, x: 4900 },
   ];
@@ -423,6 +423,32 @@ test("late-map E-talk guides the finish and does not block portals or the altar"
     if (map === 5) assert.match(firstTalk, /The east gate heals you/, `${id}:5 firstTalk should say the east gate heals`);
     else assert.match(firstTalk, /The gate behind you still heals/, `${id}:6 firstTalk should say the west gate still heals`);
   }
+});
+
+test("early and mid-road firstTalk quietly teaches the road without map-1 ending dump", () => {
+  const early = [
+    ["calen", 1], ["wren", 1], ["orrin", 1], ["tamsin", 1], ["rowan", 1], ["maer", 1],
+    ["sera", 2], ["lira", 2], ["dell", 2], ["perrin", 2], ["nia", 2],
+    ["bram", 3], ["isk", 3], ["holt", 3], ["vess", 3],
+    ["orrin", 4], ["calen", 4], ["lira", 4], ["wren", 4], ["ryn", 4],
+  ];
+  for (const [id, map] of early) {
+    const block = npcBlock(id, map);
+    const firstTalk = block.slice(block.indexOf("firstTalk:["), block.indexOf("againTalk:["));
+    assert.match(firstTalk, /the animals are the echo/i, `${id}:${map} firstTalk should name the echo`);
+    assert.match(firstTalk, /Bind /, `${id}:${map} firstTalk should say to bind`);
+    assert.match(firstTalk, /then go east/, `${id}:${map} firstTalk should send the player east`);
+    if (map <= 3) {
+      assert.match(firstTalk, /The east portal heals you/, `${id}:${map} firstTalk should say the east portal heals`);
+      assert.doesNotMatch(firstTalk, /ends the campaign|heart altar/, `${id}:${map} firstTalk should not dump the ending`);
+    } else {
+      assert.match(firstTalk, /The east gate heals you/, `${id}:${map} firstTalk should say the east gate heals`);
+    }
+  }
+  const calenCastle = npcBlock("calen", 1);
+  const calenFirst = calenCastle.slice(calenCastle.indexOf("firstTalk:["), calenCastle.indexOf("againTalk:["));
+  assert.match(calenFirst, /press E, then Q/i);
+  assert.doesNotMatch(calenFirst, /Reed|Kest|kiln|wyrm|altar/);
 });
 
 test("E-talk radii stay clear of high secrets and each other", () => {
@@ -463,6 +489,49 @@ test("E-talk radii stay clear of high secrets and each other", () => {
       for (let j = i + 1; j < row.length; j++) {
         assert.ok(Math.abs(row[i].x - row[j].x) >= 300, `map ${map} talks overlap: ${row[i].id} and ${row[j].id}`);
       }
+    }
+  }
+
+  const floorSecrets = [
+    { map: 1, id: "groove", x: 3360, r: 130 },
+    { map: 2, id: "post", x: 2050, r: 130 },
+    { map: 3, id: "cairn", x: 2140, r: 130 },
+    { map: 4, id: "notch", x: 980, r: 130 },
+    { map: 4, id: "moonwell", x: 2360, r: 140 },
+  ];
+  for (const npc of npcs) {
+    for (const secret of floorSecrets.filter((mark) => mark.map === npc.map)) {
+      assert.ok(
+        Math.abs(npc.x - secret.x) >= npc.r + secret.r,
+        `${npc.id} on map ${npc.map} at ${npc.x} blocks floor secret ${secret.id} at ${secret.x}`
+      );
+    }
+  }
+
+  const altarX = 6470;
+  const altarR = 200;
+  for (const npc of npcs.filter((person) => person.map === 6)) {
+    assert.ok(
+      Math.abs(npc.x - altarX) >= npc.r + altarR,
+      `${npc.id} on map 6 at ${npc.x} sits in the altar interact range`
+    );
+  }
+
+  const cardHunts = [
+    { map: 1, id: "baby-dragon", min: 1475, max: 1990 },
+    { map: 2, id: "jackal-a", min: 720, max: 1280 },
+    { map: 2, id: "jackal-b", min: 1580, max: 2280 },
+    { map: 2, id: "jackal-c", min: 2520, max: 3320 },
+    { map: 3, id: "fox-a", min: 620, max: 1480 },
+    { map: 3, id: "fox-b", min: 2100, max: 3300 },
+    { map: 4, id: "stag-a", min: 1180, max: 2680 },
+  ];
+  for (const npc of npcs) {
+    for (const hunt of cardHunts.filter((pack) => pack.map === npc.map)) {
+      assert.ok(
+        npc.x < hunt.min || npc.x > hunt.max,
+        `${npc.id} on map ${npc.map} at ${npc.x} sits in ${hunt.id} card-drop patrol ${hunt.min}-${hunt.max}`
+      );
     }
   }
 });

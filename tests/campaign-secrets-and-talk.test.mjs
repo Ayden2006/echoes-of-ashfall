@@ -37,6 +37,8 @@ test("later-map traveler talk is keyed per map so first/again/afterCapture all p
   assert.match(game, /That ends the campaign/);
   assert.match(game, /The animals are the echo\. Bind one, then go east/);
   assert.match(game, /The gate behind you still heals\. Press E at the heart altar/);
+  assert.match(game, /The east portal heals you/);
+  assert.match(game, /Bind it, then go east\. The east portal heals you/);
 });
 
 test("existing unique animals stay on the card + E/Q pattern, with extra on-map fights", () => {
