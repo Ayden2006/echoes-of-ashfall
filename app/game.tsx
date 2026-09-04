@@ -77,6 +77,9 @@ const nearestHuntTarget = <T extends HuntTarget>(fromX:number, hostiles:T[], ran
   return best;
 };
 const chaseBounds = (angry:boolean, patrolMin:number, patrolMax:number, mapW:number) => angry?{min:Math.max(48,patrolMin-EXTRA_CHASE_LEEWAY),max:Math.min(mapW-48,patrolMax+EXTRA_CHASE_LEEWAY)}:{min:patrolMin,max:patrolMax};
+const PORTAL_PROMPT_RANGE = 145;
+const BEAST_ATTACK_VERTICAL = 110;
+const nearPortalAt = (x:number, portalX:number) => Math.abs(x-(portalX+55))<PORTAL_PROMPT_RANGE;
 const ASSET_BASE = ((import.meta as ImportMeta & {env?:{BASE_URL?:string}}).env?.BASE_URL || "/").replace(/\/?$/, "/");
 const assetUrl = (file:string) => ASSET_BASE + file.replace(/^\//, "");
 const MAX_HEALTH = 100;
@@ -110,6 +113,7 @@ const JACKAL_MAX_HEALTH = 70;
 const JACKAL_ATTACK_DAMAGE = 8;
 const JACKAL_SIGHT_RANGE = 620;
 const JACKAL_ATTACK_RANGE = 118;
+const beastCanStrikePlayer = (beast:{x:number;y:number}, pl:{x:number;y:number}, range=JACKAL_ATTACK_RANGE, vertical=BEAST_ATTACK_VERTICAL) => Math.abs(pl.x-beast.x)<=range && Math.abs((pl.y+42)-beast.y)<vertical;
 const JACKAL_RENDER_SIZE = 92;
 const SUNSET_JACKAL_CARD:InventoryItem = {
   id:"sunset-jackal-card",name:"Sunset Jackal",type:"animal-card",description:"A dusk-born shard of the fading signal from the sunset shore.",image:assetUrl("/sunset-jackal-card.svg"),
@@ -826,16 +830,16 @@ const map1Platforms: Platform[] = [
   {x:5100,y:560,w:720,h:210},{x:5740,y:590,w:680,h:180},{x:6340,y:545,w:860,h:225},
   {x:1020,y:475,w:170,h:18},{x:1600,y:490,w:150,h:18},{x:1740,y:430,w:140,h:18},
   {x:2260,y:470,w:160,h:18},{x:2448,y:428,w:150,h:18},
-  {x:2588,y:382,w:210,h:18},{x:3320,y:455,w:180,h:18},{x:3780,y:430,w:170,h:18},
+  {x:2588,y:382,w:210,h:18},{x:2780,y:468,w:150,h:18},{x:3320,y:455,w:180,h:18},{x:3780,y:430,w:170,h:18},
   {x:5280,y:470,w:170,h:18},{x:5860,y:455,w:160,h:18},
-  {x:6380,y:500,w:150,h:18},{x:6520,y:430,w:170,h:18}
+  {x:6380,y:500,w:150,h:18},{x:6520,y:430,w:170,h:18},{x:6680,y:500,w:150,h:18}
 ];
 const map2Platforms: Platform[] = [
   {x:0,y:590,w:535,h:180},{x:500,y:568,w:470,h:202},{x:940,y:588,w:410,h:182},
   {x:1320,y:562,w:455,h:208},{x:1740,y:538,w:430,h:232},{x:2140,y:560,w:430,h:210},
   {x:2540,y:585,w:420,h:185},{x:2925,y:558,w:405,h:212},{x:3295,y:578,w:520,h:192},
   {x:3740,y:562,w:520,h:208},{x:4180,y:548,w:520,h:222},{x:4620,y:570,w:420,h:200},{x:4960,y:558,w:440,h:212},
-  {x:610,y:466,w:150,h:18},{x:1140,y:472,w:180,h:18},{x:1418,y:498,w:160,h:18},{x:1515,y:430,w:155,h:18},
+  {x:610,y:466,w:150,h:18},{x:1140,y:472,w:180,h:18},{x:1418,y:498,w:160,h:18},{x:1515,y:430,w:155,h:18},{x:1680,y:498,w:150,h:18},
   {x:2245,y:445,w:200,h:18},{x:2360,y:448,w:155,h:18},{x:2750,y:468,w:165,h:18},{x:3140,y:438,w:150,h:18},
   {x:3920,y:458,w:160,h:18},{x:4480,y:448,w:170,h:18},
   {x:5080,y:500,w:140,h:18},{x:5180,y:432,w:160,h:18}
@@ -845,27 +849,27 @@ const map3Platforms: Platform[] = [
   {x:1430,y:548,w:520,h:222},{x:1910,y:575,w:500,h:195},{x:2370,y:535,w:520,h:235},
   {x:2850,y:580,w:500,h:190},{x:3310,y:548,w:690,h:222},
   {x:3920,y:575,w:620,h:195},{x:4480,y:540,w:620,h:230},{x:5040,y:565,w:760,h:205},
-  {x:620,y:448,w:180,h:18},{x:1170,y:475,w:170,h:18},{x:1400,y:488,w:150,h:18},{x:1510,y:418,w:200,h:18},
+  {x:620,y:448,w:180,h:18},{x:1170,y:475,w:170,h:18},{x:1400,y:488,w:150,h:18},{x:1510,y:418,w:200,h:18},{x:1690,y:488,w:150,h:18},
   {x:2160,y:446,w:180,h:18},{x:1780,y:400,w:170,h:18},{x:2520,y:410,w:190,h:18},
   {x:3150,y:452,w:175,h:18},{x:3540,y:420,w:190,h:18},{x:4080,y:448,w:170,h:18},
-  {x:4380,y:500,w:140,h:18},{x:4500,y:430,w:160,h:18}
+  {x:4380,y:500,w:140,h:18},{x:4500,y:430,w:160,h:18},{x:4640,y:500,w:140,h:18}
 ];
 const map4Platforms: Platform[] = [
   {x:0,y:590,w:1180,h:180},{x:1140,y:560,w:980,h:210},{x:2080,y:575,w:900,h:195},{x:2940,y:545,w:1260,h:225},
   {x:4100,y:560,w:720,h:210},{x:4760,y:545,w:720,h:225},{x:5420,y:555,w:580,h:215},
   {x:720,y:455,w:160,h:18},{x:1080,y:500,w:140,h:18},{x:1220,y:435,w:160,h:18},
-  {x:1760,y:430,w:180,h:18},{x:2460,y:508,w:140,h:18},{x:2580,y:440,w:170,h:18},
+  {x:1760,y:430,w:180,h:18},{x:2460,y:508,w:140,h:18},{x:2580,y:440,w:170,h:18},{x:2720,y:508,w:140,h:18},
   {x:2860,y:420,w:190,h:18},{x:3480,y:400,w:170,h:18},{x:3720,y:480,w:150,h:18},{x:3880,y:418,w:160,h:18},
-  {x:4680,y:450,w:170,h:18},{x:5320,y:430,w:160,h:18}
+  {x:4680,y:450,w:170,h:18},{x:5200,y:500,w:140,h:18},{x:5320,y:430,w:160,h:18}
 ];
 const map5Platforms: Platform[] = [
   {x:0,y:590,w:1280,h:180},{x:1180,y:570,w:820,h:200},{x:1900,y:590,w:780,h:180},
   {x:2560,y:565,w:720,h:205},{x:3160,y:575,w:640,h:195},{x:3700,y:555,w:700,h:215},
   {x:4320,y:575,w:680,h:195},{x:4940,y:560,w:680,h:210},{x:5560,y:550,w:640,h:220},
-  {x:720,y:455,w:160,h:18},{x:1360,y:508,w:140,h:18},{x:1480,y:440,w:170,h:18},
+  {x:720,y:455,w:160,h:18},{x:1360,y:508,w:140,h:18},{x:1480,y:440,w:170,h:18},{x:1620,y:508,w:140,h:18},
   {x:2180,y:455,w:180,h:18},{x:1760,y:430,w:160,h:18},{x:2880,y:430,w:160,h:18},{x:3480,y:420,w:150,h:18},
   {x:4680,y:450,w:160,h:18},{x:5220,y:440,w:150,h:18},
-  {x:5640,y:488,w:150,h:18},{x:5780,y:422,w:160,h:18}
+  {x:5640,y:488,w:150,h:18},{x:5780,y:422,w:160,h:18},{x:5920,y:488,w:140,h:18}
 ];
 const map6Platforms: Platform[] = [
   {x:0,y:590,w:1180,h:180},{x:1140,y:560,w:780,h:210},{x:1920,y:590,w:1160,h:180},
@@ -874,7 +878,7 @@ const map6Platforms: Platform[] = [
   {x:720,y:455,w:160,h:18},{x:1680,y:425,w:180,h:18},{x:2680,y:415,w:190,h:18},
   {x:3380,y:430,w:180,h:18},{x:3480,y:400,w:200,h:18},
   {x:4880,y:450,w:170,h:18},{x:5280,y:430,w:160,h:18},
-  {x:5780,y:490,w:150,h:18},{x:5920,y:430,w:180,h:18},
+  {x:5780,y:490,w:150,h:18},{x:5920,y:430,w:180,h:18},{x:6080,y:490,w:150,h:18},
   {x:6160,y:490,w:150,h:18},{x:6300,y:430,w:160,h:18}
 ];
 const clamp = (n:number,a:number,b:number) => Math.max(a,Math.min(b,n));
@@ -905,7 +909,7 @@ const hopArc = (t:number, height:number)=>{
 };
 const SLEEP_SETTLE_MS = 420;
 const WAKE_BLEND_MS = 340;
-const HURT_FLASH_MS = 70;
+const HURT_FLASH_MS = 90;
 const sleepPoseAmt = (mode:DragonMode, prevMode:DragonMode, blendAt:number, now:number, elapsed:number) => {
   if(mode==="sleep") return easeInOut(clamp(elapsed/SLEEP_SETTLE_MS,0,1));
   if(prevMode==="sleep") return 1-easeInOut(clamp((now-blendAt)/WAKE_BLEND_MS,0,1));
@@ -1137,16 +1141,16 @@ export default function AshfallGame() {
       return;
     }
     if(target.landmark){showDialogue(target.landmark.lines);return;}
-    if(map===1&&Math.abs(x-(MAP1_PORTAL_X+55))<145) enterMap(2,1);
-    else if(map===2&&Math.abs(x-(MAP2_PORTAL_X+55))<145) enterMap(1,2);
-    else if(map===2&&Math.abs(x-(MAP2_EXIT_X+55))<145) enterMap(3,2);
-    else if(map===3&&Math.abs(x-(MAP3_ENTRY_X+55))<145) enterMap(2,3);
-    else if(map===3&&Math.abs(x-(MAP3_EXIT_X+55))<145) enterMap(4,3);
-    else if(map===4&&Math.abs(x-(MAP4_ENTRY_X+55))<145) enterMap(3,4);
-    else if(map===4&&Math.abs(x-(MAP4_EXIT_X+55))<145) enterMap(5,4);
-    else if(map===5&&Math.abs(x-(MAP5_ENTRY_X+55))<145) enterMap(4,5);
-    else if(map===5&&Math.abs(x-(MAP5_EXIT_X+55))<145) enterMap(6,5);
-    else if(map===6&&Math.abs(x-(MAP6_ENTRY_X+55))<145) enterMap(5,6);
+    if(map===1&&nearPortalAt(x,MAP1_PORTAL_X)) enterMap(2,1);
+    else if(map===2&&nearPortalAt(x,MAP2_PORTAL_X)) enterMap(1,2);
+    else if(map===2&&nearPortalAt(x,MAP2_EXIT_X)) enterMap(3,2);
+    else if(map===3&&nearPortalAt(x,MAP3_ENTRY_X)) enterMap(2,3);
+    else if(map===3&&nearPortalAt(x,MAP3_EXIT_X)) enterMap(4,3);
+    else if(map===4&&nearPortalAt(x,MAP4_ENTRY_X)) enterMap(3,4);
+    else if(map===4&&nearPortalAt(x,MAP4_EXIT_X)) enterMap(5,4);
+    else if(map===5&&nearPortalAt(x,MAP5_ENTRY_X)) enterMap(4,5);
+    else if(map===5&&nearPortalAt(x,MAP5_EXIT_X)) enterMap(6,5);
+    else if(map===6&&nearPortalAt(x,MAP6_ENTRY_X)) enterMap(5,6);
     else if(map===6&&atHeartAltar(x)){
       if(!campaignEndedRef.current){campaignEndedRef.current=true;setCampaignEnded(true);}
       setObjective(lateObjectiveFor(6,inventoryRef.current.map(item=>item.id),true));
@@ -1932,6 +1936,8 @@ export default function AshfallGame() {
           jackal.vx+=(0-jackal.vx)*(1-Math.exp(-9*dt));
           const lunge=clamp((now-jackal.modeStarted-280)/220,0,1);
           jackal.x+=jackal.facing*lunge*92*dt*3.2;
+          const lungeBound=chaseBounds(jackal.angry,jackal.patrolMin,jackal.patrolMax,worldWidthFor(mapRef.current));
+          jackal.x=clamp(jackal.x,lungeBound.min,lungeBound.max);
           jackal.y+=(jackal.groundY-8-hopArc(lunge,22)-jackal.y)*(1-Math.exp(-10*dt));
           if(!jackal.attackLanded&&now-jackal.modeStarted>420){
             const forward=(pl.x-jackal.x)*jackal.facing;
@@ -1947,7 +1953,7 @@ export default function AshfallGame() {
           }
           if(now>=jackal.modeUntil){
             if(jackal.angry&&pl.health>0&&sightDistance<=JACKAL_SIGHT_RANGE){
-              if(playerDistance<=JACKAL_ATTACK_RANGE+12)jackalCounterAttack(jackal,now);
+              if(beastCanStrikePlayer(jackal,pl,JACKAL_ATTACK_RANGE+12,BEAST_ATTACK_VERTICAL+12))jackalCounterAttack(jackal,now);
               else{const bounds=chaseBounds(true,jackal.patrolMin,jackal.patrolMax,worldWidthFor(mapRef.current));jackal.targetX=clamp(pl.x,bounds.min,bounds.max);beginJackalMode(jackal,"run",now,800);jackal.facing=pl.x>=jackal.x?1:-1;}
             }else{jackal.angry=false;beginJackalMode(jackal,"idle",now,1200);jackal.facing=pl.x>=jackal.x?1:-1;}
           }
@@ -1955,7 +1961,7 @@ export default function AshfallGame() {
         }
         if(jackal.angry){
           if(playerDistance>16)jackal.facing=pl.x>=jackal.x?1:-1;
-          if(playerDistance<=JACKAL_ATTACK_RANGE){jackalCounterAttack(jackal,now);continue;}
+          if(beastCanStrikePlayer(jackal,pl)){jackalCounterAttack(jackal,now);continue;}
           const bounds=chaseBounds(true,jackal.patrolMin,jackal.patrolMax,worldWidthFor(mapRef.current));
           jackal.targetX=clamp(pl.x,bounds.min,bounds.max);
           if(jackal.mode!=="run"&&jackal.mode!=="fly")beginJackalMode(jackal,"run",now,800);
@@ -2108,6 +2114,31 @@ export default function AshfallGame() {
         ally.facing=hunting&&hunted?(hunted.x>=ally.x?1:-1):(pl.x>=ally.x?1:-1);
       }
     };
+    const currentHuntTarget=()=>{
+      const ally=companionRef.current;
+      if(!ally?.active||!ally.itemId||ally.recallStarted>0||ally.map!==mapRef.current)return null;
+      const livePack=wildPackFor(mapRef.current)??[];
+      const mapHostiles:HuntTarget[]=mapRef.current===1&&dragon.health>0?[dragon,...livePack]:livePack;
+      return nearestHuntTarget(ally.x,mapHostiles,COMPANION_HUNT_RANGE);
+    };
+    const drawHuntMark=(x:number,y:number,now:number,marked:boolean)=>{
+      if(!marked)return;
+      const pulse=.55+Math.sin(now*.01)*.28;
+      ctx.save();ctx.translate(x,y);ctx.textAlign="center";ctx.textBaseline="bottom";
+      ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";
+      ctx.lineWidth=3;ctx.strokeStyle="rgba(4,10,6,.9)";ctx.strokeText("HUNT",0,-10);
+      ctx.fillStyle="rgba(185,255,99,"+pulse+")";ctx.fillText("HUNT",0,-10);
+      ctx.fillStyle="rgba(185,255,99,"+(.35+pulse*.35)+")";ctx.strokeStyle="rgba(185,255,99,.85)";ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(0,-6);ctx.lineTo(7,2);ctx.lineTo(0,7);ctx.lineTo(-7,2);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.restore();
+    };
+    const drawHurtNumber=(x:number,y:number,dmg:number,progress:number,fill:string)=>{
+      ctx.save();ctx.globalAlpha=Math.max(0,1-progress);ctx.textAlign="center";ctx.textBaseline="middle";
+      ctx.font="900 15px ui-monospace, SFMono-Regular, Menlo, monospace";
+      ctx.lineWidth=4;ctx.strokeStyle="rgba(8,4,8,.92)";ctx.strokeText("-"+dmg,x,y);
+      ctx.fillStyle=fill;ctx.shadowColor="rgba(255,240,180,.7)";ctx.shadowBlur=6;ctx.fillText("-"+dmg,x,y);
+      ctx.restore();
+    };
     const drawPixelJackal=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean,variant?:{tint?:BeastTint;antlers?:boolean;tufts?:boolean;kind?:BeastKind;gait?:number;prevMode?:DragonMode;modeBlendAt?:number})=>{
       const scale=size/90;
       const kind=variant?.kind??(variant?.tufts?"lynx":variant?.antlers?"stag":variant?.tint===FOX_TINT?"fox":"jackal");
@@ -2149,7 +2180,7 @@ export default function AshfallGame() {
       const map=mapRef.current;
       const rimGlow=map===1?"rgba(214,232,255,.28)":map===3?"rgba(255,168,96,.22)":map===4?"rgba(180,240,255,.28)":map===5?"rgba(255,176,96,.22)":map===6?"rgba(255,186,206,.24)":"rgba(255,220,176,.28)";
       const bellyShade=map===1?"rgba(10,14,28,.3)":map===3?"rgba(28,10,6,.28)":map===4?"rgba(6,16,24,.3)":map===5?"rgba(24,8,6,.28)":map===6?"rgba(22,8,16,.3)":"rgba(28,12,8,.26)";
-      if(hurt&&pixelHurtFlash(now))ctx.globalAlpha=.58;
+      if(hurt&&pixelHurtFlash(now))ctx.globalAlpha=.4;
       const drawLimb=(lx:number,ly:number,lw:number,lh:number,rot:number)=>{
         ctx.save();ctx.translate(lx,ly);ctx.rotate(rot);ctx.fillStyle=outline;ctx.fillRect(-lw/2-1,-1,lw+2,lh+2);ctx.fillStyle=furDark;ctx.fillRect(-lw/2,0,lw,lh);ctx.restore();
       };
@@ -2165,7 +2196,7 @@ export default function AshfallGame() {
         ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(12,-22);ctx.lineTo(16,-34);ctx.lineTo(8,-24);ctx.fill();
         ctx.fillStyle=furLight;ctx.beginPath();ctx.moveTo(12,-22);ctx.lineTo(15,-31);ctx.lineTo(9,-23);ctx.fill();
         if(kind==="lynx"){ctx.strokeStyle=furLight;ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(14,-32);ctx.lineTo(12,-40);ctx.stroke();}
-        ctx.fillStyle=eye;ctx.globalAlpha=hurt?ctx.globalAlpha:0.35;ctx.beginPath();ctx.ellipse(14,-14,2.2,1.2,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=hurt&&pixelHurtFlash(now)?.58:1;
+        ctx.fillStyle=eye;ctx.globalAlpha=hurt?ctx.globalAlpha:0.35;ctx.beginPath();ctx.ellipse(14,-14,2.2,1.2,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=hurt&&pixelHurtFlash(now)?.4:1;
         ctx.restore();return;
       }
       const frontSwing=mode==="idle"?0.06+idleBreath*0.03:leap>0.12?0.85:mode==="attack"?0.2+lunge*0.9:gait*(mode==="run"?0.82:0.62);
@@ -2243,7 +2274,7 @@ export default function AshfallGame() {
       ctx.translate(x+facing*lunge*16,y-hover+curl);
       ctx.rotate(facing*(-0.18*flyAmt+(attack>0?-0.1+lunge*.3:wave*.04)*(1-flyAmt*.35)+sleepPose*.18));
       ctx.scale(facing*scale*(1+lunge*.1),(scale)*(1-sleepPose*.08-lunge*.05));
-      if(hurt&&pixelHurtFlash(now))ctx.globalAlpha=.58;
+      if(hurt&&pixelHurtFlash(now))ctx.globalAlpha=.4;
       const body="#4a2048",bodyDark="#140816",belly="#d45a6a",glow="#ffc8a0",outline="#1a0810";
       for(let i=6;i>=0;i--){
         const sx=-16-i*12,sy=-10+Math.sin(wave+i*.65)*8,sr=11-i*1.15;
@@ -2262,7 +2293,7 @@ export default function AshfallGame() {
       ctx.fillStyle=belly;ctx.beginPath();ctx.ellipse(6,-10,11,8,0,0,Math.PI*2);ctx.fill();
       ctx.save();ctx.globalAlpha=hurt?ctx.globalAlpha:.55+.4*Math.sin(now*.008);ctx.fillStyle=glow;ctx.shadowColor=glow;ctx.shadowBlur=12;
       ctx.beginPath();ctx.moveTo(4,-14);ctx.bezierCurveTo(10,-24,20,-8,4,4);ctx.bezierCurveTo(-12,-8,-2,-24,4,-14);ctx.fill();
-      ctx.restore();if(hurt&&pixelHurtFlash(now))ctx.globalAlpha=.58;
+      ctx.restore();if(hurt&&pixelHurtFlash(now))ctx.globalAlpha=.4;
       ctx.save();ctx.translate(-2,-24);ctx.rotate(-0.55+wave*.18);
       ctx.fillStyle=outline;ctx.fillRect(-2,-2,5,32);ctx.fillStyle=belly;ctx.fillRect(-1,0,3,28);ctx.fillStyle=glow;ctx.fillRect(0,16,2,10);
       ctx.restore();
@@ -2400,7 +2431,8 @@ export default function AshfallGame() {
 
       if(summon>.72&&recall<.46){
         const healthRatio=clamp(ally.health/ally.maxHealth,0,1),barY=ally.y-112;
-        ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.92)";ctx.strokeText(`ALLY · ${companionName}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle=isJackal?"#ffe1b0":wyrmTint?"#ffc8d8":"#d9ffb0";ctx.fillText(`ALLY · ${companionName}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);
+        const huntTag=currentHuntTarget()?" · HUNT":"";
+        ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=3;ctx.strokeStyle="rgba(2,6,8,.92)";ctx.strokeText(`ALLY · ${companionName}${huntTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle=isJackal?"#ffe1b0":wyrmTint?"#ffc8d8":"#d9ffb0";ctx.fillText(`ALLY · ${companionName}${huntTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);
         ctx.fillStyle="rgba(2,7,8,.84)";ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.fill();
         const healthGradient=ctx.createLinearGradient(ally.x-46,0,ally.x+46,0);healthGradient.addColorStop(0,"#5ed52d");healthGradient.addColorStop(1,"#b7ff57");ctx.fillStyle=healthGradient;ctx.beginPath();ctx.roundRect(ally.x-46,barY+2,92*healthRatio,3,1.5);ctx.fill();ctx.strokeStyle="rgba(190,255,132,.72)";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.stroke();ctx.restore();
       }
@@ -2552,7 +2584,7 @@ export default function AshfallGame() {
       }
       const breatheScale=dragon.mode==="sleep"&&index===3?1+Math.sin(now*.0032)*.012:dragon.mode==="idle"?1+Math.sin(now*.0024)*.006:dragon.mode==="fly"?1+flapPhase(gait).lift*.02:1;
       ctx.scale(dragon.facing*(1+hitSquash),breatheScale-hitSquash);ctx.imageSmoothingEnabled=true;
-      ctx.globalAlpha=hurtActive&&pixelHurtFlash(now)?.52:1;
+      ctx.globalAlpha=hurtActive&&pixelHurtFlash(now)?.4:1;
       ctx.shadowColor=hurtActive?"rgba(255,245,151,.95)":dragon.mode==="attack"?"rgba(126,255,46,.52)":dragon.angry?"rgba(255,92,58,.58)":"rgba(81,188,41,.24)";ctx.shadowBlur=hurtActive?24:dragon.mode==="attack"?16:dragon.angry?13:7;
       ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);
       ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();
@@ -2581,11 +2613,10 @@ export default function AshfallGame() {
           const inner=10+hurtProgress*7,outer=22+hurtProgress*17;
           ctx.beginPath();ctx.moveTo(impactX+Math.cos(angle)*inner,impactY+Math.sin(angle)*inner);ctx.lineTo(impactX+Math.cos(angle)*outer,impactY+Math.sin(angle)*outer);ctx.stroke();
         }
-        ctx.globalAlpha=Math.max(0,1-hurtProgress*1.15);
-        ctx.font="900 15px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textBaseline="middle";
-        ctx.fillStyle="#f4ffb0";ctx.shadowColor="rgba(80,255,46,.85)";ctx.shadowBlur=8;
-        ctx.fillText("-"+dragon.lastDamage,dragon.x+recoilX,barY-19-hurtProgress*22);
+        ctx.globalAlpha=1;
+        drawHurtNumber(dragon.x+recoilX,barY-19-hurtProgress*22,dragon.lastDamage,hurtProgress*1.15,"#f4ffb0");
       }
+      drawHuntMark(dragon.x+recoilX,barY-28,now,currentHuntTarget()===dragon);
       ctx.restore();
     };
     const drawJackalCardTransformation=(jackal:Jackal,now:number)=>{
@@ -2625,11 +2656,8 @@ export default function AshfallGame() {
         healthGradient.addColorStop(0,"#ffb347");healthGradient.addColorStop(1,"#e05a22");
         ctx.fillStyle=healthGradient;ctx.fillRect(barX,barY,barW*healthRatio,barH);
         ctx.strokeStyle="rgba(255,210,140,.7)";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barW+1,barH+1);
-        if(hurtActive){
-          ctx.globalAlpha=1-hurtProgress;
-          ctx.font="900 14px ui-monospace, SFMono-Regular, Menlo, monospace";
-          ctx.fillStyle="#ffe7a8";ctx.fillText("-"+jackal.lastDamage,jackal.x+recoilX,barY-16-hurtProgress*18);
-        }
+        if(hurtActive)drawHurtNumber(jackal.x+recoilX,barY-16-hurtProgress*18,jackal.lastDamage,hurtProgress,"#ffe7a8");
+        drawHuntMark(jackal.x+recoilX,barY-26,now,currentHuntTarget()===jackal);
         ctx.restore();
       }
     };
@@ -2664,7 +2692,8 @@ export default function AshfallGame() {
       healthGradient.addColorStop(0,"#ff7a92");healthGradient.addColorStop(1,"#d45a6a");
       ctx.fillStyle=healthGradient;ctx.fillRect(barX,barY,barW*healthRatio,barH);
       ctx.strokeStyle="rgba(255,200,216,.72)";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barW+1,barH+1);
-      if(hurtActive){ctx.globalAlpha=1-hurtProgress;ctx.font="900 15px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillStyle="#ffdfe8";ctx.fillText("-"+wyrm.lastDamage,wyrm.x+recoilX,barY-18-hurtProgress*18);}
+      if(hurtActive)drawHurtNumber(wyrm.x+recoilX,barY-18-hurtProgress*18,wyrm.lastDamage,hurtProgress,"#ffdfe8");
+      drawHuntMark(wyrm.x+recoilX,barY-28,now,currentHuntTarget()===wyrm);
       ctx.restore();
     };
     const drawGroundBeastCardTransformation=(beast:Jackal,now:number,card:InventoryItem,renderSize:number,tint?:BeastTint,antlers?:boolean,tufts?:boolean,kind?:BeastKind,showCard=true)=>{
@@ -2710,7 +2739,7 @@ export default function AshfallGame() {
         const recoilX=hurtActive?Math.sin(hurtProgress*Math.PI)*10*roost.hitDirection:0;
         ctx.save();ctx.fillStyle="rgba(1,4,5,.5)";ctx.beginPath();ctx.ellipse(roost.x,roost.groundY+3,26,5.5,0,0,Math.PI*2);ctx.fill();ctx.restore();
         ctx.save();ctx.translate(roost.x+recoilX,roost.y);ctx.scale(roost.facing,1);ctx.imageSmoothingEnabled=true;
-        ctx.globalAlpha=hurtActive&&pixelHurtFlash(now)?.52:1;
+        ctx.globalAlpha=hurtActive&&pixelHurtFlash(now)?.4:1;
         ctx.shadowColor=hurtActive?"rgba(255,245,151,.9)":roost.angry?"rgba(255,92,58,.5)":"rgba(81,188,41,.22)";ctx.shadowBlur=hurtActive?18:roost.angry?11:6;
         ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);
         ctx.restore();
@@ -2723,7 +2752,8 @@ export default function AshfallGame() {
         ctx.fillStyle="rgba(2,6,8,.9)";ctx.fillRect(barX-2,barY-2,barW+4,barH+4);
         ctx.fillStyle="#401924";ctx.fillRect(barX,barY,barW,barH);
         ctx.fillStyle="#9cf63d";ctx.fillRect(barX,barY,barW*healthRatio,barH);
-        if(hurtActive){ctx.globalAlpha=1-hurtProgress;ctx.font="900 13px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.fillStyle="#f4ffb0";ctx.fillText("-"+roost.lastDamage,roost.x+recoilX,barY-16-hurtProgress*16);}
+        if(hurtActive)drawHurtNumber(roost.x+recoilX,barY-16-hurtProgress*16,roost.lastDamage,hurtProgress,"#f4ffb0");
+        drawHuntMark(roost.x+recoilX,barY-26,now,currentHuntTarget()===roost);
         ctx.restore();
       }
     };
@@ -2762,11 +2792,8 @@ export default function AshfallGame() {
         healthGradient.addColorStop(0,"#ffb347");healthGradient.addColorStop(1,"#e05a22");
         ctx.fillStyle=healthGradient;ctx.fillRect(barX,barY,barW*healthRatio,barH);
         ctx.strokeStyle="rgba(255,210,140,.7)";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barW+1,barH+1);
-        if(hurtActive){
-          ctx.globalAlpha=1-hurtProgress;
-          ctx.font="900 14px ui-monospace, SFMono-Regular, Menlo, monospace";
-          ctx.fillStyle="#ffe7a8";ctx.fillText("-"+beast.lastDamage,beast.x+recoilX,barY-16-hurtProgress*18);
-        }
+        if(hurtActive)drawHurtNumber(beast.x+recoilX,barY-16-hurtProgress*18,beast.lastDamage,hurtProgress,"#ffe7a8");
+        drawHuntMark(beast.x+recoilX,barY-26,now,currentHuntTarget()===beast);
         ctx.restore();
       }
     };
@@ -2967,7 +2994,7 @@ export default function AshfallGame() {
         ctx.restore();
       }
     };
-    const drawPortal=(x:number,groundY:number,now:number,map:MapId,colorOverride?:string)=>{
+    const drawPortal=(x:number,groundY:number,now:number,map:MapId,colorOverride?:string,label?:string)=>{
       const cx=x+55,cy=groundY-91,pulse=.34+Math.sin(now*.0022)*.1;
       const portalColor=colorOverride??(map===1?"116,230,226":"255,185,104");
       const glow=ctx.createRadialGradient(cx,cy,4,cx,cy,185);glow.addColorStop(0,"rgba("+portalColor+","+pulse+")");glow.addColorStop(1,"rgba("+portalColor+",0)");ctx.fillStyle=glow;ctx.fillRect(cx-205,cy-205,410,410);
@@ -2978,6 +3005,18 @@ export default function AshfallGame() {
       for(let i=0;i<6;i++){
         const sy=groundY-150+((now*.035+i*29)%138);
         ctx.fillStyle="rgba("+portalColor+","+(.28+i*.045)+")";ctx.fillRect(x+29+(i*13)%46,sy,4+(i%2)*3,2);
+      }
+      if(label){
+        const near=nearPortalAt(player.current.x,x);
+        const tagPulse=.62+Math.sin(now*.003)*.22;
+        ctx.save();ctx.textAlign="center";ctx.textBaseline="bottom";
+        ctx.font="900 11px ui-monospace, SFMono-Regular, Menlo, monospace";
+        ctx.lineWidth=4;ctx.strokeStyle="rgba(6,8,10,.88)";ctx.strokeText(label,cx,groundY-188);
+        ctx.fillStyle="rgba("+portalColor+","+tagPulse+")";ctx.fillText(label,cx,groundY-188);
+        ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";
+        ctx.strokeText("PRESS E",cx,groundY-174);
+        ctx.fillStyle=near?"#fff6d2":"rgba("+portalColor+","+(.55+tagPulse*.25)+")";ctx.fillText("PRESS E",cx,groundY-174);
+        ctx.restore();
       }
     };
     const drawSecrets=(now:number)=>{
@@ -3098,7 +3137,7 @@ export default function AshfallGame() {
       }
       drawRegionalScenery(now,viewW,map);
       if(map===1){
-        drawPortal(MAP1_PORTAL_X,portalGround(MAP1_PORTAL_X),now,map);
+        drawPortal(MAP1_PORTAL_X,portalGround(MAP1_PORTAL_X),now,map,undefined,"EAST · SHORE");
         ctx.strokeStyle="rgba(61,82,96,.78)";ctx.lineWidth=3;
         for(let gx=90;gx<MAP1_W;gx+=57){
           const surface=activePlatforms.find(p=>gx>p.x&&gx<p.x+p.w&&p.h>80)?.y;
@@ -3120,8 +3159,8 @@ export default function AshfallGame() {
           const a=.22+.32*Math.sin(now*.0015+m.p);ctx.fillStyle="rgba(116,230,226,"+a+")";ctx.beginPath();ctx.arc(m.x,m.y+Math.sin(m.p+now*.001)*14,2.1,0,Math.PI*2);ctx.fill();
         }
       }else if(map===2){
-        drawPortal(MAP2_PORTAL_X,portalGround(MAP2_PORTAL_X),now,map);
-        drawPortal(MAP2_EXIT_X,portalGround(MAP2_EXIT_X),now,map);
+        drawPortal(MAP2_PORTAL_X,portalGround(MAP2_PORTAL_X),now,map,undefined,"WEST · RAIN");
+        drawPortal(MAP2_EXIT_X,portalGround(MAP2_EXIT_X),now,map,undefined,"EAST · HOLLOW");
         for(let sx=430;sx<MAP2_W;sx+=173){
           const twinkle=.18+Math.max(0,Math.sin(now*.0021+sx*.01))*.4;
           const surface=surfaceYAt(2,sx,590)??590;ctx.fillStyle="rgba(255,226,165,"+twinkle+")";ctx.fillRect(sx,surface-8-(sx%3),5+(sx%4),2);
@@ -3133,8 +3172,8 @@ export default function AshfallGame() {
         }
       }else if(map===3){
         drawAshTrees(now,viewW);
-        drawPortal(MAP3_ENTRY_X,portalGround(MAP3_ENTRY_X),now,map,"255,140,80");
-        drawPortal(MAP3_EXIT_X,portalGround(MAP3_EXIT_X),now,map,"255,140,80");
+        drawPortal(MAP3_ENTRY_X,portalGround(MAP3_ENTRY_X),now,map,"255,140,80","WEST · SHORE");
+        drawPortal(MAP3_EXIT_X,portalGround(MAP3_EXIT_X),now,map,"255,140,80","EAST · CLIFFS");
         for(let i=0;i<36;i++){
           const ax=((i*197+now*.03*(1+(i%3)))%(MAP3_W+200))-80;
           const ay=590-((now*.02*(1+i%4)+i*83)%480);
@@ -3142,8 +3181,8 @@ export default function AshfallGame() {
         }
       }else if(map===4){
         drawMoonwell(now);
-        drawPortal(MAP4_ENTRY_X,portalGround(MAP4_ENTRY_X),now,map,"142,231,255");
-        drawPortal(MAP4_EXIT_X,portalGround(MAP4_EXIT_X),now,map,"142,231,255");
+        drawPortal(MAP4_ENTRY_X,portalGround(MAP4_ENTRY_X),now,map,"142,231,255","WEST · HOLLOW");
+        drawPortal(MAP4_EXIT_X,portalGround(MAP4_EXIT_X),now,map,"142,231,255","EAST · EMBER");
         for(let sx=380;sx<MAP4_W;sx+=190){
           const twinkle=.14+Math.max(0,Math.sin(now*.0018+sx*.01))*.3;
           ctx.fillStyle="rgba(142,231,255,"+twinkle+")";ctx.fillRect(sx,538-(sx%4),4,2);
@@ -3155,8 +3194,8 @@ export default function AshfallGame() {
         }
       }else if(map===5){
         drawQuietKiln(now);
-        drawPortal(MAP5_ENTRY_X,portalGround(MAP5_ENTRY_X),now,map,"255,140,80");
-        drawPortal(MAP5_EXIT_X,portalGround(MAP5_EXIT_X),now,map,"255,140,80");
+        drawPortal(MAP5_ENTRY_X,portalGround(MAP5_ENTRY_X),now,map,"255,140,80","WEST · CLIFFS");
+        drawPortal(MAP5_EXIT_X,portalGround(MAP5_EXIT_X),now,map,"255,140,80","EAST · HEART");
         for(let i=0;i<40;i++){
           const ex=((i*211+now*.04*(1+(i%3)))%(MAP5_W+220))-110;
           const ey=590-((now*.03*(1+i%4)+i*97)%520);
@@ -3170,7 +3209,7 @@ export default function AshfallGame() {
       }else if(map===6){
         drawHeartColumns(now,viewW);
         drawCooledVein(now);
-        drawPortal(MAP6_ENTRY_X,portalGround(MAP6_ENTRY_X),now,map,"212,90,106");
+        drawPortal(MAP6_ENTRY_X,portalGround(MAP6_ENTRY_X),now,map,"212,90,106","WEST · EMBER");
         drawAshfallHeartAltar(now);
         const heartPulse=.2+Math.sin(now*.0016)*.12;
         ctx.save();ctx.globalCompositeOperation="screen";
@@ -3300,16 +3339,16 @@ export default function AshfallGame() {
         else if(readyOtherWild&&otherWildCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up "+otherWildCard.name+" card";
         else if(nearNpc)action="Talk to "+nearNpc.name;
         else if(nearLandmark)action=nearLandmark.action;
-        else if(map===1&&Math.abs(pl.x-(MAP1_PORTAL_X+55))<145)action="Enter Sunset Shore";
-        else if(map===2&&Math.abs(pl.x-(MAP2_PORTAL_X+55))<145)action="Return to The Signal in the Rain";
-        else if(map===2&&Math.abs(pl.x-(MAP2_EXIT_X+55))<145)action="Enter Ash Hollow";
-        else if(map===3&&Math.abs(pl.x-(MAP3_ENTRY_X+55))<145)action="Return to Sunset Shore";
-        else if(map===3&&Math.abs(pl.x-(MAP3_EXIT_X+55))<145)action="Enter Moonwell Cliffs";
-        else if(map===4&&Math.abs(pl.x-(MAP4_ENTRY_X+55))<145)action="Return to Ash Hollow";
-        else if(map===4&&Math.abs(pl.x-(MAP4_EXIT_X+55))<145)action="Enter The Quiet Ember";
-        else if(map===5&&Math.abs(pl.x-(MAP5_ENTRY_X+55))<145)action="Return to Moonwell Cliffs";
-        else if(map===5&&Math.abs(pl.x-(MAP5_EXIT_X+55))<145)action="Enter Ashfall's Heart";
-        else if(map===6&&Math.abs(pl.x-(MAP6_ENTRY_X+55))<145)action="Return to The Quiet Ember";
+        else if(map===1&&nearPortalAt(pl.x,MAP1_PORTAL_X))action="Enter Sunset Shore";
+        else if(map===2&&nearPortalAt(pl.x,MAP2_PORTAL_X))action="Return to The Signal in the Rain";
+        else if(map===2&&nearPortalAt(pl.x,MAP2_EXIT_X))action="Enter Ash Hollow";
+        else if(map===3&&nearPortalAt(pl.x,MAP3_ENTRY_X))action="Return to Sunset Shore";
+        else if(map===3&&nearPortalAt(pl.x,MAP3_EXIT_X))action="Enter Moonwell Cliffs";
+        else if(map===4&&nearPortalAt(pl.x,MAP4_ENTRY_X))action="Return to Ash Hollow";
+        else if(map===4&&nearPortalAt(pl.x,MAP4_EXIT_X))action="Enter The Quiet Ember";
+        else if(map===5&&nearPortalAt(pl.x,MAP5_ENTRY_X))action="Return to Moonwell Cliffs";
+        else if(map===5&&nearPortalAt(pl.x,MAP5_EXIT_X))action="Enter Ashfall's Heart";
+        else if(map===6&&nearPortalAt(pl.x,MAP6_ENTRY_X))action="Return to The Quiet Ember";
         else if(map===6&&atHeartAltar(pl.x))action=campaignEndedRef.current?"Rest at Ashfall's Heart":"Press E at Ashfall's Heart";
       }
       if(action!==lastAction){lastAction=action;setNearAction(action||null);}
