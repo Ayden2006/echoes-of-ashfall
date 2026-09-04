@@ -181,4 +181,21 @@ test("new road people stand on existing maps without overlapping talks", () => {
       }
     }
   }
+
+  const platforms = {
+    1: game.match(/const map1Platforms: Platform\[\] = \[([\s\S]*?)\];/)[1],
+    2: game.match(/const map2Platforms: Platform\[\] = \[([\s\S]*?)\];/)[1],
+    3: game.match(/const map3Platforms: Platform\[\] = \[([\s\S]*?)\];/)[1],
+    4: game.match(/const map4Platforms: Platform\[\] = \[([\s\S]*?)\];/)[1],
+    5: game.match(/const map5Platforms: Platform\[\] = \[([\s\S]*?)\];/)[1],
+    6: game.match(/const map6Platforms: Platform\[\] = \[([\s\S]*?)\];/)[1],
+  };
+  const parsePlatforms = (block) => [...block.matchAll(/\{x:(-?\d+),y:(\d+),w:(\d+),h:(\d+)\}/g)].map((m) => ({
+    x: Number(m[1]), y: Number(m[2]), w: Number(m[3]), h: Number(m[4]),
+  }));
+  const newcomers = placements.filter((npc) => ["orrin", "nia", "vess"].includes(npc.id));
+  for (const npc of newcomers) {
+    const ground = parsePlatforms(platforms[npc.map]).filter((p) => p.h > 80 && npc.x >= p.x && npc.x <= p.x + p.w);
+    assert.ok(ground.length > 0, `${npc.id} on map ${npc.map} is not on solid ground at ${npc.x}`);
+  }
 });
