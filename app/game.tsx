@@ -8,11 +8,11 @@ type MapId = 1|2|3|4|5|6;
 type Player = { x:number; y:number; vx:number; vy:number; grounded:boolean; facing:1|-1; step:number; jumpsLeft:number; crouched:boolean; sliding:boolean; health:number; maxHealth:number; swordDamage:number };
 type Platform = { x:number; y:number; w:number; h:number };
 type DragonMode = "idle"|"walk"|"run"|"fly"|"sleep"|"attack";
-type Dragon = { x:number; y:number; groundY:number; vx:number; facing:1|-1; mode:DragonMode; modeStarted:number; modeUntil:number; health:number; maxHealth:number; attackDamage:number; lastPlayerAttack:number; attackLanded:boolean; hurtStarted:number; hurtUntil:number; hitDirection:1|-1; lastDamage:number; angry:boolean; landing:boolean; targetX:number; awarenessUntil:number };
+type Dragon = { x:number; y:number; groundY:number; vx:number; facing:1|-1; mode:DragonMode; modeStarted:number; modeUntil:number; gait:number; prevMode:DragonMode; modeBlendAt:number; health:number; maxHealth:number; attackDamage:number; lastPlayerAttack:number; attackLanded:boolean; hurtStarted:number; hurtUntil:number; hitDirection:1|-1; lastDamage:number; angry:boolean; landing:boolean; targetX:number; awarenessUntil:number };
 type DragonFrame = { x:number; y:number; w:number; h:number; anchorX:number; anchorY:number };
 type CardPalette = { dark:string; mid:string; accent:string; glow:string };
 type InventoryItem = { id:string; name:string; type:"animal-card"|"item"; description:string; image:string; palette:CardPalette };
-type Companion = { active:boolean; itemId:string|null; map:MapId; x:number; y:number; groundY:number; vx:number; facing:1|-1; mode:DragonMode; modeStarted:number; summonedAt:number; recallStarted:number; teleportAt:number; attackUntil:number; attackLanded:boolean; targetX:number; lastPlayerAttack:number; health:number; maxHealth:number };
+type Companion = { active:boolean; itemId:string|null; map:MapId; x:number; y:number; groundY:number; vx:number; facing:1|-1; mode:DragonMode; modeStarted:number; gait:number; prevMode:DragonMode; modeBlendAt:number; summonedAt:number; recallStarted:number; teleportAt:number; attackUntil:number; attackLanded:boolean; targetX:number; lastPlayerAttack:number; health:number; maxHealth:number };
 
 const MAP1_W = 7200;
 const MAP2_W = 5400;
@@ -558,6 +558,14 @@ const map6Platforms: Platform[] = [
   {x:6160,y:490,w:150,h:18},{x:6300,y:430,w:160,h:18}
 ];
 const clamp = (n:number,a:number,b:number) => Math.max(a,Math.min(b,n));
+const easeInOut = (t:number) => t*t*(3-2*t);
+const MODE_BLEND_MS = 260;
+const tickAnimalGait = (animal:{gait:number}, dt:number)=>{animal.gait=(animal.gait||0)+dt*1000;};
+const locoClock = (animal:{mode:DragonMode;gait:number;modeStarted:number}, now:number)=>animal.mode==="sleep"||animal.mode==="attack"?now-animal.modeStarted:animal.gait||now-animal.modeStarted;
+const rememberModeChange = (animal:{mode:DragonMode;prevMode:DragonMode;modeBlendAt:number}, mode:DragonMode, now:number)=>{
+  if(animal.mode===mode)return false;
+  animal.prevMode=animal.mode;animal.modeBlendAt=now;return true;
+};
 const rgbaFromHex = (hex:string,alpha:number) => {const value=parseInt(hex.replace("#",""),16);return `rgba(${value>>16},${value>>8&255},${value&255},${alpha})`;};
 const mixHex = (hex:string,r:number,g:number,b:number,t:number) => {
   const value=parseInt(hex.replace("#",""),16),rr=value>>16,gg=value>>8&255,bb=value&255;
@@ -608,7 +616,7 @@ export default function AshfallGame() {
   const inventoryRef = useRef<InventoryItem[]>([]);
   const equippedRef = useRef<(string|null)[]>(Array(ACTIVE_SLOT_COUNT).fill(null));
   const selectedSlotRef = useRef(0);
-  const companionRef = useRef<Companion>({active:false,itemId:null,map:1,x:150,y:590,groundY:590,vx:0,facing:1,mode:"idle",modeStarted:0,summonedAt:0,recallStarted:0,teleportAt:0,attackUntil:0,attackLanded:false,targetX:0,lastPlayerAttack:-1,health:DRAGON_MAX_HEALTH,maxHealth:DRAGON_MAX_HEALTH});
+  const companionRef = useRef<Companion>({active:false,itemId:null,map:1,x:150,y:590,groundY:590,vx:0,facing:1,mode:"idle",modeStarted:0,gait:0,prevMode:"idle",modeBlendAt:0,summonedAt:0,recallStarted:0,teleportAt:0,attackUntil:0,attackLanded:false,targetX:0,lastPlayerAttack:-1,health:DRAGON_MAX_HEALTH,maxHealth:DRAGON_MAX_HEALTH});
   const seenIntroRef = useRef<Set<MapId>>(new Set());
   const metNpcRef = useRef<Set<string>>(new Set());
   const campaignEndedRef = useRef(false);
@@ -821,9 +829,9 @@ export default function AshfallGame() {
     const knight=new Image(); knight.src=assetUrl("/knight-sprite-sheet.png");
     const dragonImage=new Image(); dragonImage.src=assetUrl("/baby-dragon-sprite-sheet.png");
     const jackalCardArt=new Image(); jackalCardArt.src=assetUrl("/sunset-jackal-card.svg");
-    const dragon:Dragon={x:1710,y:570,groundY:570,vx:0,facing:1,mode:"idle",modeStarted:last,modeUntil:last+2800,health:DRAGON_MAX_HEALTH,maxHealth:DRAGON_MAX_HEALTH,attackDamage:DRAGON_ATTACK_DAMAGE,lastPlayerAttack:-1,attackLanded:false,hurtStarted:0,hurtUntil:0,hitDirection:1,lastDamage:0,angry:false,landing:false,targetX:1840,awarenessUntil:0};
+    const dragon:Dragon={x:1710,y:570,groundY:570,vx:0,facing:1,mode:"idle",modeStarted:last,modeUntil:last+2800,gait:0,prevMode:"idle",modeBlendAt:last,health:DRAGON_MAX_HEALTH,maxHealth:DRAGON_MAX_HEALTH,attackDamage:DRAGON_ATTACK_DAMAGE,lastPlayerAttack:-1,attackLanded:false,hurtStarted:0,hurtUntil:0,hitDirection:1,lastDamage:0,angry:false,landing:false,targetX:1840,awarenessUntil:0};
     const createJackal=(id:string,x:number,patrolMin:number,patrolMax:number):Jackal=>({
-      id,x,y:590,groundY:590,vx:0,facing:1,mode:"idle",modeStarted:last,modeUntil:last+2200+Math.random()*1800,
+      id,x,y:590,groundY:590,vx:0,facing:1,mode:"idle",modeStarted:last,modeUntil:last+2200+Math.random()*1800,gait:0,prevMode:"idle",modeBlendAt:last,
       health:JACKAL_MAX_HEALTH,maxHealth:JACKAL_MAX_HEALTH,attackDamage:JACKAL_ATTACK_DAMAGE,lastPlayerAttack:-1,attackLanded:false,
       hurtStarted:0,hurtUntil:0,hitDirection:1,lastDamage:0,angry:false,landing:false,targetX:x+80,awarenessUntil:0,patrolMin,patrolMax,leapStarted:0,leapUntil:0
     });
@@ -1209,10 +1217,8 @@ export default function AshfallGame() {
       drawCompanionCast(pl,now);
     };
     const beginDragonMode=(mode:DragonMode,now:number,duration:number)=>{
+      rememberModeChange(dragon,mode,now);
       dragon.mode=mode;dragon.modeStarted=now;dragon.modeUntil=now+duration;dragon.landing=false;
-      if(mode==="fly")dragon.y=Math.min(dragon.y,dragon.groundY-42);
-      if(mode==="attack")dragon.y=Math.min(dragon.y,dragon.groundY-54);
-      if(mode==="idle"||mode==="walk"||mode==="run"||mode==="sleep")dragon.y=dragon.groundY;
       if(mode==="idle"||mode==="sleep")dragon.vx*=.58;
       if(mode==="attack")dragon.vx*=.28;
     };
@@ -1262,10 +1268,11 @@ export default function AshfallGame() {
       const ally=companionRef.current;
       if(!ally.active||ally.map!==mapRef.current||ally.recallStarted>0)return;
       ally.targetX=targetX;ally.attackUntil=now+2400;ally.attackLanded=false;
-      if(Math.abs(targetX-ally.x)<COMPANION_STRIKE_RANGE+16){ally.mode="attack";ally.modeStarted=now;ally.facing=targetX>=ally.x?1:-1;}
+      if(Math.abs(targetX-ally.x)<COMPANION_STRIKE_RANGE+16){rememberModeChange(ally,"attack",now);ally.mode="attack";ally.modeStarted=now;ally.facing=targetX>=ally.x?1:-1;}
     };
     const updateDragon=(dt:number,now:number)=>{
       if(!startedRef.current||mapRef.current!==1)return;
+      tickAnimalGait(dragon,dt);
       const pl=player.current;
       if(dragon.health<=0){
         dragon.angry=false;
@@ -1417,11 +1424,9 @@ export default function AshfallGame() {
     const beginJackalMode=(jackal:Jackal,mode:DragonMode,now:number,duration:number)=>{
       const canFly=jackal.id.startsWith("heart-wyrm")||jackal.id.startsWith("ash-roost");
       const nextMode=!canFly&&mode==="fly"?"run":mode;
+      rememberModeChange(jackal,nextMode,now);
       jackal.mode=nextMode;jackal.modeStarted=now;jackal.modeUntil=now+duration;jackal.landing=false;
       if(nextMode==="sleep"||nextMode==="attack"){jackal.leapUntil=0;jackal.leapStarted=0;}
-      if(nextMode==="fly")jackal.y=Math.min(jackal.y,jackal.groundY-(jackal.id.startsWith("heart-wyrm")?96:54));
-      if(nextMode==="attack")jackal.y=Math.min(jackal.y,jackal.groundY-10);
-      if(nextMode==="idle"||nextMode==="walk"||nextMode==="run"||nextMode==="sleep")jackal.y=jackal.groundY;
       if(nextMode==="idle"||nextMode==="sleep")jackal.vx*=.5;
       if(nextMode==="attack")jackal.vx*=.22;
     };
@@ -1492,6 +1497,7 @@ export default function AshfallGame() {
     if(!jackals)return;
       const pl=player.current;
       for(const jackal of jackals){
+        tickAnimalGait(jackal,dt);
         const terrainY=surfaceYAt(mapRef.current,jackal.x,jackal.groundY);if(terrainY!==null)jackal.groundY+=(terrainY-jackal.groundY)*(1-Math.exp(-13*dt));
         if(jackal.health<=0){
           jackal.angry=false;jackal.vx+=(0-jackal.vx)*(1-Math.exp(-7*dt));jackal.x+=jackal.vx*dt;
@@ -1597,12 +1603,14 @@ export default function AshfallGame() {
     const setCompanionMode=(mode:DragonMode,now:number)=>{
       const ally=companionRef.current;
       if(ally.mode===mode)return;
+      rememberModeChange(ally,mode,now);
       ally.mode=mode;ally.modeStarted=now;
       if(mode==="attack")ally.attackLanded=false;
     };
     const updateCompanion=(dt:number,now:number)=>{
       const ally=companionRef.current;
       if(!ally?.active||!ally.itemId)return;
+      tickAnimalGait(ally,dt);
       const pl=player.current,map=mapRef.current;
       if(ally.recallStarted>0){
         ally.attackUntil=0;ally.vx+=(0-ally.vx)*(1-Math.exp(-12*dt));ally.x+=ally.vx*dt;
@@ -1675,7 +1683,7 @@ export default function AshfallGame() {
         ally.x=clamp(ally.x,28,worldWidthFor(map)-28);
         const nextSurface=companionSurfaceAt(ally.x,ally.groundY,map);
         if(nextSurface!==null)ally.groundY+=(nextSurface-ally.groundY)*(1-Math.exp(-10*dt));
-        const hop=groundAlly&&distance>190?Math.sin(clamp((now-ally.modeStarted)/640,0,1)*Math.PI)*38:0;
+        const hop=groundAlly&&distance>190?Math.abs(Math.sin(ally.gait*.008))*38:0;
         const targetY=followMode==="fly"?Math.min(playerGround-68,ally.groundY-76):ally.groundY-hop;
         ally.y+=(targetY-ally.y)*(1-Math.exp(-(followMode==="fly"?5:12)*dt));
       }else{
@@ -1686,30 +1694,39 @@ export default function AshfallGame() {
         ally.facing=hunting&&hunted?(hunted.x>=ally.x?1:-1):(pl.x>=ally.x?1:-1);
       }
     };
-    const drawPixelJackal=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean,variant?:{tint?:BeastTint;antlers?:boolean;tufts?:boolean;kind?:BeastKind})=>{
+    const drawPixelJackal=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean,variant?:{tint?:BeastTint;antlers?:boolean;tufts?:boolean;kind?:BeastKind;gait?:number})=>{
       const scale=size/90;
       const kind=variant?.kind??(variant?.tufts?"lynx":variant?.antlers?"stag":variant?.tint===FOX_TINT?"fox":"jackal");
-      const runCycle=(elapsed/(mode==="run"?110:180))%1;
+      const loco=variant?.gait??elapsed;
+      const runCycle=(loco/(mode==="run"?110:180))%1;
       const gait=Math.sin(runCycle*Math.PI*2);
       const air=clamp((groundY-y)/52,0,1);
-      const leap=mode==="fly"?Math.max(air,Math.sin(clamp(elapsed/780,0,1)*Math.PI)):air;
+      const leap=air;
       const attack=mode==="attack"?clamp(elapsed/920,0,1):0;
       const pounce=attack>0?Math.sin(clamp(attack,0,1)*Math.PI):0;
-      const sleep=mode==="sleep";
+      const sleepBlend=mode==="sleep"?easeInOut(clamp(elapsed/MODE_BLEND_MS,0,1)):0;
+      const sleep=sleepBlend>=0.5;
       const idleBreath=Math.sin(now*.0038);
-      const bob=mode==="idle"?idleBreath*1.8:mode==="walk"||mode==="run"?Math.abs(gait)*2.4:sleep?Math.sin(now*.0026)*.7:0;
+      const bob=mode==="idle"?idleBreath*1.8:mode==="walk"||mode==="run"?Math.abs(gait)*2.4:mode==="sleep"?Math.sin(now*.0026)*.7:0;
       const lunge=attack>0.32&&attack<.72?(attack-.32)/.4:0;
-      const tail = sleep ? 0.9 : mode==="attack" ? -0.55-pounce*.2 : leap>0.12 ? 0.85 : 0.35+Math.sin(now*.008+elapsed*.01)*0.55;
-      const earFlick = Math.sin(now*.012+elapsed*.004)>0.82?0.35:0;
+      const tail = sleep ? 0.9 : mode==="attack" ? -0.55-pounce*.2 : leap>0.12 ? 0.85 : 0.35+Math.sin(now*.008+loco*.01)*0.55;
+      const earFlick = Math.sin(now*.012+loco*.004)>0.82?0.35:0;
       const footLift=(sleep?14:kind==="stag"?31:kind==="lynx"?23:kind==="fox"?25:27)*scale;
+      const plantY=y-bob-leap*8-footLift;
+      const restY=groundY-8-bob;
+      const poseY=plantY+(restY-plantY)*sleepBlend;
+      const standRot=leap>0.05?-0.22*leap:mode==="attack"?-0.10+lunge*0.38:gait*0.05;
       ctx.save();ctx.translate(x,groundY+3);ctx.scale(1,.32);
       const shadow=ctx.createRadialGradient(0,0,2,0,0,30*scale);shadow.addColorStop(0,"rgba(38,15,10,"+(0.48-leap*.22)+")");shadow.addColorStop(1,"rgba(38,15,10,0)");ctx.fillStyle=shadow;ctx.beginPath();ctx.arc(0,0,30*scale,0,Math.PI*2);ctx.fill();ctx.restore();
       ctx.save();
-      ctx.translate(x+facing*lunge*18,sleep?groundY-8-bob:y-bob-leap*8-footLift);
-      ctx.rotate(facing*(sleep?0.12:leap>0.05?-0.22*leap:mode==="attack"?-0.10+lunge*0.38:gait*0.05));
+      ctx.translate(x+facing*lunge*18,poseY);
+      ctx.rotate(facing*(standRot+(0.12-standRot)*sleepBlend));
       ctx.scale(facing*scale*(1+pounce*.12),(kind==="stag"?scale*1.08:scale)*(1-pounce*.08+(sleep?Math.sin(now*.0028)*.02:0)));
       const tint=variant?.tint;
       const fur=tint?.fur??"#c45a28",furDark=tint?.furDark??"#6b2e18",furLight=tint?.furLight??"#f0a056",chest=tint?.chest??"#ffd2a0",outline="#2a1410",eye=tint?.eye??"#ffe27a";
+      const map=mapRef.current;
+      const rimGlow=map===1?"rgba(214,232,255,.28)":map===3?"rgba(255,168,96,.22)":map===4?"rgba(180,240,255,.28)":map===5?"rgba(255,176,96,.22)":map===6?"rgba(255,186,206,.24)":"rgba(255,220,176,.28)";
+      const bellyShade=map===1?"rgba(10,14,28,.3)":map===3?"rgba(28,10,6,.28)":map===4?"rgba(6,16,24,.3)":map===5?"rgba(24,8,6,.28)":map===6?"rgba(22,8,16,.3)":"rgba(28,12,8,.26)";
       if(hurt&&Math.floor(now/45)%2===0)ctx.globalAlpha=.55;
       const drawLimb=(lx:number,ly:number,lw:number,lh:number,rot:number)=>{
         ctx.save();ctx.translate(lx,ly);ctx.rotate(rot);ctx.fillStyle=outline;ctx.fillRect(-lw/2-1,-1,lw+2,lh+2);ctx.fillStyle=furDark;ctx.fillRect(-lw/2,0,lw,lh);ctx.restore();
@@ -1717,6 +1734,9 @@ export default function AshfallGame() {
       if(sleep){
         ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(0,-10,23,16,0,0,Math.PI*2);ctx.fill();
         ctx.fillStyle=fur;ctx.beginPath();ctx.ellipse(0,-10,21,14,0,0,Math.PI*2);ctx.fill();
+        const sleepShade=ctx.createLinearGradient(-8,-22,12,6);sleepShade.addColorStop(0,furLight);sleepShade.addColorStop(.4,fur);sleepShade.addColorStop(1,furDark);ctx.fillStyle=sleepShade;ctx.beginPath();ctx.ellipse(0,-11,18,11,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=rimGlow;ctx.beginPath();ctx.ellipse(-2,-16,12,3.2,-.1,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=bellyShade;ctx.beginPath();ctx.ellipse(2,-4,14,5,.08,0,Math.PI*2);ctx.fill();
         ctx.fillStyle=chest;ctx.beginPath();ctx.ellipse(6,-8,10,8,0,0,Math.PI*2);ctx.fill();
         ctx.fillStyle=furDark;ctx.beginPath();ctx.ellipse(-16,-6,kind==="lynx"?6:8,kind==="lynx"?5:6,.6,0,Math.PI*2);ctx.fill();
         if(kind==="lynx"){ctx.fillStyle="#1a0c08";ctx.beginPath();ctx.ellipse(-18,-5,3.2,2.6,0,0,Math.PI*2);ctx.fill();}
@@ -1733,7 +1753,8 @@ export default function AshfallGame() {
       const bodyW=kind==="lynx"?22:kind==="fox"?16:20,bodyH=kind==="lynx"?15:kind==="stag"?14:13;
       ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(0,-6,bodyW,bodyH,0,0,Math.PI*2);ctx.fill();
       const bodyShade=ctx.createLinearGradient(-8,-20,10,13);bodyShade.addColorStop(0,furLight);bodyShade.addColorStop(.28,fur);bodyShade.addColorStop(.78,furDark);bodyShade.addColorStop(1,outline);ctx.fillStyle=bodyShade;ctx.beginPath();ctx.ellipse(0,-6,bodyW-2,bodyH-1.5,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle="rgba(255,220,176,.25)";ctx.beginPath();ctx.ellipse(2,-11,Math.max(7,bodyW*.55),3.2,-.08,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=rimGlow;ctx.beginPath();ctx.ellipse(2,-11,Math.max(7,bodyW*.55),3.2,-.08,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=bellyShade;ctx.beginPath();ctx.ellipse(1,1,Math.max(8,bodyW*.5),3.4,.12,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=chest;ctx.beginPath();ctx.ellipse(8,-2,8,7,0,0,Math.PI*2);ctx.fill();
       if(kind==="lynx"){
         ctx.fillStyle=furDark;ctx.fillRect(-8,-10,3,2);ctx.fillRect(1,-5,3,2);ctx.fillRect(-3,1,2,2);ctx.fillRect(6,-12,2,2);ctx.fillRect(-10,-2,2,2);
@@ -1754,7 +1775,7 @@ export default function AshfallGame() {
       ctx.restore();
       ctx.fillStyle=outline;ctx.beginPath();ctx.ellipse(kind==="lynx"?14:16,-14,kind==="fox"?10:11,kind==="lynx"?10:9,0,0,Math.PI*2);ctx.fill();
       const headShade=ctx.createLinearGradient(11,-23,24,-7);headShade.addColorStop(0,furLight);headShade.addColorStop(.42,fur);headShade.addColorStop(1,furDark);ctx.fillStyle=headShade;ctx.beginPath();ctx.ellipse(16,-14,kind==="fox"?8.5:9.5,kind==="lynx"?8.5:7.5,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle="rgba(255,228,185,.3)";ctx.beginPath();ctx.ellipse(15,-18,5.6,2,-.12,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=rimGlow;ctx.beginPath();ctx.ellipse(15,-18,5.6,2,-.12,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=furLight;ctx.fillRect(20,-16,kind==="lynx"?5:7,5);
       if(kind==="lynx"){
         ctx.fillStyle=furLight;ctx.beginPath();ctx.ellipse(10,-8,7,5.5,.35,0,Math.PI*2);ctx.fill();
@@ -1783,18 +1804,19 @@ export default function AshfallGame() {
       }
       ctx.restore();
     };
-    const drawPixelWyrm=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean)=>{
+    const drawPixelWyrm=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean,gait?:number)=>{
       const scale=size/150;
-      const fly=mode==="fly"||mode==="attack";
-      const wave=Math.sin(now*.006+elapsed*.01);
-      const hover=fly?8+Math.sin(now*.004)*6:Math.sin(now*.003)*2;
+      const loco=gait??elapsed;
+      const flyAmt=clamp((groundY-y)/90,0,1);
+      const wave=Math.sin(now*.006+loco*.01);
+      const hover=8*flyAmt+Math.sin(now*.004)*6*flyAmt+Math.sin(now*.003)*2*(1-flyAmt);
       const attack=mode==="attack"?clamp(elapsed/920,0,1):0;
       const lunge=attack>0.32&&attack<.72?(attack-.32)/.4:0;
       ctx.save();
-      ctx.fillStyle="rgba(24,8,16,"+(0.5-(fly?0.22:0))+")";
-      ctx.beginPath();ctx.ellipse(x,groundY+3,32*(fly?.7:1)*scale,6*scale,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="rgba(24,8,16,"+(0.5-(flyAmt*0.22))+")";
+      ctx.beginPath();ctx.ellipse(x,groundY+3,32*(1-flyAmt*.3)*scale,6*scale,0,0,Math.PI*2);ctx.fill();
       ctx.translate(x+facing*lunge*16,y-hover);
-      ctx.rotate(facing*(fly?-0.18:attack>0?-0.1+lunge*.3:wave*.04));
+      ctx.rotate(facing*(-0.18*flyAmt+(attack>0?-0.1+lunge*.3:wave*.04)*(1-flyAmt*.35)));
       ctx.scale(facing*scale,scale);
       if(hurt&&Math.floor(now/45)%2===0)ctx.globalAlpha=.55;
       const body="#4a2048",bodyDark="#140816",belly="#d45a6a",glow="#ffc8a0",outline="#1a0810";
@@ -1842,12 +1864,12 @@ export default function AshfallGame() {
       const palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??(isJackal?SUNSET_JACKAL_CARD.palette:wyrmTint?HEART_WYRM_CARD.palette:BABY_DRAGON_CARD.palette);
       const companionName=cardDisplayName(ally.itemId);
       const companionTint=beastTintFor(ally.itemId),companionAntlers=beastAntlersFor(ally.itemId),companionTufts=beastTuftsFor(ally.itemId),companionKind=beastKindFor(ally.itemId);
-      const frames=DRAGON_FRAMES[ally.mode]??DRAGON_FRAMES.idle,elapsed=now-ally.modeStarted;
+      const frames=DRAGON_FRAMES[ally.mode]??DRAGON_FRAMES.idle,elapsed=now-ally.modeStarted,gait=ally.gait||elapsed;
       let index=0;
       if(ally.mode==="idle")index=Math.floor(elapsed/520)%Math.max(1,frames.length);
-      else if(ally.mode==="walk")index=Math.floor(elapsed/180)%Math.max(1,frames.length);
-      else if(ally.mode==="run")index=Math.floor(elapsed/100)%Math.max(1,frames.length);
-      else if(ally.mode==="fly")index=Math.floor(elapsed/125)%Math.max(1,frames.length);
+      else if(ally.mode==="walk")index=Math.floor(gait/180)%Math.max(1,frames.length);
+      else if(ally.mode==="run")index=Math.floor(gait/100)%Math.max(1,frames.length);
+      else if(ally.mode==="fly")index=Math.floor(gait/125)%Math.max(1,frames.length);
       else if(ally.mode==="attack")index=Math.min(Math.max(0,frames.length-1),Math.floor(elapsed/175));
       const frame=frames[index]??DRAGON_FRAMES.idle[0],size=108,spriteScale=size/DRAGON_CELL;
       const smooth=(value:number)=>value*value*(3-2*value);
@@ -1934,11 +1956,11 @@ export default function AshfallGame() {
       const summonLift=(1-summonCreature)*34,recallPull=(1-recallCreature)*30;
       if(isJackal){
         ctx.save();ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?"rgba(255,186,82,.85)":"rgba(240,138,58,.45)";ctx.shadowBlur=ally.mode==="attack"?16:8;
-        drawPixelJackal(ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,96*spriteGrow,false,{tint:companionTint??undefined,antlers:companionAntlers,tufts:companionTufts,kind:companionKind});
+        drawPixelJackal(ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,96*spriteGrow,false,{tint:companionTint??undefined,antlers:companionAntlers,tufts:companionTufts,kind:companionKind,gait});
         ctx.restore();
       }else if(wyrmTint){
         ctx.save();ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?"rgba(212,90,106,.85)":"rgba(212,90,106,.5)";ctx.shadowBlur=ally.mode==="attack"?17:9;
-        drawPixelWyrm(ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,128*spriteGrow,false);
+        drawPixelWyrm(ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,128*spriteGrow,false,gait);
         ctx.restore();
       }else{
         ctx.save();ctx.translate(ally.x,ally.y+summonLift-recallPull);ctx.rotate(ally.facing*(1-recallCreature)*.72);ctx.scale(ally.facing*spriteGrow,spriteGrow);
@@ -2056,17 +2078,19 @@ export default function AshfallGame() {
     };
     const drawDragon=(now:number)=>{
       if(mapRef.current!==1||!dragonImage.complete||!dragonImage.naturalWidth)return;
-      const elapsed=now-dragon.modeStarted,frames=DRAGON_FRAMES[dragon.mode];
+      const elapsed=now-dragon.modeStarted,gait=dragon.gait||elapsed,frames=DRAGON_FRAMES[dragon.mode];
       if(dragon.health<=0){drawDragonCardTransformation(now);return;}
       let index=0;
       if(dragon.mode==="idle"){
         const phase=elapsed%2900;index=phase<1550?0:phase<2150?1:phase<2500?2:3;
-      }      else if(dragon.mode==="walk")index=Math.floor(elapsed/220)%frames.length;
-      else if(dragon.mode==="run")index=Math.floor(elapsed/95)%frames.length;
-      else if(dragon.mode==="fly")index=Math.floor(elapsed/100)%frames.length;
+      }      else if(dragon.mode==="walk")index=Math.floor(gait/220)%frames.length;
+      else if(dragon.mode==="run")index=Math.floor(gait/95)%frames.length;
+      else if(dragon.mode==="fly")index=Math.floor(gait/100)%frames.length;
       else if(dragon.mode==="sleep"){
         const remaining=dragon.modeUntil-now;
-        if(elapsed<420)index=0;
+        const settle=easeInOut(clamp(elapsed/MODE_BLEND_MS,0,1));
+        if(settle<0.35)index=0;
+        else if(elapsed<420)index=0;
         else if(elapsed<820)index=1;
         else if(elapsed<1220)index=2;
         else if(remaining>1050)index=3;
@@ -2086,11 +2110,11 @@ export default function AshfallGame() {
       ctx.save();ctx.fillStyle="rgba(1,4,5,"+(.58-airHeight*.22)+")";ctx.beginPath();ctx.ellipse(dragon.x,dragon.groundY+3,35*shadowScale,7*shadowScale,0,0,Math.PI*2);ctx.fill();ctx.restore();
       ctx.save();ctx.translate(dragon.x+recoilX,dragon.y);
       if(dragon.mode==="fly"){
-        const bank=Math.sin(elapsed*.0055)*.03;
-        const flap=Math.sin(elapsed*.062)*.012;
+        const bank=Math.sin(gait*.0055)*.03;
+        const flap=Math.sin(gait*.062)*.012;
         ctx.rotate((bank+flap)*dragon.facing);
       }
-      const breatheScale=dragon.mode==="sleep"&&index===3?1+Math.sin(now*.0032)*.012:dragon.mode==="idle"?1+Math.sin(now*.0024)*.006:dragon.mode==="fly"?1+Math.sin(elapsed*.05)*.018:1;
+      const breatheScale=dragon.mode==="sleep"&&index===3?1+Math.sin(now*.0032)*.012:dragon.mode==="idle"?1+Math.sin(now*.0024)*.006:dragon.mode==="fly"?1+Math.sin(gait*.05)*.018:1;
       ctx.scale(dragon.facing*(1+hitSquash),breatheScale-hitSquash);ctx.imageSmoothingEnabled=true;
       ctx.globalAlpha=hurtActive&&Math.floor(now/48)%2===0?.52:1;
       ctx.shadowColor=hurtActive?"rgba(255,245,151,.95)":dragon.mode==="attack"?"rgba(126,255,46,.52)":dragon.angry?"rgba(255,92,58,.58)":"rgba(81,188,41,.24)";ctx.shadowBlur=hurtActive?24:dragon.mode==="attack"?16:dragon.angry?13:7;
@@ -2144,13 +2168,13 @@ export default function AshfallGame() {
       if(mapRef.current!==2)return;
       for(const jackal of jackals){
         if(jackal.health<=0){drawJackalCardTransformation(jackal,now);continue;}
-        const elapsed=now-jackal.modeStarted;
+        const elapsed=locoClock(jackal,now);
         const hurtActive=jackal.hurtUntil>now;
         const hurtProgress=hurtActive?clamp((now-jackal.hurtStarted)/480,0,1):1;
         const hurtPulse=hurtActive?Math.sin(hurtProgress*Math.PI):0;
         const recoilX=hurtPulse*10*jackal.hitDirection;
         ctx.save();ctx.shadowColor=hurtActive?"rgba(255,220,140,.9)":jackal.mode==="attack"?"rgba(255,170,70,.55)":jackal.angry?"rgba(255,90,40,.5)":"rgba(240,138,58,.2)";ctx.shadowBlur=hurtActive?18:jackal.angry?12:6;
-        drawPixelJackal(jackal.x+recoilX,jackal.y,jackal.groundY,jackal.facing,jackal.mode,elapsed,now,JACKAL_RENDER_SIZE,hurtActive);
+        drawPixelJackal(jackal.x+recoilX,jackal.y,jackal.groundY,jackal.facing,jackal.mode,elapsed,now,JACKAL_RENDER_SIZE,hurtActive,{kind:"jackal",gait:jackal.gait});
         ctx.restore();
         const barW=78,barH=8,barX=jackal.x+recoilX-barW/2,barY=jackal.groundY-112;
         const healthRatio=clamp(jackal.health/jackal.maxHealth,0,1);
@@ -2190,7 +2214,7 @@ export default function AshfallGame() {
       const hurtActive=wyrm.hurtUntil>now,hurtProgress=hurtActive?clamp((now-wyrm.hurtStarted)/520,0,1):1;
       const hurtPulse=hurtActive?Math.sin(hurtProgress*Math.PI):0,recoilX=hurtPulse*13*wyrm.hitDirection;
       ctx.save();ctx.shadowColor=hurtActive?"rgba(255,200,220,.95)":wyrm.mode==="attack"?"rgba(212,90,106,.6)":wyrm.angry?"rgba(212,90,106,.55)":"rgba(212,90,106,.24)";ctx.shadowBlur=hurtActive?24:wyrm.mode==="attack"?18:wyrm.angry?14:8;
-      drawPixelWyrm(wyrm.x+recoilX,wyrm.y,wyrm.groundY,wyrm.facing,wyrm.mode,elapsed,now,WYRM_RENDER_SIZE,hurtActive);
+      drawPixelWyrm(wyrm.x+recoilX,wyrm.y,wyrm.groundY,wyrm.facing,wyrm.mode,elapsed,now,WYRM_RENDER_SIZE,hurtActive,wyrm.gait);
       ctx.restore();
       const barW=132,barH=11,barX=wyrm.x+recoilX-barW/2,barY=wyrm.y-92;
       const healthRatio=clamp(wyrm.health/wyrm.maxHealth,0,1);
@@ -2236,7 +2260,8 @@ export default function AshfallGame() {
           continue;
         }
         const frames=DRAGON_FRAMES[roost.mode==="fly"? "fly":roost.mode==="attack"?"attack":roost.mode==="sleep"?"sleep":roost.mode==="run"||roost.mode==="walk"?"run":"idle"];
-        const index=Math.min(frames.length-1,Math.floor(elapsed/(roost.mode==="run"?95:220))%frames.length);
+        const loco=roost.mode==="sleep"||roost.mode==="attack"||roost.mode==="idle"?elapsed:(roost.gait||elapsed);
+        const index=Math.min(frames.length-1,Math.floor(loco/(roost.mode==="run"||roost.mode==="fly"?95:220))%frames.length);
         const frame=frames[index];
         const hurtActive=roost.hurtUntil>now,hurtProgress=hurtActive?clamp((now-roost.hurtStarted)/480,0,1):1;
         const recoilX=hurtActive?Math.sin(hurtProgress*Math.PI)*10*roost.hitDirection:0;
@@ -2279,7 +2304,7 @@ export default function AshfallGame() {
         const hurtPulse=hurtActive?Math.sin(hurtProgress*Math.PI):0;
         const recoilX=hurtPulse*10*beast.hitDirection;
         ctx.save();ctx.shadowColor=hurtActive?"rgba(255,220,140,.9)":beast.mode==="attack"?"rgba(255,170,70,.55)":beast.angry?"rgba(255,90,40,.5)":"rgba(240,138,58,.2)";ctx.shadowBlur=hurtActive?18:beast.angry?12:6;
-        drawPixelJackal(beast.x+recoilX,beast.y,beast.groundY,beast.facing,beast.mode,elapsed,now,renderSize,hurtActive,{tint:tint??undefined,antlers,tufts,kind});
+        drawPixelJackal(beast.x+recoilX,beast.y,beast.groundY,beast.facing,beast.mode,elapsed,now,renderSize,hurtActive,{tint:tint??undefined,antlers,tufts,kind,gait:beast.gait});
         ctx.restore();
         const barW=78,barH=8,barX=beast.x+recoilX-barW/2,barY=beast.groundY-renderSize*.94;
         const healthRatio=clamp(beast.health/beast.maxHealth,0,1);
@@ -2395,7 +2420,7 @@ export default function AshfallGame() {
     };
     const drawHeartColumns=(now:number,viewW:number)=>{
       if(mapRef.current!==6)return;
-      for(let i=0;i<15;i++){
+      for(let i=0;i<17;i++){
         const tx=240+i*430;
         if(tx<cameraX-80||tx>cameraX+viewW+80)continue;
         const sway=Math.sin(now*.0007+i)*2;
@@ -2420,7 +2445,7 @@ export default function AshfallGame() {
     };
     const drawAshTrees=(now:number,viewW:number)=>{
       if(mapRef.current!==3)return;
-      for(let i=0;i<21;i++){
+      for(let i=0;i<24;i++){
         const tx=180+i*270;
         if(tx<cameraX-80||tx>cameraX+viewW+80)continue;
         const sway=Math.sin(now*.0008+i)*4;
@@ -2488,10 +2513,10 @@ export default function AshfallGame() {
       }
     };
     const drawRegionalScenery=(now:number,viewW:number,map:MapId)=>{
-      if(map===1)return;
-      const props=[380,760,1110,1490,1810,2190,2570,2940,3310,3710,4100,4510,4980,5420,5860,6280];
+      const props=[380,760,1110,1490,1810,2190,2570,2940,3310,3710,4100,4510,4780,4980,5150,5420,5580,5860,6040,6280,6460,6640,6820,6980];
       for(let i=0;i<props.length;i++){const x=props[i];if(x>worldWidthFor(map)-90||x<cameraX-120||x>cameraX+viewW+120)continue;const ground=surfaceYAt(map,x,590);if(ground===null)continue;ctx.save();ctx.translate(x,ground);
-        if(map===2){if(i%3===0){ctx.strokeStyle="rgba(94,76,48,.85)";ctx.lineWidth=3;for(let b=-3;b<=3;b++){const sway=Math.sin(now*.0028+x*.01+b)*4;ctx.beginPath();ctx.moveTo(b*5,0);ctx.quadraticCurveTo(b*5+sway*.3,-18,b*5+sway,-36-Math.abs(b)*2);ctx.stroke();}}else{const rock=ctx.createLinearGradient(-25,-48,22,0);rock.addColorStop(0,"#d49a68");rock.addColorStop(.45,"#85584d");rock.addColorStop(1,"#403236");ctx.fillStyle=rock;ctx.beginPath();ctx.moveTo(-30,0);ctx.lineTo(-23,-28);ctx.lineTo(-7,-45);ctx.lineTo(17,-37);ctx.lineTo(29,-13);ctx.lineTo(24,0);ctx.closePath();ctx.fill();}}
+        if(map===1){if(i%3===0){ctx.strokeStyle="rgba(61,82,96,.82)";ctx.lineWidth=3;for(let b=-3;b<=3;b++){const sway=Math.sin(now*.0025+x*.04+b)*5;ctx.beginPath();ctx.moveTo(b*5,0);ctx.quadraticCurveTo(b*5+sway*.2,-12,b*5+sway,-20-Math.abs(b)*2);ctx.stroke();}}else{const rock=ctx.createLinearGradient(-25,-48,22,0);rock.addColorStop(0,"#71869e");rock.addColorStop(.45,"#3c485a");rock.addColorStop(1,"#151d2a");ctx.fillStyle=rock;ctx.beginPath();ctx.moveTo(-28,0);ctx.lineTo(-20,-26);ctx.lineTo(-6,-40);ctx.lineTo(14,-34);ctx.lineTo(26,-12);ctx.lineTo(22,0);ctx.closePath();ctx.fill();ctx.fillStyle="rgba(156,202,199,.22)";ctx.fillRect(-10,-20,12,3);}}
+        else if(map===2){if(i%3===0){ctx.strokeStyle="rgba(94,76,48,.85)";ctx.lineWidth=3;for(let b=-3;b<=3;b++){const sway=Math.sin(now*.0028+x*.01+b)*4;ctx.beginPath();ctx.moveTo(b*5,0);ctx.quadraticCurveTo(b*5+sway*.3,-18,b*5+sway,-36-Math.abs(b)*2);ctx.stroke();}}else{const rock=ctx.createLinearGradient(-25,-48,22,0);rock.addColorStop(0,"#d49a68");rock.addColorStop(.45,"#85584d");rock.addColorStop(1,"#403236");ctx.fillStyle=rock;ctx.beginPath();ctx.moveTo(-30,0);ctx.lineTo(-23,-28);ctx.lineTo(-7,-45);ctx.lineTo(17,-37);ctx.lineTo(29,-13);ctx.lineTo(24,0);ctx.closePath();ctx.fill();}}
         else if(map===3){ctx.fillStyle="#1b0d08";ctx.fillRect(-7,-68,14,68);ctx.strokeStyle="#2d160d";ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(0,-48);ctx.lineTo(-25,-78);ctx.moveTo(1,-40);ctx.lineTo(28,-66);ctx.stroke();ctx.fillStyle="rgba(255,104,40,.22)";ctx.fillRect(-9,-3,18,3);}
         else if(map===4){ctx.fillStyle="#294856";ctx.beginPath();ctx.moveTo(-22,0);ctx.lineTo(-9,-72);ctx.lineTo(0,-95);ctx.lineTo(11,-66);ctx.lineTo(22,0);ctx.closePath();ctx.fill();ctx.fillStyle="rgba(142,231,255,.35)";ctx.beginPath();ctx.moveTo(-4,-88);ctx.lineTo(0,-95);ctx.lineTo(5,-66);ctx.lineTo(1,-38);ctx.closePath();ctx.fill();}
         else if(map===5){ctx.fillStyle="#2b130d";ctx.fillRect(-29,-52,58,52);ctx.fillStyle="#4b2416";ctx.fillRect(-34,-60,68,12);ctx.fillStyle="rgba(255,130,62,"+(.25+Math.max(0,Math.sin(now*.003+i))*.2)+")";ctx.beginPath();ctx.ellipse(0,-25,10,15,0,0,Math.PI*2);ctx.fill();}
@@ -2763,7 +2788,7 @@ export default function AshfallGame() {
           }else{
             const summonX=clamp(pl.x+pl.facing*COMPANION_DEPLOY_DISTANCE,30,activeWorldW-30);
             const summonGround=companionSurfaceAt(summonX,pl.y+PH,map)??pl.y+PH;
-            ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=summonX;ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.recallStarted=0;ally.teleportAt=0;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;
+            ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=summonX;ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.prevMode="idle";ally.modeBlendAt=now;ally.gait=0;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.recallStarted=0;ally.teleportAt=0;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;
             ally.maxHealth=cardStats(item.id).hp;ally.health=ally.maxHealth;
             const direction:1|-1=summonX>=pl.x?1:-1;companionCastRef.current={started:now,kind:"summon",direction};pl.facing=direction;setDeployedItemId(item.id);tone(330,.18,.024);window.setTimeout(()=>tone(620,.22,.022),170);window.setTimeout(()=>tone(940,.28,.02),420);
           }
