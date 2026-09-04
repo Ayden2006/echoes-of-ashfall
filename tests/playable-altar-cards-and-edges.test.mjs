@@ -186,7 +186,8 @@ test("east/west edges stay walkable and the camera can look a little past the ri
   const pad = num(/const CAM_EDGE_PAD = (\d+)/, "CAM_EDGE_PAD");
   assert.ok(margin >= 24, "player must stay inside the world");
   assert.ok(pad >= 120, "camera needs edge pad on the wider maps");
-  assert.match(game, /const cameraTarget=clamp\(pl\.x-viewW\*\.38,-CAM_EDGE_PAD,Math\.max\(0,activeWorldW-viewW\)\+CAM_EDGE_PAD\)/);
+  assert.match(game, /const cameraXFor=\(playerX:number,worldW:number,viewW:number\)=>clamp\(playerX-viewW\*\.38,-CAM_EDGE_PAD,Math\.max\(0,worldW-viewW\)\+CAM_EDGE_PAD\)/);
+  assert.match(game, /const cameraTarget=cameraXFor\(pl\.x,activeWorldW,viewW\)/);
   assert.match(game, /const plantedYAt=\(map:MapId,x:number\)=>\(surfaceYAt\(map,x,590\)\?\?590\)-PH/);
 
   for (const [id, map] of Object.entries(maps)) {

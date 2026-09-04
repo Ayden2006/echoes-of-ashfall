@@ -161,6 +161,8 @@ test("late-map combat reads: no air-stuck strikes, clamped lunges, hunt mark, st
   assert.match(game, /drawHurtNumber\(dragon\.x\+recoilX,barY-19-hurtProgress\*22,dragon\.lastDamage,hurtProgress\*1\.15,"#f4ffb0"\)/);
   assert.match(game, /drawHurtNumber\(wyrm\.x\+recoilX,barY-18-hurtProgress\*18,wyrm\.lastDamage,hurtProgress,"#ffdfe8"\)/);
   assert.match(game, /drawHuntMark\(wyrm\.x\+recoilX,barY-28,now,currentHuntTarget\(\)===wyrm\)/);
+  assert.match(game, /drawHuntMark\(beast\.x\+recoilX,barY-26,now,currentHuntTarget\(\)===beast\); \/\/ fox\/stag\/lynx keep HUNT \+ stroked hurt/);
+  assert.match(game, /if\(hurtActive\)drawHurtNumber\(beast\.x\+recoilX,barY-16-hurtProgress\*18,beast\.lastDamage,hurtProgress,"#ffe7a8"\)/);
   assert.match(game, /const HURT_FLASH_MS = 90/);
   assert.match(game, /if\(hurt&&pixelHurtFlash\(now\)\)ctx\.globalAlpha=\.4/);
 
