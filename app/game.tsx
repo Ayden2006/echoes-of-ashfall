@@ -2488,7 +2488,13 @@ export default function AshfallGame() {
       const companionTint=beastTintFor(ally.itemId),companionAntlers=beastAntlersFor(ally.itemId),companionTufts=beastTuftsFor(ally.itemId),companionKind=beastKindFor(ally.itemId);
       const frames=DRAGON_FRAMES[ally.mode]??DRAGON_FRAMES.idle,elapsed=now-ally.modeStarted,gait=ally.gait||elapsed;
       let index=0;
-      if(ally.mode==="idle")index=Math.floor(elapsed/520)%Math.max(1,frames.length);
+      if(ally.mode==="idle"){
+        const wake=ally.prevMode==="sleep"?easeInOut(clamp((now-ally.modeBlendAt)/WAKE_BLEND_MS,0,1)):1;
+        if(wake<0.28)index=3;
+        else if(wake<0.55)index=2;
+        else if(wake<0.8)index=1;
+        else{const phase=elapsed%2900;index=phase<1550?0:phase<2150?1:phase<2500?2:3;} // companion dragon idle uses stand-breath, not the curl-row 520ms cycle
+      }
       else if(ally.mode==="walk")index=Math.floor(gait/180)%Math.max(1,frames.length);
       else if(ally.mode==="run")index=Math.floor(gait/100)%Math.max(1,frames.length);
       else if(ally.mode==="fly")index=flapFrame(gait,frames.length);
@@ -2606,14 +2612,16 @@ export default function AshfallGame() {
       }
     };
     const drawCardPressE=(x:number,y:number)=>{
+      const late=lateMapContactShade(mapRef.current);
       ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="top";
-      ctx.lineWidth=3;ctx.strokeStyle="rgba(7,3,16,.9)";ctx.strokeText("PRESS E",x,y);
+      ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(7,3,16,.9)";ctx.strokeText("PRESS E",x,y);
       ctx.fillStyle="#fff6d2";ctx.fillText("PRESS E",x,y);
     };
     const drawLateStudyableTag=(x:number,y:number,label:string)=>{
+      const late=lateMapContactShade(mapRef.current);
       ctx.save();ctx.globalAlpha=1;
       ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="bottom";
-      ctx.lineWidth=3;ctx.strokeStyle="rgba(7,3,16,.9)";ctx.strokeText(label,x,y);
+      ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(7,3,16,.9)";ctx.strokeText(label,x,y);
       ctx.fillStyle="#fff6d2";ctx.fillText(label,x,y);
       drawCardPressE(x,y+3);
       ctx.restore();
@@ -2921,6 +2929,7 @@ export default function AshfallGame() {
         }else if(roost.mode==="idle"&&roost.prevMode==="sleep"){
           const wake=easeInOut(clamp((now-roost.modeBlendAt)/WAKE_BLEND_MS,0,1));
           if(wake<0.3)index=3;else if(wake<0.58)index=2;else if(wake<0.82)index=1;
+          else{const phase=elapsed%2900;index=phase<1550?0:phase<2150?1:phase<2500?2:3;} // after sleep→wake, roost idle holds stand-breath instead of a frozen curl-row cycle
         }
         const poseMode=locoPoseMode(roost,now);
         const poseFrames=DRAGON_FRAMES[poseMode==="fly"?"fly":poseMode==="attack"?"attack":poseMode==="sleep"?"sleep":poseMode==="run"||poseMode==="walk"?"run":"idle"];
@@ -3083,8 +3092,9 @@ export default function AshfallGame() {
       ctx.fillStyle="rgba(224,120,150,"+(.28+pulse*.3)+")";ctx.beginPath();ctx.ellipse(x,groundY-5,24,5,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle="#341020";ctx.beginPath();ctx.moveTo(x-4,groundY-8);ctx.lineTo(x+18,groundY-16);ctx.lineTo(x-2,groundY-12);ctx.closePath();ctx.fill();
       ctx.fillStyle="rgba(255,180,196,"+(.4+pulse*.32)+")";ctx.beginPath();ctx.moveTo(x-2,groundY-9);ctx.lineTo(x+16,groundY-15);ctx.lineTo(x,groundY-11);ctx.closePath();ctx.fill();
-      ctx.globalAlpha=.34+pulse*.2;ctx.fillStyle="#ffc8a0";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";
-      ctx.fillText(bound?"ALTAR EAST":"PULSE",x,groundY-28);
+      ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="bottom";
+      ctx.lineWidth=4;ctx.strokeStyle="rgba(6,2,4,.96)";ctx.strokeText(bound?"ALTAR EAST":"PULSE",x,groundY-28);
+      ctx.fillStyle="#fff6d2";ctx.fillText(bound?"ALTAR EAST":"PULSE",x,groundY-28);
       ctx.restore();
     };
     const drawCooledVein=(now:number)=>{
@@ -3241,13 +3251,14 @@ export default function AshfallGame() {
       if(label){
         const near=nearPortalAt(player.current.x,x);
         const tagPulse=.62+Math.sin(now*.003)*.22;
+        const late=lateMapContactShade(map);
         ctx.save();ctx.textAlign="center";ctx.textBaseline="bottom";
         ctx.font="900 11px ui-monospace, SFMono-Regular, Menlo, monospace";
-        ctx.lineWidth=4;ctx.strokeStyle="rgba(6,8,10,.88)";ctx.strokeText(label,cx,groundY-188);
-        ctx.fillStyle="rgba("+portalColor+","+tagPulse+")";ctx.fillText(label,cx,groundY-188);
+        ctx.lineWidth=late?5:4;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(6,8,10,.88)";ctx.strokeText(label,cx,groundY-188);
+        ctx.fillStyle=late?"#fff6d2":"rgba("+portalColor+","+tagPulse+")";ctx.fillText(label,cx,groundY-188);
         ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";
         ctx.strokeText("PRESS E",cx,groundY-174);
-        ctx.fillStyle=near?"#fff6d2":"rgba("+portalColor+","+(.55+tagPulse*.25)+")";ctx.fillText("PRESS E",cx,groundY-174);
+        ctx.fillStyle=near||late?"#fff6d2":"rgba("+portalColor+","+(.55+tagPulse*.25)+")";ctx.fillText("PRESS E",cx,groundY-174);
         ctx.restore();
       }
     };
