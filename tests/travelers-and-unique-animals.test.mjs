@@ -21,6 +21,7 @@ test("named travelers reuse E-talk and change if you meet them again", () => {
   assert.match(game, /id:"orrin"/);
   assert.match(game, /id:"nia"/);
   assert.match(game, /id:"vess"/);
+  assert.match(game, /id:"tamsin"/);
 
   const calenCastle = npcBlock("calen", 1);
   const calenCliffs = npcBlock("calen", 4);
@@ -34,8 +35,10 @@ test("named travelers reuse E-talk and change if you meet them again", () => {
   const niaHeart = npcBlock("nia", 6);
   const vessHollow = npcBlock("vess", 3);
   const vessEmber = npcBlock("vess", 5);
+  const tamsinCastle = npcBlock("tamsin", 1);
+  const tamsinEmber = npcBlock("tamsin", 5);
 
-  for (const block of [calenCastle, calenCliffs, seraShore, seraEmber, bramHollow, bramHeart, orrinCastle, orrinCliffs, niaShore, niaHeart, vessHollow, vessEmber]) {
+  for (const block of [calenCastle, calenCliffs, seraShore, seraEmber, bramHollow, bramHeart, orrinCastle, orrinCliffs, niaShore, niaHeart, vessHollow, vessEmber, tamsinCastle, tamsinEmber]) {
     assert.match(block, /firstTalk:\[/);
     assert.match(block, /againTalk:\[/);
     assert.match(block, /afterCaptureTalk:\[/);
@@ -50,6 +53,7 @@ test("named travelers reuse E-talk and change if you meet them again", () => {
   assert.match(orrinCliffs, /We meet again\. Castle rain, then cliff wind/);
   assert.match(niaHeart, /We keep meeting at the edge of the light/);
   assert.match(vessEmber, /We meet where the ash learned to wait/);
+  assert.match(tamsinEmber, /We meet again\. Castle merlon, then kiln road/);
 
   assert.match(game, /const npc=NPCS\.find\(n=>n\.map===map&&Math\.abs\(x-n\.x\)<n\.talkRadius\)/);
   assert.match(game, /const talkKey=npcTalkKey\(npc\)/);
@@ -119,6 +123,8 @@ test("player is Moon Night, never Moon Knight, and Reed/Kest stay", () => {
   assert.match(game, /id:"nia",name:"Nia",map:6/);
   assert.match(game, /id:"vess",name:"Vess",map:3/);
   assert.match(game, /id:"vess",name:"Vess",map:5/);
+  assert.match(game, /id:"tamsin",name:"Tamsin",map:1/);
+  assert.match(game, /id:"tamsin",name:"Tamsin",map:5/);
 });
 
 test("E-talk still keys first/again/afterCapture per id:map with no extra engine", () => {
@@ -155,12 +161,14 @@ test("new road people stand on existing maps without overlapping talks", () => {
     { id: "sera", map: 2, x: 480 },
     { id: "nia", map: 2, x: 1180 },
     { id: "bram", map: 3, x: 480 },
-    { id: "vess", map: 3, x: 3340 },
+    { id: "vess", map: 3, x: 5140 },
     { id: "orrin", map: 4, x: 1680 },
     { id: "calen", map: 4, x: 3180 },
     { id: "reed", map: 5, x: 760 },
     { id: "vess", map: 5, x: 2380 },
-    { id: "sera", map: 5, x: 3920 },
+    { id: "tamsin", map: 1, x: 3980 },
+    { id: "tamsin", map: 5, x: 4880 },
+    { id: "sera", map: 5, x: 5720 },
     { id: "kest", map: 6, x: 920 },
     { id: "bram", map: 6, x: 1480 },
     { id: "nia", map: 6, x: 3280 },
@@ -193,7 +201,7 @@ test("new road people stand on existing maps without overlapping talks", () => {
   const parsePlatforms = (block) => [...block.matchAll(/\{x:(-?\d+),y:(\d+),w:(\d+),h:(\d+)\}/g)].map((m) => ({
     x: Number(m[1]), y: Number(m[2]), w: Number(m[3]), h: Number(m[4]),
   }));
-  const newcomers = placements.filter((npc) => ["orrin", "nia", "vess"].includes(npc.id));
+  const newcomers = placements.filter((npc) => ["orrin", "nia", "vess", "tamsin"].includes(npc.id));
   for (const npc of newcomers) {
     const ground = parsePlatforms(platforms[npc.map]).filter((p) => p.h > 80 && npc.x >= p.x && npc.x <= p.x + p.w);
     assert.ok(ground.length > 0, `${npc.id} on map ${npc.map} is not on solid ground at ${npc.x}`);
