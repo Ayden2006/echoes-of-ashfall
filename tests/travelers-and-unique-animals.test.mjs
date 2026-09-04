@@ -549,3 +549,43 @@ test("E-talk radii stay clear of high secrets and each other", () => {
     }
   }
 });
+
+test("maps 4–6 reunion againTalk remembers the last crossing without the finish dump", () => {
+  const reunions = [
+    ["calen", 4, /castle rain/i],
+    ["orrin", 4, /Castle rain, then cliff wind/],
+    ["lira", 4, /Shore dusk, then cliff wind/],
+    ["wren", 4, /Castle rain, then this cliff/],
+    ["sera", 5, /Shore dusk, then this kiln/],
+    ["vess", 5, /Cairn twist, then kiln/],
+    ["tamsin", 5, /Castle merlon, then kiln road/],
+    ["maer", 5, /Castle rain, then kiln road/],
+    ["perrin", 5, /Late shore, then kiln road/],
+    ["isk", 5, /Cairn twist, then kiln heat/],
+    ["ryn", 5, /Cliff wind, then kiln gate/],
+    ["bram", 6, /Cairn twist, then this heart/],
+    ["nia", 6, /Shore dusk, then this heart/],
+    ["holt", 6, /Cairn twist, then heart/],
+    ["dell", 6, /Shore dusk, then heart/],
+    ["rowan", 6, /Castle rain, then heart/],
+  ];
+  const finishDump = /ends the campaign|Press E at the (heart )?altar|Bind the (stag|wyrm)|The east gate heals you|The gate behind you still heals/;
+  for (const [id, map, crossing] of reunions) {
+    const block = npcBlock(id, map);
+    const again = block.slice(block.indexOf("againTalk:["), block.indexOf("afterCaptureTalk:["));
+    assert.match(again, crossing, `${id}:${map} againTalk should remember the last crossing`);
+    assert.doesNotMatch(again, finishDump, `${id}:${map} againTalk should not repeat the finish dump`);
+  }
+});
+
+test("afterCaptureTalk treats bound animals as echo shards, not quarry", () => {
+  const afterBlocks = [...game.matchAll(/afterCaptureTalk:\[([\s\S]*?)\],\n\s*palette:/g)].map((m) => m[1]);
+  assert.equal(afterBlocks.length, 35);
+  for (const block of afterBlocks) {
+    assert.doesNotMatch(block, /\bhunt(?:ing|s)?\b|\bkill(?:ed|s|ing)?\b/i);
+  }
+  assert.match(game, /That dragon wasn't quarry\. It was the first spark of the signal/);
+  assert.match(game, /the signal isn't quarry\. We're carrying it/);
+  assert.match(game, /Shards, not quarry/);
+  assert.match(game, /Each bound animal is a shard/);
+});
