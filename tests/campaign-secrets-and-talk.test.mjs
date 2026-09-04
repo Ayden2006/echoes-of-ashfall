@@ -127,7 +127,7 @@ test("maps 1–6 are wider with two-way portals still on the existing road", () 
   assert.match(game, /const MAP4_EXIT_X = 5870/);
   assert.match(game, /const MAP5_EXIT_X = 6070/);
   assert.match(game, /const MAP6_HEART_X = 6470/);
-  assert.match(game, /if\(map===1\) return \{x:6860,y:483,facing:-1/);
+  assert.match(game, /if\(map===1\) return \{x:6860,y:plantedYAt\(1,6860\),facing:-1/);
   assert.doesNotMatch(game, /map:\s*7|MAP7_/);
 });
 

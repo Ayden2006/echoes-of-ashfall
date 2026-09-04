@@ -835,6 +835,21 @@ const hopArc = (t:number, height:number)=>{
   const shaped=u<peak?easeInOut(u/peak):1-easeInOut((u-peak)/(1-peak));
   return shaped*height;
 };
+const SLEEP_SETTLE_MS = 420;
+const WAKE_BLEND_MS = 340;
+const HURT_FLASH_MS = 70;
+const sleepPoseAmt = (mode:DragonMode, prevMode:DragonMode, blendAt:number, now:number, elapsed:number) => {
+  if(mode==="sleep") return easeInOut(clamp(elapsed/SLEEP_SETTLE_MS,0,1));
+  if(prevMode==="sleep") return 1-easeInOut(clamp((now-blendAt)/WAKE_BLEND_MS,0,1));
+  return 0;
+};
+const locoPoseMode = (animal:{mode:DragonMode;prevMode:DragonMode;modeBlendAt:number}, now:number):DragonMode => {
+  const blend=easeInOut(clamp((now-animal.modeBlendAt)/MODE_BLEND_MS,0,1));
+  if(animal.mode==="sleep"||animal.prevMode==="sleep") return animal.mode;
+  if(blend<0.5&&(animal.prevMode==="fly"||animal.prevMode==="run")&&(animal.mode==="idle"||animal.mode==="walk")) return animal.prevMode;
+  return animal.mode;
+};
+const pixelHurtFlash = (now:number) => Math.floor(now/HURT_FLASH_MS)%2===0;
 const rgbaFromHex = (hex:string,alpha:number) => {const value=parseInt(hex.replace("#",""),16);return `rgba(${value>>16},${value>>8&255},${value&255},${alpha})`;};
 const mixHex = (hex:string,r:number,g:number,b:number,t:number) => {
   const value=parseInt(hex.replace("#",""),16),rr=value>>16,gg=value>>8&255,bb=value&255;
@@ -843,13 +858,15 @@ const mixHex = (hex:string,r:number,g:number,b:number,t:number) => {
 const worldWidthFor = (map:MapId) => map===1?MAP1_W:map===2?MAP2_W:map===3?MAP3_W:map===4?MAP4_W:map===5?MAP5_W:MAP6_W;
 const platformsFor = (map:MapId) => map===1?map1Platforms:map===2?map2Platforms:map===3?map3Platforms:map===4?map4Platforms:map===5?map5Platforms:map6Platforms;
 const surfaceYAt=(map:MapId,x:number,currentY:number)=>{const surfaces=platformsFor(map).filter(p=>p.h>80&&x>=p.x&&x<=p.x+p.w);if(!surfaces.length)return null;return surfaces.reduce((best,p)=>Math.abs(p.y-currentY)<Math.abs(best.y-currentY)?p:best).y;};
+const plantedYAt=(map:MapId,x:number)=>(surfaceYAt(map,x,590)??590)-PH;
 const sixMapWorldPolishApplied=true;
 const spawnFor = (map:MapId, from:MapId|null) => {
-  if(from===null) return {x:230,y:498,facing:1 as 1|-1};
-  if(map===1) return {x:6860,y:483,facing:-1 as 1|-1};
+  if(from===null) return {x:230,y:plantedYAt(1,230),facing:1 as 1|-1};
+  if(map===1) return {x:6860,y:plantedYAt(1,6860),facing:-1 as 1|-1};
   const arrivingFromPrev = (map===2&&from===1)||(map===3&&from===2)||(map===4&&from===3)||(map===5&&from===4)||(map===6&&from===5);
-  if(arrivingFromPrev) return {x:340,y:498,facing:1 as 1|-1};
-  return {x:Math.max(240,worldWidthFor(map)-340),y:498,facing:-1 as 1|-1};
+  if(arrivingFromPrev) return {x:340,y:plantedYAt(map,340),facing:1 as 1|-1};
+  const x=Math.max(240,worldWidthFor(map)-340);
+  return {x,y:plantedYAt(map,x),facing:-1 as 1|-1};
 };
 const respawnXFor = (map:MapId) => map===1?230:340;
 
@@ -991,10 +1008,12 @@ export default function AshfallGame() {
     if(ally.active&&ally.itemId){
       const now=performance.now();
       const groundAlly=cardStats(ally.itemId).ground;
-      const arrivalGround=surfaceYAt(map,pl.x,pl.y+PH)??pl.y+PH;
-      ally.map=map;ally.x=pl.x-pl.facing*96;ally.groundY=arrivalGround;
+      ally.map=map;ally.x=clamp(pl.x-pl.facing*96,28,worldWidthFor(map)-28);
+      const arrivalGround=surfaceYAt(map,ally.x,pl.y+PH)??surfaceYAt(map,pl.x,590)??pl.y+PH;
+      rememberModeChange(ally,groundAlly?"run":"fly",now);
+      ally.groundY=arrivalGround;
       ally.y=groundAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.facing=pl.facing;
-      ally.mode=groundAlly?"run":"fly";ally.modeStarted=now;ally.teleportAt=now;
+      ally.mode=groundAlly?"run":"fly";ally.modeStarted=now;ally.modeBlendAt=now;ally.teleportAt=now;
       ally.attackUntil=0;ally.attackLanded=false;ally.recallStarted=0;ally.targetX=ally.x;
     }
     slideUntil.current=0;actionUntil.current=0;cameraReset.current=true;
@@ -1388,9 +1407,9 @@ export default function AshfallGame() {
     const drawCompanionCast=(pl:Player,now:number)=>{
       const cast=companionCastRef.current;
       if(!cast.kind)return;
-      const duration=cast.kind==="recall"?COMPANION_RECALL_DURATION:780,progress=clamp((now-cast.started)/duration,0,1);
+      const duration=cast.kind==="recall"?COMPANION_RECALL_DURATION:COMPANION_SUMMON_DURATION,progress=clamp((now-cast.started)/duration,0,1);
       if(progress>=1){cast.kind=null;return;}
-      const eased=progress*progress*(3-2*progress),fade=1-clamp((progress-.72)/.28,0,1);
+      const eased=progress*progress*(3-2*progress),fade=1-easeInOut(clamp((progress-.68)/.32,0,1));
       const ally=companionRef.current;
       if(!ally)return;
       const palette=inventoryRef.current.find(item=>item.id===ally.itemId)?.palette??BABY_DRAGON_CARD.palette;
@@ -1411,7 +1430,8 @@ export default function AshfallGame() {
       for(let mote=0;mote<10;mote++){
         const angle=mote*Math.PI*.2+now*.006*(mote%2?1:-1),radius=9+(mote%3)*4+eased*5;
         const mx=handX+Math.cos(angle)*radius,my=handY+Math.sin(angle)*radius*.65;
-        ctx.globalAlpha=fade*(.45+(mote%3)*.2);ctx.fillStyle=mote%3===0?"#ffffff":color;ctx.beginPath();ctx.arc(mx,my,.9+(mote%2)*.7,0,Math.PI*2);ctx.fill();
+        const moteFade=fade*easeInOut(.4+(mote%3)*.2);
+        ctx.globalAlpha=moteFade;ctx.fillStyle=mote%3===0?"#ffffff":color;ctx.beginPath();ctx.arc(mx,my,1.1+(mote%2)*.8,0,Math.PI*2);ctx.fill();
       }
       ctx.restore();
 
@@ -1452,7 +1472,7 @@ export default function AshfallGame() {
       let list=SPRITE_FRAMES.idle;
       let index=Math.floor(now/620)%list.length;
       const attacking=actionUntil.current>now;
-      const castState=companionCastRef.current,castDuration=castState.kind==="recall"?COMPANION_RECALL_DURATION:780,casting=Boolean(castState.kind&&now-castState.started<castDuration);
+      const castState=companionCastRef.current,castDuration=castState.kind==="recall"?COMPANION_RECALL_DURATION:COMPANION_SUMMON_DURATION,casting=Boolean(castState.kind&&now-castState.started<castDuration);
       if(attacking||casting){list=SPRITE_FRAMES.action;index=1;}
       else if(!pl.grounded){list=SPRITE_FRAMES.jump;index=0;}
       else if(pl.sliding){list=SPRITE_FRAMES.slide;index=0;}
@@ -1704,7 +1724,7 @@ export default function AshfallGame() {
       }
 
       if(playerRespawnAt&&now>=playerRespawnAt){
-        pl.health=pl.maxHealth;pl.x=respawnXFor(mapRef.current);pl.y=498;pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
+        pl.health=pl.maxHealth;pl.x=respawnXFor(mapRef.current);pl.y=plantedYAt(mapRef.current,pl.x);pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
         staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;
         playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
       }
@@ -1786,7 +1806,9 @@ export default function AshfallGame() {
       const pl=player.current;
       for(const jackal of jackals){
         tickAnimalGait(jackal,dt);
-        const terrainY=surfaceYAt(mapRef.current,jackal.x,jackal.groundY);if(terrainY!==null)jackal.groundY+=(terrainY-jackal.groundY)*(1-Math.exp(-13*dt));
+        const terrainY=surfaceYAt(mapRef.current,jackal.x,jackal.groundY)??surfaceYAt(mapRef.current,jackal.x,590);
+        if(terrainY!==null)jackal.groundY+=(terrainY-jackal.groundY)*(1-Math.exp(-13*dt));
+        if(jackal.y>jackal.groundY+28)jackal.y=jackal.groundY;
         if(jackal.health<=0){
           jackal.angry=false;jackal.vx+=(0-jackal.vx)*(1-Math.exp(-7*dt));jackal.x+=jackal.vx*dt;
           jackal.y+=(jackal.groundY-jackal.y)*(1-Math.exp(-8*dt));
@@ -1878,7 +1900,7 @@ export default function AshfallGame() {
         }
       }
       if(playerRespawnAt&&now>=playerRespawnAt){
-        pl.health=pl.maxHealth;pl.x=respawnXFor(mapRef.current);pl.y=498;pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
+        pl.health=pl.maxHealth;pl.x=respawnXFor(mapRef.current);pl.y=plantedYAt(mapRef.current,pl.x);pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
         staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;
         playerRespawnAt=0;cameraReset.current=true;portalFlashUntil.current=now+430;
       }
@@ -1902,11 +1924,19 @@ export default function AshfallGame() {
       const pl=player.current,map=mapRef.current;
       if(ally.recallStarted>0){
         ally.attackUntil=0;ally.vx+=(0-ally.vx)*(1-Math.exp(-12*dt));ally.x+=ally.vx*dt;
+        const recallGround=companionSurfaceAt(ally.x,ally.groundY,map);
+        if(recallGround!==null)ally.groundY+=(recallGround-ally.groundY)*(1-Math.exp(-10*dt));
+        ally.y+=(ally.groundY-ally.y)*(1-Math.exp(-5.4*dt));
         if(now-ally.recallStarted>=COMPANION_RECALL_DURATION){ally.active=false;ally.itemId=null;ally.recallStarted=0;setDeployedItemId(null);}
         return;
       }
       const groundAlly=cardStats(ally.itemId).ground;
-      if(ally.map!==map){ally.map=map;ally.x=pl.x-pl.facing*96;ally.groundY=pl.y+PH;ally.y=groundAlly?ally.groundY:ally.groundY-52;ally.vx=0;ally.mode=groundAlly?"run":"fly";ally.modeStarted=now;ally.teleportAt=now;}
+      if(ally.map!==map){
+        ally.map=map;ally.x=clamp(pl.x-pl.facing*96,28,worldWidthFor(map)-28);
+        const reseatGround=companionSurfaceAt(ally.x,pl.y+PH,map)??surfaceYAt(map,ally.x,590)??pl.y+PH;
+        ally.groundY=reseatGround;ally.y=groundAlly?reseatGround:reseatGround-52;ally.vx=0;
+        setCompanionMode(groundAlly?"run":"fly",now);ally.teleportAt=now;
+      }
 
       const livePack=wildPackFor(map)??[];
       const mapHostiles:HuntTarget[]=map===1&&dragon.health>0?[dragon,...livePack]:livePack;
@@ -1917,7 +1947,7 @@ export default function AshfallGame() {
       const playerGround=pl.y+PH;
       const stayForHunt=hunted&&Math.abs(pl.x-hunted.x)<COMPANION_HUNT_RANGE+140;
       if(Math.abs(pl.x-ally.x)>COMPANION_TELEPORT_DISTANCE&&!stayForHunt){
-        const arrivalGround=companionSurfaceAt(followX,playerGround,map)??playerGround;
+        const arrivalGround=companionSurfaceAt(followX,playerGround,map)??surfaceYAt(map,followX,590)??playerGround;
         ally.x=followX;ally.groundY=arrivalGround;ally.y=groundAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.attackUntil=0;ally.teleportAt=now;ally.facing=pl.facing;setCompanionMode(groundAlly?"run":"fly",now);
       }
       const targetX=hunting?hunted!.x:followX;
@@ -1972,19 +2002,24 @@ export default function AshfallGame() {
         const nextSurface=companionSurfaceAt(ally.x,ally.groundY,map);
         if(nextSurface!==null)ally.groundY+=(nextSurface-ally.groundY)*(1-Math.exp(-10*dt));
         const hop=groundAlly&&distance>190?Math.abs(Math.sin(ally.gait*.008))*38:0;
-        const targetY=followMode==="fly"?Math.min(playerGround-68,ally.groundY-76):ally.groundY-hop;
+        const hopPrev=groundAlly&&(ally.prevMode==="run"||ally.mode==="run")&&distance>80?Math.abs(Math.sin(ally.gait*.008))*38:0;
+        const hopBlend=hopPrev+(hop-hopPrev)*easeInOut(clamp((now-ally.modeBlendAt)/MODE_BLEND_MS,0,1));
+        const targetY=followMode==="fly"?Math.min(playerGround-68,ally.groundY-76):ally.groundY-hopBlend;
         ally.y+=(targetY-ally.y)*(1-Math.exp(-(followMode==="fly"?5:12)*dt));
       }else{
         setCompanionMode("idle",now);ally.vx+=(0-ally.vx)*(1-Math.exp(-9*dt));ally.x+=ally.vx*dt;
-        const idleGround=companionSurfaceAt(ally.x,ally.groundY,map);
+        const idleGround=companionSurfaceAt(ally.x,ally.groundY,map)??surfaceYAt(map,ally.x,590);
         if(idleGround!==null)ally.groundY=idleGround;
         ally.y+=(ally.groundY-ally.y)*(1-Math.exp(-12*dt));
+        if(ally.y>ally.groundY+28)ally.y=ally.groundY;
         ally.facing=hunting&&hunted?(hunted.x>=ally.x?1:-1):(pl.x>=ally.x?1:-1);
       }
     };
-    const drawPixelJackal=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean,variant?:{tint?:BeastTint;antlers?:boolean;tufts?:boolean;kind?:BeastKind;gait?:number})=>{
+    const drawPixelJackal=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean,variant?:{tint?:BeastTint;antlers?:boolean;tufts?:boolean;kind?:BeastKind;gait?:number;prevMode?:DragonMode;modeBlendAt?:number})=>{
       const scale=size/90;
       const kind=variant?.kind??(variant?.tufts?"lynx":variant?.antlers?"stag":variant?.tint===FOX_TINT?"fox":"jackal");
+      const prevMode=variant?.prevMode??mode;
+      const modeBlendAt=variant?.modeBlendAt??0;
       const loco=variant?.gait??elapsed;
       const runCycle=(loco/(mode==="run"?110:180))%1;
       const gait=Math.sin(runCycle*Math.PI*2);
@@ -1993,29 +2028,35 @@ export default function AshfallGame() {
       const attack=mode==="attack"?clamp(elapsed/920,0,1):0;
       const pounce=attack>0?hopArc(attack,1):0;
       const sleepBlend=mode==="sleep"?easeInOut(clamp(elapsed/MODE_BLEND_MS,0,1)):0;
-      const sleep=sleepBlend>=0.5;
+      const sleepPose=sleepPoseAmt(mode,prevMode,modeBlendAt,now,elapsed);
+      const sleep=sleepPose>=0.62;
+      const waking=prevMode==="sleep"&&mode!=="sleep";
       const idleBreath=Math.sin(now*.0038);
-      const bob=mode==="idle"?idleBreath*1.8:mode==="walk"||mode==="run"?Math.abs(gait)*2.4:mode==="sleep"?Math.sin(now*.0026)*.7:0;
+      const weightShift=mode==="idle"?idleBreath*1.4:0;
+      const bob=mode==="idle"?idleBreath*1.8:mode==="walk"||mode==="run"?Math.abs(gait)*2.4:mode==="sleep"||waking?Math.sin(now*.0026)*.7:0;
       const lunge=attack>0.32&&attack<.72?(attack-.32)/.4:0;
       const tail = sleep ? 0.9 : mode==="attack" ? -0.55-pounce*.2 : leap>0.12 ? 0.85 : 0.35+Math.sin(now*.008+loco*.01)*0.55;
-      const earFlick = Math.sin(now*.012+loco*.004)>0.82?0.35:0;
+      const earFlick = waking?0.55*(1-sleepPose):Math.sin(now*.012+loco*.004)>0.82?0.35:0;
       const footLift=(sleep?14:kind==="stag"?31:kind==="lynx"?23:kind==="fox"?25:27)*scale;
       const plantY=y-bob-leap*8-footLift;
       const restY=groundY-8-bob;
-      const poseY=plantY+(restY-plantY)*sleepBlend;
+      const poseY=plantY+(restY-plantY)*sleepPose;
       const standRot=leap>0.05?-0.22*leap:mode==="attack"?-0.10+lunge*0.38:gait*0.05;
-      ctx.save();ctx.translate(x,groundY+3);ctx.scale(1,.32);
-      const shadow=ctx.createRadialGradient(0,0,2,0,0,30*scale);shadow.addColorStop(0,"rgba(38,15,10,"+(0.48-leap*.22)+")");shadow.addColorStop(1,"rgba(38,15,10,0)");ctx.fillStyle=shadow;ctx.beginPath();ctx.arc(0,0,30*scale,0,Math.PI*2);ctx.fill();ctx.restore();
+      const wakeStretch=waking?hopArc(1-sleepPose,0.07):0;
+      ctx.save();ctx.translate(x+facing*lunge*8,groundY+3);ctx.scale(1+pounce*.08,.3);
+      const shadow=ctx.createRadialGradient(0,0,2,0,0,30*scale);shadow.addColorStop(0,"rgba(18,10,8,"+(0.56-leap*.24+(mode==="attack"?0.1:0))+")");shadow.addColorStop(1,"rgba(18,10,8,0)");ctx.fillStyle=shadow;ctx.beginPath();ctx.arc(0,0,30*scale,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+      ctx.save();ctx.translate(x,groundY+4);ctx.globalAlpha=.55-leap*.25;ctx.fillStyle="rgba(8,4,4,.72)";ctx.fillRect(-16*scale,0,32*scale,2);ctx.restore();
       ctx.save();
-      ctx.translate(x+facing*lunge*18,poseY);
-      ctx.rotate(facing*(standRot+(0.12-standRot)*sleepBlend));
-      ctx.scale(facing*scale*(1+pounce*.12),(kind==="stag"?scale*1.08:scale)*(1-pounce*.08+(sleep?Math.sin(now*.0028)*.02:0)));
+      ctx.translate(x+facing*(lunge*18+weightShift*.55),poseY);
+      ctx.rotate(facing*(standRot+(0.12-standRot)*sleepPose));
+      ctx.scale(facing*scale*(1+pounce*.14+wakeStretch),(kind==="stag"?scale*1.08:scale)*(1-pounce*.08-wakeStretch*.4+(sleepPose>0.2?Math.sin(now*.0028)*.02:0)));
       const tint=variant?.tint;
       const fur=tint?.fur??"#c45a28",furDark=tint?.furDark??"#6b2e18",furLight=tint?.furLight??"#f0a056",chest=tint?.chest??"#ffd2a0",outline="#2a1410",eye=tint?.eye??"#ffe27a";
       const map=mapRef.current;
       const rimGlow=map===1?"rgba(214,232,255,.28)":map===3?"rgba(255,168,96,.22)":map===4?"rgba(180,240,255,.28)":map===5?"rgba(255,176,96,.22)":map===6?"rgba(255,186,206,.24)":"rgba(255,220,176,.28)";
       const bellyShade=map===1?"rgba(10,14,28,.3)":map===3?"rgba(28,10,6,.28)":map===4?"rgba(6,16,24,.3)":map===5?"rgba(24,8,6,.28)":map===6?"rgba(22,8,16,.3)":"rgba(28,12,8,.26)";
-      if(hurt&&Math.floor(now/45)%2===0)ctx.globalAlpha=.55;
+      if(hurt&&pixelHurtFlash(now))ctx.globalAlpha=.58;
       const drawLimb=(lx:number,ly:number,lw:number,lh:number,rot:number)=>{
         ctx.save();ctx.translate(lx,ly);ctx.rotate(rot);ctx.fillStyle=outline;ctx.fillRect(-lw/2-1,-1,lw+2,lh+2);ctx.fillStyle=furDark;ctx.fillRect(-lw/2,0,lw,lh);ctx.restore();
       };
@@ -2031,7 +2072,7 @@ export default function AshfallGame() {
         ctx.fillStyle=outline;ctx.beginPath();ctx.moveTo(12,-22);ctx.lineTo(16,-34);ctx.lineTo(8,-24);ctx.fill();
         ctx.fillStyle=furLight;ctx.beginPath();ctx.moveTo(12,-22);ctx.lineTo(15,-31);ctx.lineTo(9,-23);ctx.fill();
         if(kind==="lynx"){ctx.strokeStyle=furLight;ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(14,-32);ctx.lineTo(12,-40);ctx.stroke();}
-        ctx.fillStyle=eye;ctx.globalAlpha=hurt?ctx.globalAlpha:0.35;ctx.beginPath();ctx.ellipse(14,-14,2.2,1.2,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=hurt&&Math.floor(now/45)%2===0?.55:1;
+        ctx.fillStyle=eye;ctx.globalAlpha=hurt?ctx.globalAlpha:0.35;ctx.beginPath();ctx.ellipse(14,-14,2.2,1.2,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=hurt&&pixelHurtFlash(now)?.58:1;
         ctx.restore();return;
       }
       const frontSwing=mode==="idle"?0.06+idleBreath*0.03:leap>0.12?0.85:mode==="attack"?0.2+lunge*0.9:gait*(mode==="run"?0.82:0.62);
@@ -2092,7 +2133,7 @@ export default function AshfallGame() {
       }
       ctx.restore();
     };
-    const drawPixelWyrm=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean,gait?:number)=>{
+    const drawPixelWyrm=(x:number,y:number,groundY:number,facing:1|-1,mode:DragonMode,elapsed:number,now:number,size:number,hurt:boolean,gait?:number,prevMode?:DragonMode,modeBlendAt?:number)=>{
       const scale=size/150;
       const loco=gait??elapsed;
       const flyAmt=clamp((groundY-y)/90,0,1);
@@ -2100,13 +2141,16 @@ export default function AshfallGame() {
       const hover=8*flyAmt+Math.sin(now*.004)*6*flyAmt+Math.sin(now*.003)*2*(1-flyAmt);
       const attack=mode==="attack"?clamp(elapsed/920,0,1):0;
       const lunge=attack>0.32&&attack<.72?(attack-.32)/.4:0;
+      const sleepPose=sleepPoseAmt(mode, prevMode??mode, modeBlendAt??0, now, elapsed);
+      const curl=sleepPose*(14+Math.sin(now*.0024)*1.4);
       ctx.save();
-      ctx.fillStyle="rgba(24,8,16,"+(0.5-(flyAmt*0.22))+")";
-      ctx.beginPath();ctx.ellipse(x,groundY+3,32*(1-flyAmt*.3)*scale,6*scale,0,0,Math.PI*2);ctx.fill();
-      ctx.translate(x+facing*lunge*16,y-hover);
-      ctx.rotate(facing*(-0.18*flyAmt+(attack>0?-0.1+lunge*.3:wave*.04)*(1-flyAmt*.35)));
-      ctx.scale(facing*scale,scale);
-      if(hurt&&Math.floor(now/45)%2===0)ctx.globalAlpha=.55;
+      ctx.fillStyle="rgba(16,6,12,"+(0.58-(flyAmt*0.24)+sleepPose*.08)+")";
+      ctx.beginPath();ctx.ellipse(x,groundY+3,34*(1-flyAmt*.3)*scale,6.5*scale,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="rgba(10,4,8,.7)";ctx.fillRect(x-18*scale,groundY+4,36*scale,2);
+      ctx.translate(x+facing*lunge*16,y-hover+curl);
+      ctx.rotate(facing*(-0.18*flyAmt+(attack>0?-0.1+lunge*.3:wave*.04)*(1-flyAmt*.35)+sleepPose*.18));
+      ctx.scale(facing*scale*(1+lunge*.1),(scale)*(1-sleepPose*.08-lunge*.05));
+      if(hurt&&pixelHurtFlash(now))ctx.globalAlpha=.58;
       const body="#4a2048",bodyDark="#140816",belly="#d45a6a",glow="#ffc8a0",outline="#1a0810";
       for(let i=6;i>=0;i--){
         const sx=-16-i*12,sy=-10+Math.sin(wave+i*.65)*8,sr=11-i*1.15;
@@ -2125,7 +2169,7 @@ export default function AshfallGame() {
       ctx.fillStyle=belly;ctx.beginPath();ctx.ellipse(6,-10,11,8,0,0,Math.PI*2);ctx.fill();
       ctx.save();ctx.globalAlpha=hurt?ctx.globalAlpha:.55+.4*Math.sin(now*.008);ctx.fillStyle=glow;ctx.shadowColor=glow;ctx.shadowBlur=12;
       ctx.beginPath();ctx.moveTo(4,-14);ctx.bezierCurveTo(10,-24,20,-8,4,4);ctx.bezierCurveTo(-12,-8,-2,-24,4,-14);ctx.fill();
-      ctx.restore();if(hurt&&Math.floor(now/45)%2===0)ctx.globalAlpha=.55;
+      ctx.restore();if(hurt&&pixelHurtFlash(now))ctx.globalAlpha=.58;
       ctx.save();ctx.translate(-2,-24);ctx.rotate(-0.55+wave*.18);
       ctx.fillStyle=outline;ctx.fillRect(-2,-2,5,32);ctx.fillStyle=belly;ctx.fillRect(-1,0,3,28);ctx.fillStyle=glow;ctx.fillRect(0,16,2,10);
       ctx.restore();
@@ -2159,12 +2203,16 @@ export default function AshfallGame() {
       else if(ally.mode==="run")index=Math.floor(gait/100)%Math.max(1,frames.length);
       else if(ally.mode==="fly")index=flapFrame(gait,frames.length);
       else if(ally.mode==="attack")index=Math.min(Math.max(0,frames.length-1),Math.floor(elapsed/175));
-      const frame=frames[index]??DRAGON_FRAMES.idle[0],size=108,spriteScale=size/DRAGON_CELL;
+      const poseMode=locoPoseMode(ally,now);
+      const poseFrames=DRAGON_FRAMES[poseMode]??frames;
+      if(poseMode!==ally.mode&&poseMode==="fly")index=flapFrame(gait,poseFrames.length);
+      else if(poseMode!==ally.mode&&poseMode==="run")index=Math.floor(gait/100)%Math.max(1,poseFrames.length);
+      const frame=poseFrames[index]??frames[index]??DRAGON_FRAMES.idle[0],size=108,spriteScale=size/DRAGON_CELL;
       const smooth=(value:number)=>value*value*(3-2*value);
       const summon=clamp((now-ally.summonedAt)/COMPANION_SUMMON_DURATION,0,1);
-      const summonCreature=smooth(clamp((summon-.22)/.58,0,1));
+      const summonCreature=smooth(clamp((summon-.14)/.7,0,1));
       const recall=ally.recallStarted>0?clamp((now-ally.recallStarted)/COMPANION_RECALL_DURATION,0,1):0;
-      const recallCreature=1-smooth(clamp((recall-.08)/.68,0,1));
+      const recallCreature=1-smooth(clamp((recall-.06)/.78,0,1));
       const visibility=summonCreature*recallCreature;
       const spriteGrow=(.32+summonCreature*.68)*(.22+recallCreature*.78);
       const airHeight=clamp((ally.groundY-ally.y)/110,0,1);
@@ -2244,11 +2292,11 @@ export default function AshfallGame() {
       const summonLift=(1-summonCreature)*34,recallPull=(1-recallCreature)*30;
       if(isJackal){
         ctx.save();ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?"rgba(255,186,82,.85)":"rgba(240,138,58,.45)";ctx.shadowBlur=ally.mode==="attack"?16:8;
-        drawPixelJackal(ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,96*spriteGrow,false,{tint:companionTint??undefined,antlers:companionAntlers,tufts:companionTufts,kind:companionKind,gait});
+        drawPixelJackal(ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,96*spriteGrow,false,{tint:companionTint??undefined,antlers:companionAntlers,tufts:companionTufts,kind:companionKind,gait,prevMode:ally.prevMode,modeBlendAt:ally.modeBlendAt});
         ctx.restore();
       }else if(wyrmTint){
         ctx.save();ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?"rgba(212,90,106,.85)":"rgba(212,90,106,.5)";ctx.shadowBlur=ally.mode==="attack"?17:9;
-        drawPixelWyrm(ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,128*spriteGrow,false,gait);
+        drawPixelWyrm(ally.x,ally.y+summonLift-recallPull,ally.groundY,ally.facing,ally.mode,elapsed,now,128*spriteGrow,false,gait,ally.prevMode,ally.modeBlendAt);
         ctx.restore();
       }else{
         ctx.save();ctx.translate(ally.x,ally.y+summonLift-recallPull);ctx.rotate(ally.facing*(1-recallCreature)*.72);ctx.scale(ally.facing*spriteGrow,spriteGrow);
@@ -2370,14 +2418,20 @@ export default function AshfallGame() {
       if(dragon.health<=0){drawDragonCardTransformation(now);return;}
       let index=0;
       if(dragon.mode==="idle"){
-        const phase=elapsed%2900;index=phase<1550?0:phase<2150?1:phase<2500?2:3;
+        const wake=dragon.prevMode==="sleep"?easeInOut(clamp((now-dragon.modeBlendAt)/WAKE_BLEND_MS,0,1)):1;
+        if(wake<0.28)index=3;
+        else if(wake<0.55)index=2;
+        else if(wake<0.8)index=1;
+        else{const phase=elapsed%2900;index=phase<1550?0:phase<2150?1:phase<2500?2:3;}
       }      else if(dragon.mode==="walk")index=Math.floor(gait/220)%frames.length;
       else if(dragon.mode==="run")index=Math.floor(gait/95)%frames.length;
       else if(dragon.mode==="fly")index=flapFrame(gait,frames.length);
       else if(dragon.mode==="sleep"){
         const remaining=dragon.modeUntil-now;
-        const settle=easeInOut(clamp(elapsed/MODE_BLEND_MS,0,1));
-        if(settle<0.35)index=0;
+        const settle=easeInOut(clamp(elapsed/SLEEP_SETTLE_MS,0,1));
+        if(settle<0.22)index=0;
+        else if(settle<0.48)index=1;
+        else if(settle<0.76)index=2;
         else if(elapsed<420)index=0;
         else if(elapsed<820)index=1;
         else if(elapsed<1220)index=2;
@@ -2404,7 +2458,7 @@ export default function AshfallGame() {
       }
       const breatheScale=dragon.mode==="sleep"&&index===3?1+Math.sin(now*.0032)*.012:dragon.mode==="idle"?1+Math.sin(now*.0024)*.006:dragon.mode==="fly"?1+flapPhase(gait).lift*.02:1;
       ctx.scale(dragon.facing*(1+hitSquash),breatheScale-hitSquash);ctx.imageSmoothingEnabled=true;
-      ctx.globalAlpha=hurtActive&&Math.floor(now/48)%2===0?.52:1;
+      ctx.globalAlpha=hurtActive&&pixelHurtFlash(now)?.52:1;
       ctx.shadowColor=hurtActive?"rgba(255,245,151,.95)":dragon.mode==="attack"?"rgba(126,255,46,.52)":dragon.angry?"rgba(255,92,58,.58)":"rgba(81,188,41,.24)";ctx.shadowBlur=hurtActive?24:dragon.mode==="attack"?16:dragon.angry?13:7;
       ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);
       ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();
@@ -2462,7 +2516,7 @@ export default function AshfallGame() {
         const hurtPulse=hurtActive?Math.sin(hurtProgress*Math.PI):0;
         const recoilX=hurtPulse*10*jackal.hitDirection;
         ctx.save();ctx.shadowColor=hurtActive?"rgba(255,220,140,.9)":jackal.mode==="attack"?"rgba(255,170,70,.55)":jackal.angry?"rgba(255,90,40,.5)":"rgba(240,138,58,.2)";ctx.shadowBlur=hurtActive?18:jackal.angry?12:6;
-        drawPixelJackal(jackal.x+recoilX,jackal.y,jackal.groundY,jackal.facing,jackal.mode,elapsed,now,JACKAL_RENDER_SIZE,hurtActive,{kind:"jackal",gait:jackal.gait});
+        drawPixelJackal(jackal.x+recoilX,jackal.y,jackal.groundY,jackal.facing,jackal.mode,elapsed,now,JACKAL_RENDER_SIZE,hurtActive,{kind:"jackal",gait:jackal.gait,prevMode:jackal.prevMode,modeBlendAt:jackal.modeBlendAt});
         ctx.restore();
         const barW=78,barH=8,barX=jackal.x+recoilX-barW/2,barY=jackal.groundY-112;
         const healthRatio=clamp(jackal.health/jackal.maxHealth,0,1);
@@ -2502,7 +2556,7 @@ export default function AshfallGame() {
       const hurtActive=wyrm.hurtUntil>now,hurtProgress=hurtActive?clamp((now-wyrm.hurtStarted)/520,0,1):1;
       const hurtPulse=hurtActive?Math.sin(hurtProgress*Math.PI):0,recoilX=hurtPulse*13*wyrm.hitDirection;
       ctx.save();ctx.shadowColor=hurtActive?"rgba(255,200,220,.95)":wyrm.mode==="attack"?"rgba(212,90,106,.6)":wyrm.angry?"rgba(212,90,106,.55)":"rgba(212,90,106,.24)";ctx.shadowBlur=hurtActive?24:wyrm.mode==="attack"?18:wyrm.angry?14:8;
-      drawPixelWyrm(wyrm.x+recoilX,wyrm.y,wyrm.groundY,wyrm.facing,wyrm.mode,elapsed,now,WYRM_RENDER_SIZE,hurtActive,wyrm.gait);
+      drawPixelWyrm(wyrm.x+recoilX,wyrm.y,wyrm.groundY,wyrm.facing,wyrm.mode,elapsed,now,WYRM_RENDER_SIZE,hurtActive,wyrm.gait,wyrm.prevMode,wyrm.modeBlendAt);
       ctx.restore();
       const barW=132,barH=11,barX=wyrm.x+recoilX-barW/2,barY=wyrm.y-92;
       const healthRatio=clamp(wyrm.health/wyrm.maxHealth,0,1);
@@ -2549,13 +2603,20 @@ export default function AshfallGame() {
         }
         const frames=DRAGON_FRAMES[roost.mode==="fly"? "fly":roost.mode==="attack"?"attack":roost.mode==="sleep"?"sleep":roost.mode==="run"||roost.mode==="walk"?"run":"idle"];
         const loco=roost.mode==="sleep"||roost.mode==="attack"||roost.mode==="idle"?elapsed:(roost.gait||elapsed);
-        const index=roost.mode==="fly"?flapFrame(roost.gait||elapsed,frames.length):Math.min(frames.length-1,Math.floor(loco/(roost.mode==="run"?95:220))%frames.length);
+        let index=roost.mode==="fly"?flapFrame(roost.gait||elapsed,frames.length):Math.min(frames.length-1,Math.floor(loco/(roost.mode==="run"?95:220))%frames.length);
+        if(roost.mode==="sleep"){
+          const settle=easeInOut(clamp(elapsed/SLEEP_SETTLE_MS,0,1));
+          index=settle<0.28?0:settle<0.58?1:settle<0.82?2:Math.min(3,frames.length-1);
+        }else if(roost.mode==="idle"&&roost.prevMode==="sleep"){
+          const wake=easeInOut(clamp((now-roost.modeBlendAt)/WAKE_BLEND_MS,0,1));
+          if(wake<0.3)index=3;else if(wake<0.58)index=2;else if(wake<0.82)index=1;
+        }
         const frame=frames[index];
         const hurtActive=roost.hurtUntil>now,hurtProgress=hurtActive?clamp((now-roost.hurtStarted)/480,0,1):1;
         const recoilX=hurtActive?Math.sin(hurtProgress*Math.PI)*10*roost.hitDirection:0;
         ctx.save();ctx.fillStyle="rgba(1,4,5,.5)";ctx.beginPath();ctx.ellipse(roost.x,roost.groundY+3,26,5.5,0,0,Math.PI*2);ctx.fill();ctx.restore();
         ctx.save();ctx.translate(roost.x+recoilX,roost.y);ctx.scale(roost.facing,1);ctx.imageSmoothingEnabled=true;
-        ctx.globalAlpha=hurtActive&&Math.floor(now/48)%2===0?.52:1;
+        ctx.globalAlpha=hurtActive&&pixelHurtFlash(now)?.52:1;
         ctx.shadowColor=hurtActive?"rgba(255,245,151,.9)":roost.angry?"rgba(255,92,58,.5)":"rgba(81,188,41,.22)";ctx.shadowBlur=hurtActive?18:roost.angry?11:6;
         ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);
         ctx.restore();
@@ -2592,7 +2653,7 @@ export default function AshfallGame() {
         const hurtPulse=hurtActive?Math.sin(hurtProgress*Math.PI):0;
         const recoilX=hurtPulse*10*beast.hitDirection;
         ctx.save();ctx.shadowColor=hurtActive?"rgba(255,220,140,.9)":beast.mode==="attack"?"rgba(255,170,70,.55)":beast.angry?"rgba(255,90,40,.5)":"rgba(240,138,58,.2)";ctx.shadowBlur=hurtActive?18:beast.angry?12:6;
-        drawPixelJackal(beast.x+recoilX,beast.y,beast.groundY,beast.facing,beast.mode,elapsed,now,renderSize,hurtActive,{tint:tint??undefined,antlers,tufts,kind,gait:beast.gait});
+        drawPixelJackal(beast.x+recoilX,beast.y,beast.groundY,beast.facing,beast.mode,elapsed,now,renderSize,hurtActive,{tint:tint??undefined,antlers,tufts,kind,gait:beast.gait,prevMode:beast.prevMode,modeBlendAt:beast.modeBlendAt});
         ctx.restore();
         const barW=78,barH=8,barX=beast.x+recoilX-barW/2,barY=beast.groundY-renderSize*.94;
         const healthRatio=clamp(beast.health/beast.maxHealth,0,1);
@@ -3076,7 +3137,7 @@ export default function AshfallGame() {
         if(pl.y>WORLD_H+80){pl.x=Math.max(120,pl.x-180);pl.y=240;pl.vy=0;pl.grounded=false;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}pl.step+=Math.abs(pl.vx)*dt*.048;
       }else{pl.vx*=.82;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
       const castState=companionCastRef.current;
-      const castDuration=castState.kind==="recall"?COMPANION_RECALL_DURATION:780;
+      const castDuration=castState.kind==="recall"?COMPANION_RECALL_DURATION:COMPANION_SUMMON_DURATION;
       if(castState.kind&&now-castState.started<castDuration)pl.facing=castState.direction;
       updateDragon(dt,now);updateJackals(dt,now);
       if(deployQueued.current){
