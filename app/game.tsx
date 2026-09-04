@@ -472,7 +472,7 @@ const NPCS:Npc[] = [
       {speaker:"Tamsin",text:"The animals are the echo."},
       {speaker:"Tamsin",text:"Bind the spark, then go east. The east portal heals you. The shore is longer than it looks from here."}
     ],
-    againTalk:[{speaker:"Tamsin",text:"Still on the wall, Moon Night. Bind the spark if you haven't, then go east. The east portal heals you."},{speaker:"Tamsin",text:"The merlon is farther east if the rain feels thin. I walk the kiln road later."}],
+    againTalk:[{speaker:"Tamsin",text:"Still on the wall, Moon Night. Bind the spark if you haven't, then go east. The east portal heals you."},{speaker:"Tamsin",text:"The merlon is farther east. Press E there if the rain feels thin."}],
     afterCaptureTalk:[
       {speaker:"Tamsin",text:"You took the first spark. The rain on this wall is quieter now."},
       {speaker:"Tamsin",text:"The east portal heals you. I'll take the long road to the kiln. Tell Reed a merlon-watcher still stands."}
@@ -563,7 +563,7 @@ const NPCS:Npc[] = [
       {speaker:"Maer",text:"The animals are the echo."},
       {speaker:"Maer",text:"Bind the first spark, then go east. The east portal heals you. The shore is longer than this rain looks."}
     ],
-    againTalk:[{speaker:"Maer",text:"Still on the leftover road, Moon Night. Bind the spark if you haven't, then go east."},{speaker:"Maer",text:"The east portal heals you."},{speaker:"Maer",text:"The merlon is west if the rain feels thin. The dragon still keeps the ruins."}],
+    againTalk:[{speaker:"Maer",text:"Still on the leftover road, Moon Night. Bind the spark if you haven't, then go east."},{speaker:"Maer",text:"The east portal heals you."},{speaker:"Maer",text:"The merlon is west. Press E there if the rain feels thin."}],
     afterCaptureTalk:[
       {speaker:"Maer",text:"You took the first spark. The leftover road I walk is quieter now."},
       {speaker:"Maer",text:"The east portal heals you. I'll keep the leftover rain walking."},
