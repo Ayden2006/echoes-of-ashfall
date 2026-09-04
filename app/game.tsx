@@ -293,8 +293,7 @@ const NPCS:Npc[] = [
     ],
     againTalk:[
       {speaker:"Calen",text:"We meet again. I left the castle rain for this watch."},
-      {speaker:"Calen",text:"Same spark, later wind. The moonwell still tries to bottle what we already carry."},
-      {speaker:"Calen",text:"Press E there if the cliff feels thin."}
+      {speaker:"Calen",text:"Same spark, later wind. The moonwell still bottles what we carry. Press E there if the pool feels thin."}
     ],
     afterCaptureTalk:[
       {speaker:"Calen",text:"Pale antlers. The moonwell poured the signal into that stag."},
@@ -347,7 +346,7 @@ const NPCS:Npc[] = [
       {speaker:"Bram",text:"Cinder Foxes. Ember coats, white-tipped tails. Leftover heat — the animals are the echo."},
       {speaker:"Bram",text:"Bind a fox, then go east. The east portal heals you. Read the split cairn mid-hollow before the well."}
     ],
-    againTalk:[{speaker:"Bram",text:"Still scouting, Moon Night. Bind a fox if you haven't, then go east. The east portal heals you."},{speaker:"Bram",text:"The cairn is the part nobody wants to hear. Press E on it."}],
+    againTalk:[{speaker:"Bram",text:"Still scouting, Moon Night. Bind a fox if you haven't, then go east. The east portal heals you."},{speaker:"Bram",text:"The cairn is the part nobody wants to hear. Press E there if the stones feel thin."}],
     afterCaptureTalk:[
       {speaker:"Bram",text:"You took the leftover fire. That's foxfire — the echo shedding heat."},
       {speaker:"Bram",text:"Don't think the cliffs will be quieter. The stag will try to hold what you just carried."},
@@ -442,7 +441,7 @@ const NPCS:Npc[] = [
       {speaker:"Vess",text:"That's the twist. The animals are the echo. Bram scouts the foxes. I read the stones."},
       {speaker:"Vess",text:"Bind leftover heat, then go east. The east portal heals you. Don't mistake the gate for the call."}
     ],
-    againTalk:[{speaker:"Vess",text:"Still reading, Moon Night. Bind leftover heat if you haven't, then go east. The east portal heals you."},{speaker:"Vess",text:"If you skipped the cairn, walk back. The hollow is the part nobody wants to hear."}],
+    againTalk:[{speaker:"Vess",text:"Still reading, Moon Night. Bind leftover heat if you haven't, then go east. The east portal heals you."},{speaker:"Vess",text:"If you skipped the cairn, walk back. Press E there if the stones feel thin."}],
     afterCaptureTalk:[
       {speaker:"Vess",text:"You took the leftover fire. The cairn was right."},
       {speaker:"Vess",text:"The east portal heals you. I'll walk the kiln road. If Reed still tends heat, tell him the ash already knew."}
@@ -532,7 +531,7 @@ const NPCS:Npc[] = [
       {speaker:"Holt",text:"That's the part. The animals are the echo. Bram scouts the foxes. Vess reads the writing."},
       {speaker:"Holt",text:"Bind leftover heat, then go east. The east portal heals you. The well is through that gate."}
     ],
-    againTalk:[{speaker:"Holt",text:"Still on the cairn road, Moon Night. Bind leftover heat if you haven't, then go east."},{speaker:"Holt",text:"The east portal heals you."},{speaker:"Holt",text:"If you skipped the split cairn, walk west. That twist is the road."}],
+    againTalk:[{speaker:"Holt",text:"Still on the cairn road, Moon Night. Bind leftover heat if you haven't, then go east."},{speaker:"Holt",text:"The east portal heals you."},{speaker:"Holt",text:"If you skipped the split cairn, walk west. Press E there if the stones feel thin."}],
     afterCaptureTalk:[
       {speaker:"Holt",text:"You took the leftover-fire shard. That's foxfire — the echo shedding what the shore dropped."},
       {speaker:"Holt",text:"The cairn stayed honest. Leftover fire lives in the animals, not the next gate."},
