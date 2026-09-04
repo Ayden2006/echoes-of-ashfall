@@ -59,11 +59,11 @@ test("angry extras chase beyond their patrol box without crossing the whole map"
   assert.match(game, /const move=chaseBounds\(jackal\.angry,jackal\.patrolMin,jackal\.patrolMax,worldWidthFor\(mapRef\.current\)\)/);
   assert.match(game, /isCombatOnlyBeast\(jackal\.id\)&&pl\.health>0&&playerDistance<COMBAT_ONLY_AGGRO_RANGE/);
   assert.match(game, /const COMBAT_ONLY_AGGRO_RANGE = 220/);
-  assert.match(game, /createJackal\("sunset-jackal-scout",2400,2320,2480\)/);
-  assert.match(game, /createBeast\("ash-roost",4380,4180,4560/);
-  assert.match(game, /createBeast\("cinder-fox-c",1780,1600,1960/);
-  assert.match(game, /createBeast\("pale-stag-b",3720,3480,4040/);
-  assert.match(game, /createBeast\("ember-lynx-d",2620,2520,2720/);
+  assert.match(game, /createJackal\("sunset-jackal-scout",3300,3160,3420\)/);
+  assert.match(game, /createBeast\("ash-roost",6000,5780,6320/);
+  assert.match(game, /createBeast\("cinder-fox-c",2360,2120,2580/);
+  assert.match(game, /createBeast\("pale-stag-b",4980,4680,5460/);
+  assert.match(game, /createBeast\("ember-lynx-d",3620,3440,3800/);
 });
 
 test("lock holds: Moon Night, no romance, no maps 7+, extras stay combat-only", () => {

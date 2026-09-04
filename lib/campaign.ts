@@ -34,7 +34,7 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     id: 1,
     name: "The Signal in the Rain",
     chapter: "Chapter I",
-    width: 5200,
+    width: 7000,
     playable: true,
     objective: "Find the baby dragon in the rain, then take the far-right portal.",
     intro: [
@@ -43,7 +43,7 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
       { speaker: "Moon Night", text: "Defeat the dragon, take its card, then follow the signal east." }
     ],
     entryPortalX: 105,
-    exitPortalX: 5070,
+    exitPortalX: 6870,
     nextMap: 2,
     prevMap: null,
     animal: "Baby Dragon"
@@ -52,7 +52,7 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     id: 2,
     name: "Sunset Shore",
     chapter: "Chapter II",
-    width: 3600,
+    width: 5200,
     playable: true,
     objective: "Track the three Sunset Jackals, then take the eastern portal to Ash Hollow.",
     intro: [
@@ -61,7 +61,7 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
       { speaker: "Moon Night", text: "Bind one, then push east before the light dies." }
     ],
     entryPortalX: 105,
-    exitPortalX: 3470,
+    exitPortalX: 5070,
     nextMap: 3,
     prevMap: 1,
     animal: "Sunset Jackal"
@@ -70,7 +70,7 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     id: 3,
     name: "Ash Hollow",
     chapter: "Chapter III",
-    width: 4000,
+    width: 5800,
     playable: true,
     objective: "Bind a Cinder Fox in the hollow, then reach the moonwell gate.",
     intro: [
@@ -79,7 +79,7 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
       { speaker: "Moon Night", text: "A Cinder Fox can walk the ash with me if I earn its card." }
     ],
     entryPortalX: 105,
-    exitPortalX: 3870,
+    exitPortalX: 5670,
     nextMap: 4,
     prevMap: 2,
     animal: "Cinder Fox"
@@ -88,7 +88,7 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     id: 4,
     name: "Moonwell Cliffs",
     chapter: "Chapter IV",
-    width: 4200,
+    width: 6000,
     playable: true,
     objective: "Face the Pale Stag, then take the far gate into The Quiet Ember.",
     intro: [
@@ -97,7 +97,7 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
       { speaker: "Moon Night", text: "A Pale Stag keeps this cliff. East is The Quiet Ember." }
     ],
     entryPortalX: 105,
-    exitPortalX: 4070,
+    exitPortalX: 5870,
     nextMap: 5,
     prevMap: 3,
     animal: "Pale Stag"
@@ -106,7 +106,7 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     id: 5,
     name: "The Quiet Ember",
     chapter: "Chapter V",
-    width: 4400,
+    width: 6200,
     playable: true,
     objective: "Talk to Reed, bind an Ember Lynx, then follow the coals to Ashfall's Heart.",
     intro: [
@@ -114,7 +114,7 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
       { speaker: "Moon Night", text: "Lynx-shaped coals hunt the dark. A kiln-keeper is tending the last heat." }
     ],
     entryPortalX: 105,
-    exitPortalX: 4270,
+    exitPortalX: 6070,
     nextMap: 6,
     prevMap: 4,
     animal: "Ember Lynx"
@@ -123,7 +123,7 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     id: 6,
     name: "Ashfall's Heart",
     chapter: "Chapter VI",
-    width: 4800,
+    width: 6600,
     playable: true,
     objective: "Speak with Kest, face the Heart Wyrm, and let the signal rest at the altar.",
     intro: [
