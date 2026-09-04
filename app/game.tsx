@@ -55,21 +55,26 @@ const MAP3_NEST_X = 2900;
 const MAP4_LICHEN_X = 2580;
 const COMBAT_ONLY_BEAST_IDS = new Set(["sunset-jackal-scout","ash-roost","cinder-fox-c","pale-stag-b","ember-lynx-d"]);
 const isCombatOnlyBeast = (id:string) => COMBAT_ONLY_BEAST_IDS.has(id);
-const COMPANION_HUNT_RANGE = 680;
+const COMPANION_HUNT_RANGE = 520;
 const COMPANION_STRIKE_RANGE = 132;
-const COMPANION_STRIKE_DAMAGE = 8;
-const COMBAT_ONLY_AGGRO_RANGE = 390;
-type HuntTarget = {x:number; health:number};
+const COMPANION_STRIKE_DAMAGE = 5;
+const COMPANION_STRIKE_RECOVERY = 840;
+const COMBAT_ONLY_AGGRO_RANGE = 220;
+const EXTRA_CHASE_LEEWAY = 360;
+type HuntTarget = {x:number; health:number; id?:string; angry?:boolean};
 const nearestHuntTarget = <T extends HuntTarget>(fromX:number, hostiles:T[], range:number):T|null => {
   let best:T|null=null, bestDist=range;
   for(const hostile of hostiles){
     if(hostile.health<=0)continue;
+    if(hostile.id&&isCombatOnlyBeast(hostile.id)&&!hostile.angry)continue;
     const dist=Math.abs(hostile.x-fromX);
     if(dist<=bestDist){best=hostile;bestDist=dist;}
   }
   return best;
 };
-const chaseBounds = (angry:boolean, patrolMin:number, patrolMax:number, mapW:number) => angry?{min:48,max:mapW-48}:{min:patrolMin,max:patrolMax};
+const chaseBounds = (angry:boolean, patrolMin:number, patrolMax:number, mapW:number) => angry?{min:Math.max(48,patrolMin-EXTRA_CHASE_LEEWAY),max:Math.min(mapW-48,patrolMax+EXTRA_CHASE_LEEWAY)}:{min:patrolMin,max:patrolMax};
+const ASSET_BASE = ((import.meta as ImportMeta & {env?:{BASE_URL?:string}}).env?.BASE_URL || "/").replace(/\/?$/, "/");
+const assetUrl = (file:string) => ASSET_BASE + file.replace(/^\//, "");
 const MAX_HEALTH = 100;
 const SWORD_DAMAGE = 15;
 const MAX_STAMINA = 100;
@@ -77,7 +82,7 @@ const SWORD_STAMINA_COST = 25;
 const STAMINA_REGEN_DELAY = 650;
 const STAMINA_REGEN_PER_SECOND = 45;
 const PLAYER_NAME = "Moon Night";
-const DRAGON_MAX_HEALTH = 150;
+const DRAGON_MAX_HEALTH = 120;
 const DRAGON_ATTACK_DAMAGE = 10;
 const DRAGON_RENDER_SIZE = 138;
 const DRAGON_SIGHT_RANGE = 720;
@@ -94,7 +99,7 @@ const COMPANION_RECALL_DURATION = 980;
 const INVENTORY_CAPACITY = 30;
 const ACTIVE_SLOT_COUNT = 5;
 const BABY_DRAGON_CARD:InventoryItem = {
-  id:"baby-dragon-card",name:"Baby Dragon",type:"animal-card",description:"The first spark of Ashfall's fading echo, bound from a young ash dragon.",image:"/baby-dragon-sprite-sheet.png",
+  id:"baby-dragon-card",name:"Baby Dragon",type:"animal-card",description:"The first spark of Ashfall's fading echo, bound from a young ash dragon.",image:assetUrl("/baby-dragon-sprite-sheet.png"),
   palette:{dark:"#090d0c",mid:"#202a24",accent:"#71d92f",glow:"#b2ff55"}
 };
 const JACKAL_MAX_HEALTH = 70;
@@ -103,7 +108,7 @@ const JACKAL_SIGHT_RANGE = 620;
 const JACKAL_ATTACK_RANGE = 118;
 const JACKAL_RENDER_SIZE = 92;
 const SUNSET_JACKAL_CARD:InventoryItem = {
-  id:"sunset-jackal-card",name:"Sunset Jackal",type:"animal-card",description:"A dusk-born shard of the fading signal from the sunset shore.",image:"/sunset-jackal-card.svg",
+  id:"sunset-jackal-card",name:"Sunset Jackal",type:"animal-card",description:"A dusk-born shard of the fading signal from the sunset shore.",image:assetUrl("/sunset-jackal-card.svg"),
   palette:{dark:"#2a120c",mid:"#7a3118",accent:"#f08a3a",glow:"#ffd27a"}
 };
 const JACKAL_CARD_BY_BEAST:Record<string,InventoryItem> = {
@@ -116,19 +121,19 @@ const cardThumbClass = (item:InventoryItem) => item.image.includes("sprite-sheet
 const FOX_MAX_HEALTH = 55;
 const FOX_ATTACK_DAMAGE = 7;
 const FOX_RENDER_SIZE = 78;
-const CINDER_FOX_CARD:InventoryItem = {id:"cinder-fox-card",name:"Cinder Fox",type:"animal-card",description:"Leftover heat of the echo, bound from Ash Hollow foxfire.",image:"/cinder-fox-card.svg",palette:{dark:"#1a0a08",mid:"#6a2414",accent:"#ff7a3a",glow:"#ffc08a"}};
+const CINDER_FOX_CARD:InventoryItem = {id:"cinder-fox-card",name:"Cinder Fox",type:"animal-card",description:"Leftover heat of the echo, bound from Ash Hollow foxfire.",image:assetUrl("/cinder-fox-card.svg"),palette:{dark:"#1a0a08",mid:"#6a2414",accent:"#ff7a3a",glow:"#ffc08a"}};
 const STAG_MAX_HEALTH = 95;
 const STAG_ATTACK_DAMAGE = 10;
 const STAG_RENDER_SIZE = 118;
-const PALE_STAG_CARD:InventoryItem = {id:"pale-stag-card",name:"Pale Stag",type:"animal-card",description:"Moonwell light pooled into a stag — the echo holding still.",image:"/pale-stag-card.svg",palette:{dark:"#0b1418",mid:"#2a4a55",accent:"#8ee7ff",glow:"#d7fbff"}};
+const PALE_STAG_CARD:InventoryItem = {id:"pale-stag-card",name:"Pale Stag",type:"animal-card",description:"Moonwell light pooled into a stag — the echo holding still.",image:assetUrl("/pale-stag-card.svg"),palette:{dark:"#0b1418",mid:"#2a4a55",accent:"#8ee7ff",glow:"#d7fbff"}};
 const LYNX_MAX_HEALTH = 95;
 const LYNX_ATTACK_DAMAGE = 10;
 const LYNX_RENDER_SIZE = 94;
-const EMBER_LYNX_CARD:InventoryItem = {id:"ember-lynx-card",name:"Ember Lynx",type:"animal-card",description:"The last banked heat of the signal, a coal-pelt lynx from The Quiet Ember.",image:"/ember-lynx-card.svg",palette:{dark:"#1a0c08",mid:"#7a2e14",accent:"#e07030",glow:"#ffb060"}};
+const EMBER_LYNX_CARD:InventoryItem = {id:"ember-lynx-card",name:"Ember Lynx",type:"animal-card",description:"The last banked heat of the signal, a coal-pelt lynx from The Quiet Ember.",image:assetUrl("/ember-lynx-card.svg"),palette:{dark:"#1a0c08",mid:"#7a2e14",accent:"#e07030",glow:"#ffb060"}};
 const WYRM_MAX_HEALTH = 170;
 const WYRM_ATTACK_DAMAGE = 14;
 const WYRM_RENDER_SIZE = 152;
-const HEART_WYRM_CARD:InventoryItem = {id:"heart-wyrm-card",name:"Heart Wyrm",type:"animal-card",description:"The last pulse of Ashfall's Heart — the echo ready to rest.",image:"/heart-wyrm-card.svg",palette:{dark:"#140816",mid:"#4a2048",accent:"#d45a6a",glow:"#ffc8a0"}};
+const HEART_WYRM_CARD:InventoryItem = {id:"heart-wyrm-card",name:"Heart Wyrm",type:"animal-card",description:"The last pulse of Ashfall's Heart — the echo ready to rest.",image:assetUrl("/heart-wyrm-card.svg"),palette:{dark:"#140816",mid:"#4a2048",accent:"#d45a6a",glow:"#ffc8a0"}};
 const CAMPAIGN_OPENING:Line[] = [{speaker:"Moon Night",text:"The rain carries a signal. Something in Ashfall is still calling."},{speaker:"Moon Night",text:"Follow the echo through castle, shore, ash, moonwell, quiet ember, and heart."},{speaker:"Moon Night",text:"If an animal falls, its spirit becomes a card. Press E to take it, then Q to deploy."}];
 const MAP_STORY:Record<MapId,{name:string;objective:string;intro:Line[]}> = {
   1:{name:"The Signal in the Rain",objective:"Find the baby dragon in the rain, then take the far-right portal.",intro:[{speaker:"Moon Night",text:"Moonlit stone. A young ash dragon hunts these ruins."},{speaker:"Moon Night",text:"The rain is not just weather. The echo is already in the walls."},{speaker:"Moon Night",text:"Defeat the dragon, take its card, then follow the signal east."}]},
@@ -576,6 +581,7 @@ export default function AshfallGame() {
       dialogueRef.current=null;setDialogue(null);
     }
     pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
+    pl.health=pl.maxHealth;staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;setHealth(pl.maxHealth);setStamina(MAX_STAMINA);
     const ally=companionRef.current;
     if(ally.active&&ally.itemId){
       const now=performance.now();
@@ -682,11 +688,11 @@ export default function AshfallGame() {
     const canvas=canvasRef.current, ctx=canvas?.getContext("2d");
     if (!canvas||!ctx) return;
     let raf=0,last=performance.now(),cameraX=0,lastAction="",lastHealth=player.current.health,lastStamina=Math.round(staminaRef.current),lastMapProgress=-1,lastHudMap:MapId=1;
-    const backdrop=new Image(); backdrop.src="/pixel-castle-night.png";
-    const beachBackdrop=new Image(); beachBackdrop.src="/map2-sunset-beach.png";
-    const knight=new Image(); knight.src="/knight-sprite-sheet.png";
-    const dragonImage=new Image(); dragonImage.src="/baby-dragon-sprite-sheet.png";
-    const jackalCardArt=new Image(); jackalCardArt.src="/sunset-jackal-card.svg";
+    const backdrop=new Image(); backdrop.src=assetUrl("/pixel-castle-night.png");
+    const beachBackdrop=new Image(); beachBackdrop.src=assetUrl("/map2-sunset-beach.png");
+    const knight=new Image(); knight.src=assetUrl("/knight-sprite-sheet.png");
+    const dragonImage=new Image(); dragonImage.src=assetUrl("/baby-dragon-sprite-sheet.png");
+    const jackalCardArt=new Image(); jackalCardArt.src=assetUrl("/sunset-jackal-card.svg");
     const dragon:Dragon={x:1710,y:570,groundY:570,vx:0,facing:1,mode:"idle",modeStarted:last,modeUntil:last+2800,health:DRAGON_MAX_HEALTH,maxHealth:DRAGON_MAX_HEALTH,attackDamage:DRAGON_ATTACK_DAMAGE,lastPlayerAttack:-1,attackLanded:false,hurtStarted:0,hurtUntil:0,hitDirection:1,lastDamage:0,angry:false,landing:false,targetX:1840,awarenessUntil:0};
     const createJackal=(id:string,x:number,patrolMin:number,patrolMax:number):Jackal=>({
       id,x,y:590,groundY:590,vx:0,facing:1,mode:"idle",modeStarted:last,modeUntil:last+2200+Math.random()*1800,
@@ -696,25 +702,25 @@ export default function AshfallGame() {
     const jackals:Jackal[]=[
       createJackal("sunset-jackal-a",980,720,1280),
       createJackal("sunset-jackal-b",1880,1580,2280),
-      createJackal("sunset-jackal-scout",2400,2080,2740),
+      createJackal("sunset-jackal-scout",2400,2320,2480),
       createJackal("sunset-jackal-c",2860,2520,3320)
     ];
     const createBeast=(id:string,x:number,patrolMin:number,patrolMax:number,health:number,damage:number):Jackal=>({...createJackal(id,x,patrolMin,patrolMax),health,maxHealth:health,attackDamage:damage,y:590,groundY:590});
     const roosts:Jackal[]=[
-      createBeast("ash-roost",3820,3280,4560,80,8)
+      createBeast("ash-roost",4380,4180,4560,80,8)
     ];
     const foxes:Jackal[]=[
       createBeast("cinder-fox-a",920,620,1480,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE),
-      createBeast("cinder-fox-c",1780,1360,2280,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE),
+      createBeast("cinder-fox-c",1780,1600,1960,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE),
       createBeast("cinder-fox-b",2480,2100,3300,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE)
     ];
     const stags:Jackal[]=[
       createBeast("pale-stag-a",1760,1180,2680,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE),
-      createBeast("pale-stag-b",3600,3040,4040,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE)
+      createBeast("pale-stag-b",3720,3480,4040,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE)
     ];
     const lynxes:Jackal[]=[
       createBeast("ember-lynx-a",1280,980,1680,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE),
-      createBeast("ember-lynx-d",1820,1480,2360,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE),
+      createBeast("ember-lynx-d",2620,2520,2720,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE),
       createBeast("ember-lynx-b",2140,1960,2480,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE),
       createBeast("ember-lynx-c",3120,2760,3580,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE)
     ];
@@ -1499,7 +1505,7 @@ export default function AshfallGame() {
             tone(118,.1,.02);
           }
         }
-        if(attackElapsed>720){ally.modeStarted=now;ally.attackLanded=false;}
+        if(attackElapsed>COMPANION_STRIKE_RECOVERY){ally.modeStarted=now;ally.attackLanded=false;}
         return;
       }
 
