@@ -72,7 +72,7 @@ test("E-talk stays Moon Night, never Moon Knight, with leftover knight and softl
 
   const allowed = new Set([
     "Moon Night", "Reed", "Kest", "Calen", "Sera", "Bram", "Orrin", "Nia", "Vess",
-    "Tamsin", "Lira", "Holt", "Maer", "Perrin", "Wren", "Dell", "Isk", "Rowan", "Ryn", "Edan",
+    "Tamsin", "Lira", "Holt", "Maer", "Perrin", "Wren", "Dell", "Isk", "Rowan", "Ryn", "Edan", "Hale",
   ]);
   const walkLines = talkLinesFrom(walkTalk).filter((line) => !/each was a shard of the same fading call/.test(line.text));
   assert.ok(walkLines.length >= 330, "walk talk should still cover opening, maps, people, and studyables");

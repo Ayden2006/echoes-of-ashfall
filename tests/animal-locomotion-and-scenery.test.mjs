@@ -66,9 +66,9 @@ test("locks hold: Moon Night, no people-talk edits, no dating, no maps 7+, PR #1
   assert.match(game, /const COMBAT_ONLY_AGGRO_RANGE = 220/);
   assert.match(game, /if\(hunting&&hunted\)\{ally\.targetX=hunted\.x;ally\.attackUntil=now\+1600;\}/);
   assert.doesNotMatch(game, /ally\.attackUntil=now\+900/);
-  assert.equal((game.match(/firstTalk:\[/g) || []).length, 35);
-  assert.equal((game.match(/againTalk:\[/g) || []).length, 35);
-  assert.equal((game.match(/afterCaptureTalk:\[/g) || []).length, 35);
+  assert.equal((game.match(/firstTalk:\[/g) || []).length, 36);
+  assert.equal((game.match(/againTalk:\[/g) || []).length, 36);
+  assert.equal((game.match(/afterCaptureTalk:\[/g) || []).length, 36);
   assert.match(game, /id:"tamsin"/);
   assert.match(game, /id:"lira"/);
   assert.match(game, /id:"holt"/);
@@ -80,6 +80,7 @@ test("locks hold: Moon Night, no people-talk edits, no dating, no maps 7+, PR #1
   assert.match(game, /id:"rowan"/);
   assert.match(game, /id:"ryn"/);
   assert.match(game, /id:"edan"/);
+  assert.match(game, /id:"hale"/);
   assert.match(game, /We meet again\. Castle merlon, then kiln road/);
   assert.match(game, /id:"reed"/);
   assert.match(game, /id:"kest"/);
