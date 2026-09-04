@@ -25,10 +25,10 @@ test("animals keep a continuous gait clock and blend modes instead of snapping Y
 test("walk/run/fly/sleep/leap/pounce use gait or eased pose, and Q deploy still eases", () => {
   assert.match(game, /else if\(dragon\.mode==="walk"\)index=Math\.floor\(gait\/220\)%frames\.length/);
   assert.match(game, /else if\(dragon\.mode==="run"\)index=Math\.floor\(gait\/95\)%frames\.length/);
-  assert.match(game, /else if\(dragon\.mode==="fly"\)index=Math\.floor\(gait\/100\)%frames\.length/);
+  assert.match(game, /else if\(dragon\.mode==="fly"\)index=flapFrame\(gait,frames\.length\)/);
   assert.match(game, /else if\(ally\.mode==="walk"\)index=Math\.floor\(gait\/180\)%/);
   assert.match(game, /else if\(ally\.mode==="run"\)index=Math\.floor\(gait\/100\)%/);
-  assert.match(game, /else if\(ally\.mode==="fly"\)index=Math\.floor\(gait\/125\)%/);
+  assert.match(game, /else if\(ally\.mode==="fly"\)index=flapFrame\(gait,frames\.length\)/);
   assert.match(game, /const sleepBlend=mode==="sleep"\?easeInOut\(clamp\(elapsed\/MODE_BLEND_MS,0,1\)\):0/);
   assert.match(game, /const leap=air/);
   assert.match(game, /const flyAmt=clamp\(\(groundY-y\)\/90,0,1\)/);
@@ -63,10 +63,14 @@ test("locks hold: Moon Night, no people-talk edits, no dating, no maps 7+, PR #1
   assert.match(game, /const COMBAT_ONLY_AGGRO_RANGE = 220/);
   assert.match(game, /if\(hunting&&hunted\)\{ally\.targetX=hunted\.x;ally\.attackUntil=now\+1600;\}/);
   assert.doesNotMatch(game, /ally\.attackUntil=now\+900/);
-  assert.equal((game.match(/firstTalk:\[/g) || []).length, 16);
-  assert.equal((game.match(/againTalk:\[/g) || []).length, 16);
-  assert.equal((game.match(/afterCaptureTalk:\[/g) || []).length, 16);
+  assert.equal((game.match(/firstTalk:\[/g) || []).length, 24);
+  assert.equal((game.match(/againTalk:\[/g) || []).length, 24);
+  assert.equal((game.match(/afterCaptureTalk:\[/g) || []).length, 24);
   assert.match(game, /id:"tamsin"/);
+  assert.match(game, /id:"lira"/);
+  assert.match(game, /id:"holt"/);
+  assert.match(game, /id:"maer"/);
+  assert.match(game, /id:"perrin"/);
   assert.match(game, /We meet again\. Castle merlon, then kiln road/);
   assert.match(game, /id:"reed"/);
   assert.match(game, /id:"kest"/);
