@@ -595,6 +595,8 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
   const cues = [
     ["calen", 1, /rain-cut groove/, /Press E there/],
     ["wren", 1, /rain-cut groove/, /Press E there/],
+    ["tamsin", 1, /merlon/, /Press E there/],
+    ["maer", 1, /merlon/, /Press E there/],
     ["orrin", 1, /plaque higher up/, /Press E there/],
     ["sera", 2, /dusk-shell/, /Press E there/],
     ["lira", 2, /drowned post/, /Press E there/],
@@ -619,7 +621,7 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
     assert.match(again, secret, `${id}:${map} againTalk should name the nearby studyable`);
     assert.match(again, press, `${id}:${map} againTalk should say to press E`);
     const named = [
-      /rain-cut groove/i, /plaque/i, /dusk-shell/i, /drowned post/i, /tide-cut step/i,
+      /rain-cut groove/i, /plaque/i, /merlon/i, /dusk-shell/i, /drowned post/i, /tide-cut step/i,
       /foxfire hollow/i, /split cairn|the cairn/i, /cliff notch/i, /moonwell/i,
       /quiet kiln/i, /coal-bed/i, /bellows/i, /echo-stone/i, /cooled vein/i, /first-step stone/i,
     ].filter((re) => re.test(again));
@@ -635,6 +637,8 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
   assert.match(againOf("hale", 5), /The quiet kiln still sits west\. Press E there if the coals feel thin/);
   assert.match(againOf("calen", 1), /Press E there if the road feels thin/);
   assert.match(againOf("wren", 1), /Press E there if the signal feels thin/);
+  assert.match(againOf("tamsin", 1), /Press E there if the rain feels thin/);
+  assert.match(againOf("maer", 1), /Press E there if the rain feels thin/);
   assert.match(againOf("orrin", 1), /Press E there if the rain feels thin/);
   assert.match(againOf("sera", 2), /Press E there if the gold feels thin/);
   assert.match(againOf("lira", 2), /Press E there if the light feels thin/);
