@@ -43,12 +43,14 @@ test("locks hold after flap and atmosphere polish", () => {
   assert.doesNotMatch(game, /radio encounter|tune the radio/i);
   assert.match(game, /const COMPANION_HUNT_RANGE = 520/);
   assert.match(game, /if\(hunting&&hunted\)\{ally\.targetX=hunted\.x;ally\.attackUntil=now\+1600;\}/);
-  assert.equal((game.match(/firstTalk:\[/g) || []).length, 32);
+  assert.equal((game.match(/firstTalk:\[/g) || []).length, 35);
   assert.match(game, /id:"lira"/);
   assert.match(game, /id:"holt"/);
   assert.match(game, /id:"wren"/);
   assert.match(game, /id:"dell"/);
   assert.match(game, /id:"isk"/);
   assert.match(game, /id:"rowan"/);
+  assert.match(game, /id:"ryn"/);
+  assert.match(game, /id:"edan"/);
   assert.match(game, /We meet again\. Castle merlon, then kiln road/);
 });

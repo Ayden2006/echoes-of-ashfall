@@ -108,7 +108,7 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     chapter: "Chapter V",
     width: 6200,
     playable: true,
-    objective: "Talk to Reed, bind an Ember Lynx, then follow the coals to Ashfall's Heart.",
+    objective: "Talk to Reed, bind an Ember Lynx, then take the healing east gate to the heart altar.",
     intro: [
       { speaker: "Moon Night", text: "The fire here does not roar. It waits." },
       { speaker: "Moon Night", text: "Lynx-shaped coals hunt the dark. A kiln-keeper is tending the last heat." }
@@ -125,11 +125,11 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     chapter: "Chapter VI",
     width: 6600,
     playable: true,
-    objective: "Speak with Kest, face the Heart Wyrm, and let the signal rest at the altar.",
+    objective: "Speak with Kest, bind the Heart Wyrm, then press E at the altar to end the campaign.",
     intro: [
       { speaker: "Moon Night", text: "This is the last echo. The heart of Ashfall still beats." },
       { speaker: "Moon Night", text: "Kest walked this road ahead of me. The Heart Wyrm is the pulse we came to still." },
-      { speaker: "Moon Night", text: "Speak with Kest, bind the wyrm, study the cooled vein, then rest the signal at the altar." }
+      { speaker: "Moon Night", text: "Speak with Kest, bind the wyrm, then press E at the heart altar. That ends the campaign." }
     ],
     entryPortalX: 105,
     exitPortalX: null,
