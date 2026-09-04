@@ -24,6 +24,10 @@ test("later-map traveler talk is keyed per map so first/again/afterCapture all p
   assert.match(game, /We keep meeting at the edge of the light/);
   assert.match(game, /We meet where the ash learned to wait/);
   assert.match(game, /We meet again\. Castle merlon, then kiln road/);
+  assert.match(game, /We meet again\. Shore dusk, then cliff wind/);
+  assert.match(game, /We meet again\. Cairn twist, then heart/);
+  assert.match(game, /We meet again\. Castle rain, then kiln road/);
+  assert.match(game, /We meet again\. Late shore, then kiln road/);
 });
 
 test("existing unique animals stay on the card + E/Q pattern, with extra on-map fights", () => {
@@ -85,6 +89,13 @@ test("after-capture lines tie each map animal to the fading signal", () => {
   assert.match(game, /The moonwell poured the signal into that stag/);
   assert.match(game, /That lynx was the last heat the echo could keep without going out/);
   assert.match(game, /The wyrm is the last pulse/);
+  assert.match(game, /Each bound animal is a shard/);
+  assert.match(game, /You named the whole road in shards/);
+  assert.match(game, /Castle rain, shore, cairn twist, kiln, then this heart/);
+  assert.match(game, /You took the dusk shard/);
+  assert.match(game, /You took the leftover-fire shard/);
+  assert.match(game, /You took the first spark\. The leftover road I walk is quieter now/);
+  assert.match(game, /You bound the coal shard/);
 });
 
 test("combat-only extras never flash a second card", () => {

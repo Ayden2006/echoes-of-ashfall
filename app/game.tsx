@@ -225,6 +225,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Reed",text:"That lynx was the last heat the echo could keep without going out."},
       {speaker:"Reed",text:"You are not keeping a pet. You are carrying the signal so the heart still has warmth to receive."},
+      {speaker:"Reed",text:"Castle rain, shore dusk, cairn twist — then this kiln. Each bound animal is a shard."},
       {speaker:"Reed",text:"If you reach the wyrm, tell Kest I didn't quit the fire."},
       {speaker:"Moon Night",text:"I will."}
     ],
@@ -242,6 +243,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Kest",text:"The wyrm is the last pulse. Rest it at the altar and the whole road can go quiet."},
       {speaker:"Kest",text:"The cards you carry are the echo's memory. Lay them down as a road, not a cage."},
+      {speaker:"Kest",text:"Spark, dusk, leftover fire, pool, coal, pulse. You named the whole road in shards."},
       {speaker:"Kest",text:"The road remembers us now, Moon Night."},
       {speaker:"Moon Night",text:"Then we walk it together."}
     ],
@@ -277,6 +279,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Calen",text:"Pale antlers. The moonwell poured the signal into that stag."},
       {speaker:"Calen",text:"You bound the pool, not just a beast. That's why the well looks dimmer now."},
+      {speaker:"Calen",text:"Castle rain to this cliff. The dragon was the first shard. This stag is the pool."},
       {speaker:"Calen",text:"Reed keeps a kiln east of here. Tell him a castle knight still stands."}
     ],
     palette:{skin:"#c9b08a",cloak:"#2a3348",trim:"#8aa4c8",accent:"#c8e4ff"}
@@ -308,6 +311,7 @@ const NPCS:Npc[] = [
     ],
     afterCaptureTalk:[
       {speaker:"Sera",text:"Coal pelt, not dusk fur. You bound the last heat the shore could not keep."},
+      {speaker:"Sera",text:"Shore to kiln. Dusk shard, then coal shard. The cairn already told us the rest."},
       {speaker:"Sera",text:"If Bram is still walking, tell him the signal isn't hunting us. We're carrying it."}
     ],
     palette:{skin:"#d4a07a",cloak:"#6a3418",trim:"#f08a3a",accent:"#ffd27a"}
@@ -337,6 +341,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Bram",text:"We meet at the last echo. I'm not leaving until the altar cools."}],
     afterCaptureTalk:[
       {speaker:"Bram",text:"You bound the Heart Wyrm. That's every crossing we walked, still in one place."},
+      {speaker:"Bram",text:"Castle rain, shore, cairn twist, kiln, then this heart. Every bound animal was a shard of the same call."},
       {speaker:"Bram",text:"Rest the signal. Then we all walk out as people. Not as ghosts on the road."}
     ],
     palette:{skin:"#c09070",cloak:"#3a1c12",trim:"#ff7a3a",accent:"#ffc08a"}
@@ -365,6 +370,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Orrin",text:"We meet again. Castle rain, then cliff wind. Same road."},{speaker:"Orrin",text:"The well is still trying to bottle what you already carry."}],
     afterCaptureTalk:[
       {speaker:"Orrin",text:"You bound the pool I came to copy. The well looks dimmer, and the rain I wrote is finally still."},
+      {speaker:"Orrin",text:"Castle rain, then this well. Spark shard, then pool shard. The kiln will want the next line."},
       {speaker:"Orrin",text:"Reed's kiln is east. Tell him a scribe still walks."}
     ],
     palette:{skin:"#b8a090",cloak:"#1e2a38",trim:"#6a8aa0",accent:"#c8dce8"}
@@ -393,6 +399,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Nia",text:"We keep meeting at the edge of the light. The altar is still east."}],
     afterCaptureTalk:[
       {speaker:"Nia",text:"You bound the last pulse. That's the dusk I followed, finished."},
+      {speaker:"Nia",text:"Castle rain, shore, cairn twist, kiln, heart. The dusk shard was only one note of it."},
       {speaker:"Nia",text:"Rest it. Then we walk out as people. The shore can go dark without taking us with it."}
     ],
     palette:{skin:"#d8b090",cloak:"#4a2848",trim:"#e8a060",accent:"#ffd8a0"}
@@ -421,6 +428,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Vess",text:"We meet where the ash learned to wait. Reed is west. The heart is east."}],
     afterCaptureTalk:[
       {speaker:"Vess",text:"Coal pelt, not foxfire. You bound the last heat the cairn promised."},
+      {speaker:"Vess",text:"Cairn twist to kiln. Leftover-fire shard, then coal shard. The heart is the last page."},
       {speaker:"Vess",text:"If Nia is still walking dusk, tell her the light didn't fail. It banked."}
     ],
     palette:{skin:"#c4a888",cloak:"#2a2824",trim:"#8a7060",accent:"#e8c8a0"}
@@ -449,9 +457,130 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Tamsin",text:"We meet again. Castle merlon, then kiln road. Same watch, later fire."}],
     afterCaptureTalk:[
       {speaker:"Tamsin",text:"You bound the last heat. The merlon I left behind can finally stop watching."},
+      {speaker:"Tamsin",text:"Castle rain to kiln. Spark shard, then coal shard. The heart is still east."},
       {speaker:"Tamsin",text:"If Orrin is still copying rain, tell him the wall already knew the line."}
     ],
     palette:{skin:"#c8b49a",cloak:"#243040",trim:"#7a9ab0",accent:"#d0e8f0"}
+  },
+  {id:"lira",name:"Lira",map:2,x:2480,talkRadius:150,cardId:SUNSET_JACKAL_CARD.id,
+    firstTalk:[
+      {speaker:"Lira",text:"The gold thins here. I'm Lira. I count dusk until it fails."},
+      {speaker:"Moon Night",text:"Jackals hunt the dusk of the echo."},
+      {speaker:"Lira",text:"They do. Sera counts the pack. Nia follows the last light. I keep the count honest."},
+      {speaker:"Lira",text:"Bind one shard. Leave the extra scout to the sand. The hollow will want leftover heat."}
+    ],
+    againTalk:[{speaker:"Lira",text:"Still counting, Moon Night. Three jackals. One shard is enough to carry."},{speaker:"Lira",text:"The drowned post mid-beach keeps the same count. Press E there if the light feels thin."}],
+    afterCaptureTalk:[
+      {speaker:"Lira",text:"You took the dusk shard. That's why the shore looks thinner."},
+      {speaker:"Lira",text:"Castle rain, then this shore. Spark first, dusk next. The cairn will name the rest."},
+      {speaker:"Lira",text:"I walk the cliffs later. If the well still pools light, we may share that watch."}
+    ],
+    palette:{skin:"#e0b888",cloak:"#5a3020",trim:"#f0a050",accent:"#ffe0a8"}
+  },
+  {id:"lira",name:"Lira",map:4,x:4480,talkRadius:150,cardId:PALE_STAG_CARD.id,
+    firstTalk:[
+      {speaker:"Lira",text:"The gold ended. The well didn't. I'm Lira. I left the shore to count this pool."},
+      {speaker:"Moon Night",text:"The stag is holding the signal."},
+      {speaker:"Lira",text:"Pale antlers, not dusk fur. Same echo, later shard. Bind the pool if you can."},
+      {speaker:"Lira",text:"Calen keeps the east watch. Orrin copies the well. I keep the count so the light does not lie."}
+    ],
+    againTalk:[{speaker:"Lira",text:"We meet again. Shore dusk, then cliff wind. Same count, later light."},{speaker:"Lira",text:"The kiln is still east. Don't go into the heart without that heat."}],
+    afterCaptureTalk:[
+      {speaker:"Lira",text:"You bound the pool shard. The dusk I counted on the shore is quieter now."},
+      {speaker:"Lira",text:"Castle rain, shore, then this well. Spark, dusk, pool. The cairn already knew."},
+      {speaker:"Lira",text:"Reed's kiln is east. Tell him a dusk-counter still walks."}
+    ],
+    palette:{skin:"#e0b888",cloak:"#5a3020",trim:"#f0a050",accent:"#ffe0a8"}
+  },
+  {id:"holt",name:"Holt",map:3,x:2640,talkRadius:150,cardId:CINDER_FOX_CARD.id,
+    firstTalk:[
+      {speaker:"Holt",text:"Ash on the stones. I'm Holt. I walk the cairn road so the twist stays honest."},
+      {speaker:"Moon Night",text:"The signal is closer to the animals than the gate."},
+      {speaker:"Holt",text:"That's the part. Bram scouts the foxes. Vess reads the writing. I walk the stretch between."},
+      {speaker:"Holt",text:"Bind leftover heat. Then the well. East is only where the last pulse waits."}
+    ],
+    againTalk:[{speaker:"Holt",text:"Still on the cairn road, Moon Night. The foxes don't share the path."},{speaker:"Holt",text:"If you skipped the split cairn, walk west. That twist is the road."}],
+    afterCaptureTalk:[
+      {speaker:"Holt",text:"You took the leftover-fire shard. That's foxfire — the echo shedding what the shore dropped."},
+      {speaker:"Holt",text:"Castle rain, shore, then this cairn twist. Spark, dusk, leftover fire."},
+      {speaker:"Holt",text:"I'll take the long way to the heart. If Kest is still ahead, tell him the ash already knew."}
+    ],
+    palette:{skin:"#c89878",cloak:"#2c1a14",trim:"#d86838",accent:"#f0b888"}
+  },
+  {id:"holt",name:"Holt",map:6,x:2260,talkRadius:150,cardId:HEART_WYRM_CARD.id,
+    firstTalk:[
+      {speaker:"Holt",text:"So the cairn road ends here. I'm Holt. I walked the ash this far."},
+      {speaker:"Moon Night",text:"Kest walked ahead."},
+      {speaker:"Holt",text:"He's west of the wyrm. Long-bodied, ribbon-finned. Not leftover fire. The twist was right."},
+      {speaker:"Holt",text:"Speak with Kest, then rest the pulse. We were never chasing a gate."}
+    ],
+    againTalk:[{speaker:"Holt",text:"We meet again. Cairn twist, then heart. Same road, last page."},{speaker:"Holt",text:"The first-step stone is west of me. Study it if the pulse feels too loud."}],
+    afterCaptureTalk:[
+      {speaker:"Holt",text:"You bound the last pulse. That's every shard we named, still in one place."},
+      {speaker:"Holt",text:"Castle rain, shore, cairn twist, kiln, heart. Spark, dusk, leftover fire, pool, coal, pulse."},
+      {speaker:"Holt",text:"Rest it. Then we walk out as people. The ash can go quiet without taking us."}
+    ],
+    palette:{skin:"#c89878",cloak:"#2c1a14",trim:"#d86838",accent:"#f0b888"}
+  },
+  {id:"maer",name:"Maer",map:1,x:5480,talkRadius:150,cardId:BABY_DRAGON_CARD.id,
+    firstTalk:[
+      {speaker:"Maer",text:"The rain keeps walking after the wall gives up. I'm Maer. I follow that leftover road."},
+      {speaker:"Moon Night",text:"The spark is in the dragon, not the stone."},
+      {speaker:"Maer",text:"Then you heard Calen and Tamsin. I keep the stretch after the merlon so nobody turns back."},
+      {speaker:"Maer",text:"Bind the first spark. The shore is longer than this rain looks."}
+    ],
+    againTalk:[{speaker:"Maer",text:"Still on the leftover road, Moon Night. East is the shore. The dragon still keeps the ruins."},{speaker:"Maer",text:"The merlon is west if the rain feels thin. I walk the kiln later."}],
+    afterCaptureTalk:[
+      {speaker:"Maer",text:"You took the first spark. The leftover road I walk is quieter now."},
+      {speaker:"Maer",text:"Castle rain starts here. That dragon is the first shard. Shore, cairn, kiln, heart come after."},
+      {speaker:"Maer",text:"I'll take the long road to the kiln. Tell Reed a rain-walker still stands."}
+    ],
+    palette:{skin:"#c4a888",cloak:"#1c2834",trim:"#6a88a0",accent:"#c0d8e8"}
+  },
+  {id:"maer",name:"Maer",map:5,x:3600,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
+    firstTalk:[
+      {speaker:"Maer",text:"The leftover rain ended. The kiln road didn't. I'm Maer. I left the castle for this heat."},
+      {speaker:"Moon Night",text:"Reed keeps the fire."},
+      {speaker:"Maer",text:"He does. Lynx-shaped coals, not castle rain. Same echo, later shard. Don't go into the heart cold."},
+      {speaker:"Maer",text:"Tamsin is farther east. Vess read the cairn. Talk to Reed if you haven't."}
+    ],
+    againTalk:[{speaker:"Maer",text:"We meet again. Castle rain, then kiln road. Same leftover walk, later fire."},{speaker:"Maer",text:"Reed is west. The heart is east. Carry the coal shard."}],
+    afterCaptureTalk:[
+      {speaker:"Maer",text:"You bound the last heat. The leftover rain I followed can finally rest."},
+      {speaker:"Maer",text:"Castle rain, shore, cairn twist, then this kiln. Spark shard, then coal shard."},
+      {speaker:"Maer",text:"If Lira is still counting light, tell her the gold banked here."}
+    ],
+    palette:{skin:"#c4a888",cloak:"#1c2834",trim:"#6a88a0",accent:"#c0d8e8"}
+  },
+  {id:"perrin",name:"Perrin",map:2,x:4000,talkRadius:150,cardId:SUNSET_JACKAL_CARD.id,
+    firstTalk:[
+      {speaker:"Perrin",text:"Late sand. I'm Perrin. I keep the last stretch so dusk does not strand anyone."},
+      {speaker:"Moon Night",text:"The hollow waits when the light fails."},
+      {speaker:"Perrin",text:"It does. Lira counts mid-beach. I watch the gate. Bind one dusk shard. Leave the rest."},
+      {speaker:"Perrin",text:"I walk the kiln road after the hollow. If Reed still tends heat, we may share that fire."}
+    ],
+    againTalk:[{speaker:"Perrin",text:"Still on the late sand, Moon Night. The hollow is east when the gold fails."},{speaker:"Perrin",text:"A tide-cut step sits farther east if you need the shore to slow down."}],
+    afterCaptureTalk:[
+      {speaker:"Perrin",text:"You took the dusk shard. The late sand can go dark without taking you."},
+      {speaker:"Perrin",text:"Castle rain, then this shore. Spark first, dusk next. The cairn twist is through that gate."},
+      {speaker:"Perrin",text:"I'll take the kiln road. Tell Reed a late-shore walker still stands."}
+    ],
+    palette:{skin:"#d4a878",cloak:"#3a2418",trim:"#e88840",accent:"#ffd090"}
+  },
+  {id:"perrin",name:"Perrin",map:5,x:3080,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
+    firstTalk:[
+      {speaker:"Perrin",text:"The late sand ended. The coals didn't. I'm Perrin. I left the shore for this kiln road."},
+      {speaker:"Moon Night",text:"Reed keeps the kiln."},
+      {speaker:"Perrin",text:"He does. Lynx-shaped coals, not dusk fur. Same road, later shard. Don't go into the heart cold."},
+      {speaker:"Perrin",text:"Maer is farther east. Sera is farther still. Talk to Reed if you haven't."}
+    ],
+    againTalk:[{speaker:"Perrin",text:"We meet again. Late shore, then kiln road. Same watch, later heat."},{speaker:"Perrin",text:"Reed is west. The heart is east. Carry the coal. Do not feed it."}],
+    afterCaptureTalk:[
+      {speaker:"Perrin",text:"You bound the coal shard. The dusk I watched on the late sand is finished here."},
+      {speaker:"Perrin",text:"Castle rain, shore, cairn twist, kiln. Spark, dusk, leftover fire, then this last heat."},
+      {speaker:"Perrin",text:"If Holt is still on the cairn road, tell him the ash banked."}
+    ],
+    palette:{skin:"#d4a878",cloak:"#3a2418",trim:"#e88840",accent:"#ffd090"}
   }
 ];
 const DRAGON_FRAMES:Record<DragonMode,DragonFrame[]> = {
