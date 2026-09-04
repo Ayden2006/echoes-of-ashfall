@@ -1049,8 +1049,13 @@ const lateObjectiveFor=(map:MapId,held:string[],ended:boolean)=>{
   if(ended) return "The echo is still. Ashfall keeps its heart.";
   if(map===6&&held.includes(HEART_WYRM_CARD.id)) return "Press E at the heart altar to end the campaign.";
   if(map===5&&held.includes(EMBER_LYNX_CARD.id)) return "Take the healing east gate to Ashfall's Heart.";
+  if(map===4&&held.includes(PALE_STAG_CARD.id)) return "Take the far gate into The Quiet Ember.";
+  if(map===3&&held.includes(CINDER_FOX_CARD.id)) return "Reach the moonwell gate.";
+  if(map===2&&held.some(isSunsetJackalCardId)) return "Take the eastern portal to Ash Hollow.";
+  if(map===1&&held.includes(BABY_DRAGON_CARD.id)) return "Take the far-right portal to Sunset Shore.";
   return MAP_STORY[map].objective;
 };
+const hudLockFor=(map:MapId,held:string[],ended:boolean)=>({name:MAP_STORY[map].name,objective:lateObjectiveFor(map,held,ended)});
 const sixMapWorldPolishApplied=true;
 const spawnFor = (map:MapId, from:MapId|null) => {
   if(from===null) return {x:230,y:plantedYAt(1,230),facing:1 as 1|-1};
@@ -1191,7 +1196,7 @@ export default function AshfallGame() {
     const pl=player.current;
     const spawn=spawnFor(map, from);
     pl.x=spawn.x;pl.y=spawn.y;pl.facing=spawn.facing;
-    setObjective(lateObjectiveFor(map,inventoryRef.current.map(item=>item.id),campaignEndedRef.current));
+    setObjective(hudLockFor(map,inventoryRef.current.map(item=>item.id),campaignEndedRef.current).objective);
     if(!seenIntroRef.current.has(map)){
       seenIntroRef.current.add(map);
       showDialogue(MAP_STORY[map].intro);
@@ -1252,7 +1257,7 @@ export default function AshfallGame() {
     else if(map===6&&nearPortalAt(x,MAP6_ENTRY_X)) enterMap(5,6);
     else if(map===6&&atHeartAltar(x)){
       if(!campaignEndedRef.current){campaignEndedRef.current=true;setCampaignEnded(true);}
-      setObjective(lateObjectiveFor(6,inventoryRef.current.map(item=>item.id),true));
+      setObjective(hudLockFor(6,inventoryRef.current.map(item=>item.id),true).objective);
       showDialogue(ENDING_LINES);
     }
   },[advanceDialogue,enterMap,setObjective,showDialogue]);
@@ -2271,8 +2276,8 @@ export default function AshfallGame() {
       const sleepBlend=mode==="sleep"?easeInOut(clamp(elapsed/MODE_BLEND_MS,0,1)):0;
       const landSquash=prevMode==="fly"&&(mode==="idle"||mode==="walk"||mode==="run")?(1-easeInOut(clamp((now-modeBlendAt)/240,0,1)))*.12:0;
       const sleepPose=sleepPoseAmt(mode,prevMode,modeBlendAt,now,elapsed);
-      const sleep=sleepPose>=0.62;
       const waking=prevMode==="sleep"&&mode!=="sleep";
+      const sleep=mode==="sleep"&&sleepPose>=0.72; // curl only while asleep; sleep→wake uses sleepPoseAmt stand-up, no frozen curl frame
       const idleBreath=Math.sin(now*.0038);
       const weightShift=mode==="idle"?idleBreath*1.4:0;
       const bob=mode==="idle"?idleBreath*1.8:mode==="walk"||mode==="run"?Math.abs(gait)*2.4:mode==="sleep"||waking?Math.sin(now*.0026)*.7:0;
@@ -2567,6 +2572,11 @@ export default function AshfallGame() {
         const healthGradient=ctx.createLinearGradient(ally.x-46,0,ally.x+46,0);healthGradient.addColorStop(0,"#5ed52d");healthGradient.addColorStop(1,"#b7ff57");ctx.fillStyle=healthGradient;ctx.beginPath();ctx.roundRect(ally.x-46,barY+2,92*healthRatio,3,1.5);ctx.fill();ctx.strokeStyle="rgba(190,255,132,.72)";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.stroke();ctx.restore();
       }
     };
+    const drawCardPressE=(x:number,y:number)=>{
+      ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="top";
+      ctx.lineWidth=3;ctx.strokeStyle="rgba(7,3,16,.9)";ctx.strokeText("PRESS E",x,y);
+      ctx.fillStyle="#fff6d2";ctx.fillText("PRESS E",x,y);
+    };
     const drawMagicalAnimalCard=(name:string,x:number,groundY:number,now:number,formedAt:number,image:HTMLImageElement|null,portrait:{x:number;y:number;w:number;h:number}|null,palette:CardPalette)=>{
       const elapsed=now-formedAt;
       const reveal=clamp(elapsed/620,0,1);
@@ -2642,9 +2652,7 @@ export default function AshfallGame() {
         ctx.lineWidth=3;ctx.strokeStyle="rgba(7,3,16,.9)";ctx.strokeText("MAGICAL CARD FORMED",x,riseY-cardH/2*scale-13);
         ctx.fillStyle="#eaff9f";ctx.fillText("MAGICAL CARD FORMED",x,riseY-cardH/2*scale-13);
       }
-      ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="top";
-      ctx.lineWidth=3;ctx.strokeStyle="rgba(7,3,16,.9)";ctx.strokeText("PRESS E",x,riseY+cardH/2*scale+6);
-      ctx.fillStyle="#fff6d2";ctx.fillText("PRESS E",x,riseY+cardH/2*scale+6);
+      drawCardPressE(x,riseY+cardH/2*scale+6);
       ctx.restore();
     };
     const drawDragonCardTransformation=(now:number)=>{
@@ -3408,7 +3416,7 @@ export default function AshfallGame() {
     };
     const frame=(now:number)=>{
       const dt=Math.min((now-last)/1000,.032);last=now;const w=canvas.clientWidth,h=canvas.clientHeight,scale=Math.max(w/1280,h/WORLD_H),pl=player.current,map=mapRef.current,activeWorldW=worldWidthFor(map);
-      const hudProgress=Math.round(clamp(pl.x/activeWorldW*100,0,100));if(map!==lastHudMap||lastMapProgress<0||Math.abs(hudProgress-lastMapProgress)>=2){lastHudMap=map;lastMapProgress=hudProgress;setMapProgress(hudProgress);}
+      const hudProgress=Math.round(clamp(pl.x/activeWorldW*100,0,100));if(map!==lastHudMap||lastMapProgress<0||Math.abs(hudProgress-lastMapProgress)>=2){if(map!==lastHudMap){const hud=hudLockFor(map,inventoryRef.current.map(item=>item.id),campaignEndedRef.current);setMapNumber(map);setObjective(hud.objective);}lastHudMap=map;lastMapProgress=hudProgress;setMapProgress(hudProgress);}
       if(actionUntil.current<=now)activeAttackDamage.current=0;
       if(pl.health!==lastHealth){lastHealth=pl.health;setHealth(pl.health);}
       if(startedRef.current&&staminaRef.current<MAX_STAMINA&&now-staminaUsedAt.current>=STAMINA_REGEN_DELAY){staminaRef.current=Math.min(MAX_STAMINA,staminaRef.current+STAMINA_REGEN_PER_SECOND*dt);}
@@ -3486,16 +3494,18 @@ export default function AshfallGame() {
       if(pickupQueued.current){
         if(nearDragonCard&&collectInventoryItem(BABY_DRAGON_CARD)){
           dragonCardCollected=true;toggleEquippedItem(BABY_DRAGON_CARD.id);
+          setObjective(hudLockFor(map,inventoryRef.current.map(item=>item.id),campaignEndedRef.current).objective);
           tone(760,.16,.025);window.setTimeout(()=>tone(1040,.22,.018),90);
         }else if(readyJackal){
           const jackalCard=JACKAL_CARD_BY_BEAST[readyJackal.id];
           if(jackalCard&&collectInventoryItem(jackalCard)){
             jackalCardsCollected.add(jackalCard.id);toggleEquippedItem(jackalCard.id);
+            setObjective(hudLockFor(map,inventoryRef.current.map(item=>item.id),campaignEndedRef.current).objective);
             tone(640,.16,.024);window.setTimeout(()=>tone(980,.22,.018),90);
           }
         }else if(readyOtherWild&&otherWildCard&&collectInventoryItem(otherWildCard)){
           otherWildCollected.add(otherWildCard.id);toggleEquippedItem(otherWildCard.id);
-          setObjective(lateObjectiveFor(map,inventoryRef.current.map(item=>item.id),campaignEndedRef.current));
+          setObjective(hudLockFor(map,inventoryRef.current.map(item=>item.id),campaignEndedRef.current).objective);
           tone(660,.16,.024);window.setTimeout(()=>tone(1000,.22,.018),90);
         }
         pickupQueued.current=false;
@@ -3588,7 +3598,7 @@ export default function AshfallGame() {
     {worldMapOpen&&<section className="world-map-screen" role="dialog" aria-modal="true" aria-label="Ashfall world map"><div className="world-map-panel">
       <header className="world-map-header"><div><p>Exploration map</p><h2>Ashfall</h2><small>The road reveals itself only as you reach it.</small></div><button onClick={toggleWorldMap} aria-label="Close world map"><X size={18}/><span>Close</span></button></header>
       <div className="world-map-route">{([1,2,3,4,5,6] as MapId[]).map((id)=>{const revealed=unlockedMaps.includes(id);const highest=Math.max(...unlockedMaps);const frontier=!revealed&&id===highest+1;if(!revealed&&!frontier)return null;return <div className="world-map-stop-wrap" key={id}>{id>1&&<span className={"world-map-link "+(revealed?"open":"locked")}/>} {revealed?<article className={"world-map-region map-theme-"+id+" "+(mapNumber===id?"current":"")}><span className="world-map-number">{String(id).padStart(2,"0")}</span><div className="world-map-region-copy"><p>Map {id}</p><h3>{MAP_STORY[id].name}</h3></div>{mapNumber===id&&<span className="world-map-player" style={{left:clamp(mapProgress,7,93)+"%"}}><i/><b>You</b></span>}</article>:<article className="world-map-region world-map-fog"><LockKeyhole size={25}/><strong>Unknown region</strong><small>Reach the next gate to reveal this part of Ashfall.</small></article>}</div>;})}</div>
-      <footer className="world-map-footer"><span>Current location</span><strong>Map {mapNumber} · {MAP_STORY[mapNumber].name} · {mapProgress}% across</strong><small>Press M to close</small></footer>
+      <footer className="world-map-footer"><span>Current location</span><strong>Map {mapNumber} · {MAP_STORY[mapNumber].name} · {objective} · {mapProgress}% across</strong><small>Press M to close</small></footer>
     </div></section>}
     <section className={"title-screen "+(started?"hidden":"")} aria-hidden={started}>
       <div className="title-card"><p className="title-kicker">A story begins</p><h1 className="game-title">Echoes<br/>of Ashfall<span>Chapter Zero</span></h1><button className="start-button" onClick={startGame}>Enter Ashfall</button><p className="start-hint">Headphones recommended · Best played fullscreen</p></div>
