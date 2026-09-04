@@ -401,7 +401,7 @@ test("late-map E-talk guides the finish and does not block portals or the altar"
     3: [{ x: 160, r: 145 }, { x: 5725, r: 145 }],
     4: [{ x: 160, r: 145 }, { x: 5925, r: 145 }],
     5: [{ x: 160, r: 145 }, { x: 6125, r: 145 }],
-    6: [{ x: 160, r: 145 }, { x: 6470, r: 160 }],
+    6: [{ x: 160, r: 145 }, { x: 6470, r: 200 }],
   };
   for (const npc of people) {
     for (const gate of gates[npc.map]) {

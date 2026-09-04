@@ -98,7 +98,8 @@ test("no softlock markers: companion reseat, underground snap, edge recovery, PR
   assert.match(game, /if\(ally\.y>ally\.groundY\+28\)ally\.y=ally\.groundY/);
   assert.match(game, /if\(jackal\.y>jackal\.groundY\+28\)jackal\.y=jackal\.groundY/);
   assert.match(game, /if\(pl\.y>WORLD_H\+80\)\{pl\.x=Math\.max\(120,pl\.x-180\);pl\.y=240/);
-  assert.match(game, /pl\.x=clamp\(pl\.x\+pl\.vx\*dt,24,activeWorldW-24\)/);
+  assert.match(game, /const nextX=clamp\(pl\.x\+pl\.vx\*dt,PLAYER_EDGE_MARGIN,activeWorldW-PLAYER_EDGE_MARGIN\)/);
+  assert.match(game, /if\(!pl\.grounded\|\|groundAt\(nextX,oldBottom\)<Infinity\)pl\.x=nextX/);
   assert.match(game, /const COMPANION_HUNT_RANGE = 520/);
   assert.match(game, /const COMPANION_STRIKE_RANGE = 132/);
   assert.match(game, /const COMPANION_STRIKE_DAMAGE = 5/);
@@ -130,9 +131,9 @@ test("locks hold: Moon Night, existing people, no dating, no maps 7+, radio stay
   assert.doesNotMatch(game, /Moon Knight|bondMeter|dating sim|affectionMeter|romanceChoice|MAP7_/);
   assert.doesNotMatch(game, /radio encounter|tune the radio|drawPixelHouse|drawCastleKeep/i);
   assert.doesNotMatch(game, /map:\s*7|Map 7/);
-  assert.equal((game.match(/firstTalk:\[/g) || []).length, 32);
-  assert.equal((game.match(/againTalk:\[/g) || []).length, 32);
-  assert.equal((game.match(/afterCaptureTalk:\[/g) || []).length, 32);
+  assert.equal((game.match(/firstTalk:\[/g) || []).length, 35);
+  assert.equal((game.match(/againTalk:\[/g) || []).length, 35);
+  assert.equal((game.match(/afterCaptureTalk:\[/g) || []).length, 35);
   assert.match(game, /id:"wren"/);
   assert.match(game, /id:"dell"/);
   assert.match(game, /id:"isk"/);

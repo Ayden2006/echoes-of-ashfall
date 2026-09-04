@@ -72,8 +72,9 @@ test("extra E-talk secrets use the existing landmark pattern and keep kiln/vein/
   assert.match(game, /action:"Study the tide-cut step"/);
   assert.match(game, /action:"Study the charred nest"/);
   assert.match(game, /action:"Study the pale lichen"/);
-  assert.match(game, /Approach Ashfall's Heart/);
-  assert.match(game, /const x=MAP6_HEART_X\+40,groundY=545/);
+  assert.match(game, /Press E at Ashfall's Heart/);
+  assert.match(game, /const MAP6_ALTAR_X = MAP6_HEART_X\+40/);
+  assert.match(game, /const x=MAP6_ALTAR_X,groundY=545/);
   assert.match(game, /PLAYER_NAME = "Moon Night"/);
   assert.match(campaign, /PLAYER_DISPLAY_NAME = "Moon Night"/);
   assert.doesNotMatch(game, /Moon Knight/);
