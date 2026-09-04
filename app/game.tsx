@@ -970,6 +970,15 @@ const hopArc = (t:number, height:number)=>{
   const shaped=u<peak?easeInOut(u/peak):1-easeInOut((u-peak)/(1-peak));
   return shaped*height;
 };
+const groundBeastHop = (beast:{id:string;mode:DragonMode;leapStarted:number;leapUntil:number}, now:number)=>{
+  if(now>=beast.leapUntil||beast.id.startsWith("heart-wyrm")||beast.id.startsWith("ash-roost"))return 0;
+  if(beast.mode!=="walk"&&beast.mode!=="run"&&beast.mode!=="idle")return 0;
+  const span=beast.leapUntil-beast.leapStarted;
+  const hopT=span>0?clamp((now-beast.leapStarted)/span,0,1):0;
+  return hopArc(hopT,52);
+};
+const flyLandAmt = (animal:{mode:DragonMode;prevMode:DragonMode;modeBlendAt:number}, now:number)=>
+  animal.prevMode==="fly"&&(animal.mode==="idle"||animal.mode==="walk"||animal.mode==="run")?(1-gaitBlendAmt(animal.modeBlendAt,now))*28:0;
 const SLEEP_SETTLE_MS = 420;
 const WAKE_BLEND_MS = 340;
 const HURT_FLASH_MS = 90;
@@ -2115,16 +2124,16 @@ export default function AshfallGame() {
             if(jackal.x>=move.max){jackal.x=move.max;jackal.targetX=jackal.angry?clamp(pl.x,move.min,move.max):jackal.patrolMin;jackal.facing=-1;}
             const wyrmFly=jackal.mode==="fly"&&(jackal.id.startsWith("heart-wyrm")||jackal.id.startsWith("ash-roost"));
             const flyLeap=wyrmFly?(jackal.landing?flapPhase(jackal.gait).lift*36:54+flapPhase(jackal.gait).lift*56):0;
-            const hopT=jackal.leapUntil>jackal.leapStarted?clamp((now-jackal.leapStarted)/(jackal.leapUntil-jackal.leapStarted),0,1):0;
-            const hop=(!wyrmFly&&now<jackal.leapUntil&&(jackal.mode==="walk"||jackal.mode==="run"))?hopArc(hopT,52):0;
-            const targetY=jackal.groundY-(flyLeap||hop);
+            const hop=groundBeastHop(jackal,now);
+            const land=flyLandAmt(jackal,now);
+            const targetY=jackal.groundY-(flyLeap||hop||land);
             jackal.y+=(targetY-jackal.y)*(1-Math.exp(-10*dt));
           }
         }else{
           jackal.vx+=(0-jackal.vx)*(1-Math.exp(-8*dt));
-          const hopT=jackal.leapUntil>jackal.leapStarted?clamp((now-jackal.leapStarted)/(jackal.leapUntil-jackal.leapStarted),0,1):0;
-          const hop=now<jackal.leapUntil&&!jackal.id.startsWith("heart-wyrm")&&!jackal.id.startsWith("ash-roost")&&(jackal.mode==="walk"||jackal.mode==="run")?hopArc(hopT,52):0;
-          jackal.y+=(jackal.groundY-hop-jackal.y)*(1-Math.exp(-12*dt));
+          const hop=groundBeastHop(jackal,now);
+          const land=flyLandAmt(jackal,now);
+          jackal.y+=(jackal.groundY-hop-land-jackal.y)*(1-Math.exp(-12*dt));
         }
         keepCreatureOnRoad(jackal,mapRef.current);
       }
@@ -2905,6 +2914,9 @@ export default function AshfallGame() {
         const poseFrames=DRAGON_FRAMES[poseMode==="fly"?"fly":poseMode==="attack"?"attack":poseMode==="sleep"?"sleep":poseMode==="run"||poseMode==="walk"?"run":"idle"];
         if(poseMode!==roost.mode&&poseMode==="fly")index=flapFrame(roost.gait||elapsed,poseFrames.length);
         else if(poseMode!==roost.mode&&(poseMode==="walk"||poseMode==="run"))index=Math.min(poseFrames.length-1,Math.floor(loco/(poseMode==="run"?95:220))%poseFrames.length);
+        else if((roost.mode==="idle"||poseMode==="idle")&&roost.prevMode!=="sleep"){
+          const phase=elapsed%2900;index=phase<1550?0:phase<2150?1:phase<2500?2:3;
+        }
         const frame=poseFrames[Math.min(index,poseFrames.length-1)]??frames[index];
         const hurtActive=roost.hurtUntil>now,hurtProgress=hurtActive?clamp((now-roost.hurtStarted)/480,0,1):1;
         const recoilX=hurtActive?Math.sin(hurtProgress*Math.PI)*10*roost.hitDirection:0;
