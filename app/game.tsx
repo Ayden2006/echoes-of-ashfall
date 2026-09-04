@@ -2207,7 +2207,8 @@ export default function AshfallGame() {
       const poseFrames=DRAGON_FRAMES[poseMode]??frames;
       if(poseMode!==ally.mode&&poseMode==="fly")index=flapFrame(gait,poseFrames.length);
       else if(poseMode!==ally.mode&&poseMode==="run")index=Math.floor(gait/100)%Math.max(1,poseFrames.length);
-      const frame=poseFrames[index]??frames[index]??DRAGON_FRAMES.idle[0],size=108,spriteScale=size/DRAGON_CELL;
+      const frame=frames[index]??DRAGON_FRAMES.idle[0],size=108,spriteScale=size/DRAGON_CELL;
+      const poseFrame=poseFrames[index]??frame;
       const smooth=(value:number)=>value*value*(3-2*value);
       const summon=clamp((now-ally.summonedAt)/COMPANION_SUMMON_DURATION,0,1);
       const summonCreature=smooth(clamp((summon-.14)/.7,0,1));
@@ -2301,7 +2302,7 @@ export default function AshfallGame() {
       }else{
         ctx.save();ctx.translate(ally.x,ally.y+summonLift-recallPull);ctx.rotate(ally.facing*(1-recallCreature)*.72);ctx.scale(ally.facing*spriteGrow,spriteGrow);
         ctx.globalAlpha=visibility;ctx.shadowColor=ally.mode==="attack"?"rgba(179,255,71,.8)":"rgba(95,224,48,.42)";ctx.shadowBlur=ally.mode==="attack"?17:9;
-        ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);ctx.restore();
+        ctx.drawImage(dragonImage,poseFrame.x,poseFrame.y,poseFrame.w,poseFrame.h,-poseFrame.anchorX*spriteScale,-poseFrame.anchorY*spriteScale,poseFrame.w*spriteScale,poseFrame.h*spriteScale);ctx.restore();
       }
 
       if(summon>.72&&recall<.46){
