@@ -788,6 +788,22 @@ const NPCS:Npc[] = [
       {speaker:"Edan",text:"Walk east. Press E at the heart altar. That ends the campaign."}
     ],
     palette:{skin:"#c09080",cloak:"#2c1828",trim:"#c86878",accent:"#f0c0b0"}
+  },
+  {id:"hale",name:"Hale",map:4,x:4080,talkRadius:150,cardId:PALE_STAG_CARD.id,
+    firstTalk:[
+      {speaker:"Hale",text:"The wind forgets you between watches. I'm Hale."},
+      {speaker:"Moon Night",text:"I won't let it forget."},
+      {speaker:"Hale",text:"Pale antlers keep the pool. The animals are the echo."},
+      {speaker:"Hale",text:"Bind the stag if you still need the pool, then go east."},
+      {speaker:"Hale",text:"The east gate heals you. Calen watches west. Lira counts east."}
+    ],
+    againTalk:[{speaker:"Hale",text:"Still on the quiet stretch, Moon Night. Bind the stag if you haven't, then go east."},{speaker:"Hale",text:"The east gate heals you."},{speaker:"Hale",text:"The wind still forgets you if nobody speaks."}],
+    afterCaptureTalk:[
+      {speaker:"Hale",text:"You bound the pool shard. That's why this quiet wind went still."},
+      {speaker:"Hale",text:"The east gate heals you. Reed's kiln is through it."},
+      {speaker:"Hale",text:"I keep the stretch the wind forgets. The pool can rest now."}
+    ],
+    palette:{skin:"#d2a890",cloak:"#3a2432",trim:"#c87888",accent:"#f0c8d0"}
   }
 ];
 const talkTargetAt=(map:MapId,x:number,footY:number)=>{
