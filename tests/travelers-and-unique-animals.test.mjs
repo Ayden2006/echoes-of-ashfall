@@ -298,9 +298,9 @@ test("new road people stand on existing maps without overlapping talks", () => {
     { id: "orrin", map: 4, x: 650 },
     { id: "calen", map: 4, x: 3180 },
     { id: "reed", map: 5, x: 760 },
-    { id: "vess", map: 5, x: 2380 },
+    { id: "vess", map: 5, x: 2960 },
     { id: "tamsin", map: 1, x: 3980 },
-    { id: "tamsin", map: 5, x: 4880 },
+    { id: "tamsin", map: 5, x: 5000 },
     { id: "sera", map: 5, x: 5720 },
     { id: "kest", map: 6, x: 920 },
     { id: "bram", map: 6, x: 1480 },
@@ -308,11 +308,11 @@ test("new road people stand on existing maps without overlapping talks", () => {
     { id: "lira", map: 2, x: 2480 },
     { id: "lira", map: 4, x: 4480 },
     { id: "holt", map: 3, x: 3800 },
-    { id: "holt", map: 6, x: 2260 },
+    { id: "holt", map: 6, x: 3580 },
     { id: "maer", map: 1, x: 5480 },
     { id: "maer", map: 5, x: 3600 },
     { id: "perrin", map: 2, x: 4000 },
-    { id: "perrin", map: 5, x: 3080 },
+    { id: "perrin", map: 5, x: 3260 },
     { id: "wren", map: 1, x: 1200 },
     { id: "wren", map: 4, x: 5200 },
     { id: "dell", map: 2, x: 3680 },
@@ -320,7 +320,7 @@ test("new road people stand on existing maps without overlapping talks", () => {
     { id: "isk", map: 3, x: 1820 },
     { id: "isk", map: 5, x: 1770 },
     { id: "rowan", map: 1, x: 4730 },
-    { id: "rowan", map: 6, x: 2770 },
+    { id: "rowan", map: 6, x: 3880 },
     { id: "ryn", map: 4, x: 5565 },
     { id: "ryn", map: 5, x: 5300 },
     { id: "edan", map: 6, x: 4900 },
@@ -392,8 +392,8 @@ test("late-map E-talk guides the finish and does not block portals or the altar"
     { map: 2, x: 480 }, { map: 2, x: 2480 }, { map: 2, x: 3680 }, { map: 2, x: 4000 }, { map: 2, x: 4360 },
     { map: 3, x: 480 }, { map: 3, x: 1820 }, { map: 3, x: 3800 }, { map: 3, x: 5140 },
     { map: 4, x: 650 }, { map: 4, x: 3180 }, { map: 4, x: 4480 }, { map: 4, x: 5200 }, { map: 4, x: 5565 },
-    { map: 5, x: 760 }, { map: 5, x: 1770 }, { map: 5, x: 2380 }, { map: 5, x: 3080 }, { map: 5, x: 3600 }, { map: 5, x: 4880 }, { map: 5, x: 5300 }, { map: 5, x: 5720 },
-    { map: 6, x: 920 }, { map: 6, x: 1480 }, { map: 6, x: 2260 }, { map: 6, x: 2770 }, { map: 6, x: 3280 }, { map: 6, x: 4180 }, { map: 6, x: 4900 },
+    { map: 5, x: 760 }, { map: 5, x: 1770 }, { map: 5, x: 2960 }, { map: 5, x: 3260 }, { map: 5, x: 3600 }, { map: 5, x: 5000 }, { map: 5, x: 5300 }, { map: 5, x: 5720 },
+    { map: 6, x: 920 }, { map: 6, x: 1480 }, { map: 6, x: 3280 }, { map: 6, x: 3580 }, { map: 6, x: 3880 }, { map: 6, x: 4180 }, { map: 6, x: 4900 },
   ];
   const gates = {
     1: [{ x: 7125, r: 145 }],
@@ -410,8 +410,8 @@ test("late-map E-talk guides the finish and does not block portals or the altar"
   }
 
   const lateGuides = [
-    ["reed", 5], ["sera", 5], ["tamsin", 5], ["isk", 5], ["maer", 5], ["perrin", 5],
-    ["kest", 6], ["bram", 6], ["holt", 6], ["rowan", 6], ["nia", 6], ["dell", 6],
+    ["reed", 5], ["sera", 5], ["vess", 5], ["tamsin", 5], ["isk", 5], ["maer", 5], ["perrin", 5], ["ryn", 5],
+    ["kest", 6], ["bram", 6], ["holt", 6], ["rowan", 6], ["nia", 6], ["dell", 6], ["edan", 6],
   ];
   for (const [id, map] of lateGuides) {
     const first = npcBlock(id, map);
@@ -422,6 +422,16 @@ test("late-map E-talk guides the finish and does not block portals or the altar"
     assert.match(firstTalk, /ends the campaign/, `${id}:${map} firstTalk should say the campaign ends`);
     if (map === 5) assert.match(firstTalk, /The east gate heals you/, `${id}:5 firstTalk should say the east gate heals`);
     else assert.match(firstTalk, /The gate behind you still heals/, `${id}:6 firstTalk should say the west gate still heals`);
+    const echoHits = firstTalk.match(/the animals are the echo/gi) || [];
+    const bindHits = firstTalk.match(/Bind /g) || [];
+    const altarHits = firstTalk.match(/heart altar/g) || [];
+    const endHits = firstTalk.match(/ends the campaign/g) || [];
+    const healHits = firstTalk.match(map === 5 ? /The east gate heals you/g : /The gate behind you still heals/g) || [];
+    assert.equal(echoHits.length, 1, `${id}:${map} firstTalk should say the echo once`);
+    assert.equal(bindHits.length, 1, `${id}:${map} firstTalk should say bind once`);
+    assert.ok(altarHits.length <= 1, `${id}:${map} firstTalk should not restack the altar`);
+    assert.equal(endHits.length, 1, `${id}:${map} firstTalk should end the campaign once`);
+    assert.equal(healHits.length, 1, `${id}:${map} firstTalk should name the heal gate once`);
   }
 });
 
@@ -525,6 +535,10 @@ test("E-talk radii stay clear of high secrets and each other", () => {
     { map: 3, id: "fox-a", min: 620, max: 1480 },
     { map: 3, id: "fox-b", min: 2100, max: 3300 },
     { map: 4, id: "stag-a", min: 1180, max: 2680 },
+    { map: 5, id: "lynx-a", min: 980, max: 1680 },
+    { map: 5, id: "lynx-b", min: 1960, max: 2480 },
+    { map: 5, id: "lynx-c", min: 4160, max: 4980 },
+    { map: 6, id: "heart-wyrm", min: 1880, max: 3180 },
   ];
   for (const npc of npcs) {
     for (const hunt of cardHunts.filter((pack) => pack.map === npc.map)) {
