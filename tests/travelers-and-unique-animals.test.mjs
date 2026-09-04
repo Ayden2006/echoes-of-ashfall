@@ -9,7 +9,7 @@ function npcBlock(id, map) {
   const re = new RegExp(`\\{id:"${id}",name:"[^"]+",map:${map},`);
   const at = game.search(re);
   assert.ok(at >= 0, `missing ${id} on map ${map}`);
-  return game.slice(at, at + 2400);
+  return game.slice(at, at + 3600);
 }
 
 test("named travelers reuse E-talk and change if you meet them again", () => {
@@ -317,8 +317,8 @@ test("new road people stand on existing maps without overlapping talks", () => {
     { id: "wren", map: 4, x: 5200 },
     { id: "dell", map: 2, x: 3240 },
     { id: "dell", map: 6, x: 4180 },
-    { id: "isk", map: 3, x: 1560 },
-    { id: "isk", map: 5, x: 1570 },
+    { id: "isk", map: 3, x: 1820 },
+    { id: "isk", map: 5, x: 1770 },
     { id: "rowan", map: 1, x: 4730 },
     { id: "rowan", map: 6, x: 2770 },
     { id: "ryn", map: 4, x: 5565 },
@@ -390,9 +390,9 @@ test("late-map E-talk guides the finish and does not block portals or the altar"
   const people = [
     { map: 1, x: 820 }, { map: 1, x: 1550 }, { map: 1, x: 2280 }, { map: 1, x: 3980 }, { map: 1, x: 4730 }, { map: 1, x: 5480 },
     { map: 2, x: 480 }, { map: 2, x: 1180 }, { map: 2, x: 2480 }, { map: 2, x: 3240 }, { map: 2, x: 4000 },
-    { map: 3, x: 480 }, { map: 3, x: 1560 }, { map: 3, x: 2640 }, { map: 3, x: 5140 },
+    { map: 3, x: 480 }, { map: 3, x: 1820 }, { map: 3, x: 2640 }, { map: 3, x: 5140 },
     { map: 4, x: 1680 }, { map: 4, x: 3180 }, { map: 4, x: 4480 }, { map: 4, x: 5200 }, { map: 4, x: 5565 },
-    { map: 5, x: 760 }, { map: 5, x: 1570 }, { map: 5, x: 2380 }, { map: 5, x: 3080 }, { map: 5, x: 3600 }, { map: 5, x: 4880 }, { map: 5, x: 5300 }, { map: 5, x: 5720 },
+    { map: 5, x: 760 }, { map: 5, x: 1770 }, { map: 5, x: 2380 }, { map: 5, x: 3080 }, { map: 5, x: 3600 }, { map: 5, x: 4880 }, { map: 5, x: 5300 }, { map: 5, x: 5720 },
     { map: 6, x: 920 }, { map: 6, x: 1480 }, { map: 6, x: 2260 }, { map: 6, x: 2770 }, { map: 6, x: 3280 }, { map: 6, x: 4180 }, { map: 6, x: 4900 },
   ];
   const gates = {
@@ -406,6 +406,63 @@ test("late-map E-talk guides the finish and does not block portals or the altar"
   for (const npc of people) {
     for (const gate of gates[npc.map]) {
       assert.ok(Math.abs(npc.x - gate.x) >= 150 + gate.r, `map ${npc.map} talk at ${npc.x} blocks gate ${gate.x}`);
+    }
+  }
+
+  const lateGuides = [
+    ["reed", 5], ["sera", 5], ["tamsin", 5], ["isk", 5], ["maer", 5], ["perrin", 5],
+    ["kest", 6], ["bram", 6], ["holt", 6], ["rowan", 6], ["nia", 6], ["dell", 6],
+  ];
+  for (const [id, map] of lateGuides) {
+    const first = npcBlock(id, map);
+    const firstTalk = first.slice(first.indexOf("firstTalk:["), first.indexOf("againTalk:["));
+    assert.match(firstTalk, /the animals are the echo/i, `${id}:${map} firstTalk should name the echo twist`);
+    assert.match(firstTalk, /Bind /, `${id}:${map} firstTalk should say to bind`);
+    assert.match(firstTalk, /heart altar/, `${id}:${map} firstTalk should name the heart altar`);
+    assert.match(firstTalk, /ends the campaign/, `${id}:${map} firstTalk should say the campaign ends`);
+    if (map === 5) assert.match(firstTalk, /The east gate heals you/, `${id}:5 firstTalk should say the east gate heals`);
+    else assert.match(firstTalk, /The gate behind you still heals/, `${id}:6 firstTalk should say the west gate still heals`);
+  }
+});
+
+test("E-talk radii stay clear of high secrets and each other", () => {
+  const npcs = [...game.matchAll(/\{id:"([^"]+)",name:"[^"]+",map:(\d+),x:(\d+),talkRadius:(\d+)/g)].map((m) => ({
+    id: m[1], map: Number(m[2]), x: Number(m[3]), r: Number(m[4]),
+  }));
+  assert.equal(npcs.length, 35);
+  for (const npc of npcs) assert.equal(npc.r, 150, `${npc.id}:${npc.map} talkRadius must stay 150`);
+
+  const highSecrets = [
+    { map: 1, id: "plaque", x: 2680, r: 120 },
+    { map: 1, id: "merlon", x: 6520, r: 120 },
+    { map: 2, id: "shell", x: 1515, r: 130 },
+    { map: 2, id: "tide", x: 5180, r: 120 },
+    { map: 3, id: "hollow", x: 1510, r: 120 },
+    { map: 3, id: "nest", x: 4500, r: 120 },
+    { map: 4, id: "lichen", x: 2580, r: 120 },
+    { map: 5, id: "coal", x: 1480, r: 120 },
+    { map: 6, id: "echo", x: 5920, r: 120 },
+  ];
+  for (const npc of npcs) {
+    for (const secret of highSecrets.filter((mark) => mark.map === npc.map)) {
+      assert.ok(
+        Math.abs(npc.x - secret.x) >= npc.r + secret.r,
+        `${npc.id} on map ${npc.map} at ${npc.x} blocks high secret ${secret.id} at ${secret.x}`
+      );
+    }
+  }
+
+  const byMap = new Map();
+  for (const npc of npcs) {
+    const row = byMap.get(npc.map) ?? [];
+    row.push(npc);
+    byMap.set(npc.map, row);
+  }
+  for (const [map, row] of byMap) {
+    for (let i = 0; i < row.length; i++) {
+      for (let j = i + 1; j < row.length; j++) {
+        assert.ok(Math.abs(row[i].x - row[j].x) >= 300, `map ${map} talks overlap: ${row[i].id} and ${row[j].id}`);
+      }
     }
   }
 });
