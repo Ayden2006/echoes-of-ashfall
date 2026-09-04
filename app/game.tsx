@@ -283,6 +283,7 @@ const NPCS:Npc[] = [
       {speaker:"Calen",text:"Pale antlers. The moonwell poured the signal into that stag."},
       {speaker:"Calen",text:"You bound the pool, not just a beast. That's why the well looks dimmer now."},
       {speaker:"Calen",text:"Castle rain to this cliff. The dragon was the first shard. This stag is the pool."},
+      {speaker:"Calen",text:"The east gate heals you. Reed's kiln is through it. Don't go into the heart cold."},
       {speaker:"Calen",text:"Reed keeps a kiln east of here. Tell him a castle knight still stands."}
     ],
     palette:{skin:"#c9b08a",cloak:"#2a3348",trim:"#8aa4c8",accent:"#c8e4ff"}
@@ -378,6 +379,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Orrin",text:"You bound the pool I came to copy. The well looks dimmer, and the rain I wrote is finally still."},
       {speaker:"Orrin",text:"Castle rain, then this well. Spark shard, then pool shard. The kiln will want the next line."},
+      {speaker:"Orrin",text:"The east gate heals you. Reed's kiln is through it. Then Kest, then the altar."},
       {speaker:"Orrin",text:"Reed's kiln is east. Tell him a scribe still walks."}
     ],
     palette:{skin:"#b8a090",cloak:"#1e2a38",trim:"#6a8aa0",accent:"#c8dce8"}
@@ -432,7 +434,7 @@ const NPCS:Npc[] = [
       {speaker:"Vess",text:"He does. Lynx-shaped coals, not foxes. Same echo, later heat. Don't go into the heart cold."},
       {speaker:"Vess",text:"Sera is farther east if the shore still walks. Talk to Reed if you haven't."}
     ],
-    againTalk:[{speaker:"Vess",text:"We meet where the ash learned to wait. Reed is west. The heart is east."}],
+    againTalk:[{speaker:"Vess",text:"We meet where the ash learned to wait. Reed is west. The heart is east."},{speaker:"Vess",text:"The east gate heals you. Talk to Kest. Press E at the altar to end the campaign."}],
     afterCaptureTalk:[
       {speaker:"Vess",text:"Coal pelt, not foxfire. You bound the last heat the cairn promised."},
       {speaker:"Vess",text:"Cairn twist to kiln. Leftover-fire shard, then coal shard. The heart is the last page."},
@@ -496,6 +498,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Lira",text:"You bound the pool shard. The dusk I counted on the shore is quieter now."},
       {speaker:"Lira",text:"Castle rain, shore, then this well. Spark, dusk, pool. The cairn already knew."},
+      {speaker:"Lira",text:"The east gate heals you. Reed's kiln is through it. Press E at the later altar to end the campaign."},
       {speaker:"Lira",text:"Reed's kiln is east. Tell him a dusk-counter still walks."}
     ],
     palette:{skin:"#e0b888",cloak:"#5a3020",trim:"#f0a050",accent:"#ffe0a8"}
@@ -552,7 +555,7 @@ const NPCS:Npc[] = [
       {speaker:"Maer",text:"He does. Lynx-shaped coals, not castle rain. Same echo, later shard. Don't go into the heart cold."},
       {speaker:"Maer",text:"Tamsin is farther east. Vess read the cairn. Talk to Reed if you haven't."}
     ],
-    againTalk:[{speaker:"Maer",text:"We meet again. Castle rain, then kiln road. Same leftover walk, later fire."},{speaker:"Maer",text:"Reed is west. The heart is east. Carry the coal shard."}],
+    againTalk:[{speaker:"Maer",text:"We meet again. Castle rain, then kiln road. Same leftover walk, later fire."},{speaker:"Maer",text:"The east gate heals you. Talk to Kest. Press E at the heart altar to end the campaign."}],
     afterCaptureTalk:[
       {speaker:"Maer",text:"You bound the last heat. The leftover rain I followed can finally rest."},
       {speaker:"Maer",text:"Castle rain, shore, cairn twist, then this kiln. Spark shard, then coal shard."},
@@ -582,7 +585,7 @@ const NPCS:Npc[] = [
       {speaker:"Perrin",text:"He does. Lynx-shaped coals, not dusk fur. Same road, later shard. Don't go into the heart cold."},
       {speaker:"Perrin",text:"Maer is farther east. Sera is farther still. Talk to Reed if you haven't."}
     ],
-    againTalk:[{speaker:"Perrin",text:"We meet again. Late shore, then kiln road. Same watch, later heat."},{speaker:"Perrin",text:"Reed is west. The heart is east. Carry the coal. Do not feed it."}],
+    againTalk:[{speaker:"Perrin",text:"We meet again. Late shore, then kiln road. Same watch, later heat."},{speaker:"Perrin",text:"The east gate heals you. Talk to Kest. Press E at the heart altar to end the campaign."}],
     afterCaptureTalk:[
       {speaker:"Perrin",text:"You bound the coal shard. The dusk I watched on the late sand is finished here."},
       {speaker:"Perrin",text:"Castle rain, shore, cairn twist, kiln. Spark, dusk, leftover fire, then this last heat."},
@@ -616,6 +619,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Wren",text:"You bound the pool shard. The rain I listened to in the castle is finally still."},
       {speaker:"Wren",text:"Castle rain, shore dusk, cairn twist — the animals are the echo — then kiln heat and the heart altar."},
+      {speaker:"Wren",text:"The east gate heals you. Reed's kiln is through it. Press E at the later altar to end the campaign."},
       {speaker:"Wren",text:"Reed's kiln is east. Tell him a rain-listener still walks."}
     ],
     palette:{skin:"#d0b898",cloak:"#243848",trim:"#7ab0c8",accent:"#b8e8f0"}
@@ -672,7 +676,7 @@ const NPCS:Npc[] = [
       {speaker:"Isk",text:"He does. Lynx-shaped coals, not foxes. Same echo, later shard. Don't go into the heart cold."},
       {speaker:"Isk",text:"Vess is farther east. The cairn already told us: the animals are the echo."}
     ],
-    againTalk:[{speaker:"Isk",text:"We meet again. Cairn twist, then kiln heat. Same leftover walk, later fire."},{speaker:"Isk",text:"Reed is west. The heart altar is east. Carry the coal shard."}],
+    againTalk:[{speaker:"Isk",text:"We meet again. Cairn twist, then kiln heat. Same leftover walk, later fire."},{speaker:"Isk",text:"Reed is west. The east gate heals you. Talk to Kest. Press E at the altar to end the campaign."}],
     afterCaptureTalk:[
       {speaker:"Isk",text:"You bound the coal shard. The leftover fire I walked in the hollow banked here."},
       {speaker:"Isk",text:"Castle rain, shore dusk, cairn twist — the animals are the echo — then this kiln heat. The heart altar is the last page."},
