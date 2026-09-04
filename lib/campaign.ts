@@ -111,7 +111,8 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     objective: "Talk to Reed, bind an Ember Lynx, then take the healing east gate to the heart altar.",
     intro: [
       { speaker: "Moon Night", text: "The fire here does not roar. It waits." },
-      { speaker: "Moon Night", text: "Lynx-shaped coals hunt the dark. A kiln-keeper is tending the last heat." }
+      { speaker: "Moon Night", text: "Lynx-shaped coals hunt the dark. Reed keeps the kiln; press E to hear him." },
+      { speaker: "Moon Night", text: "Bind a lynx if you still need the heat. The east gate heals you. The heart altar ends it." }
     ],
     entryPortalX: 105,
     exitPortalX: 6070,
@@ -129,7 +130,7 @@ export const CAMPAIGN_MAPS: Record<MapId, CampaignMap> = {
     intro: [
       { speaker: "Moon Night", text: "This is the last echo. The heart of Ashfall still beats." },
       { speaker: "Moon Night", text: "Kest walked this road ahead of me. The Heart Wyrm is the pulse we came to still." },
-      { speaker: "Moon Night", text: "Speak with Kest, bind the wyrm, then press E at the heart altar. That ends the campaign." }
+      { speaker: "Moon Night", text: "Talk to Kest. Bind the wyrm if you still need the pulse. Press E at the heart altar. That ends the campaign." }
     ],
     entryPortalX: 105,
     exitPortalX: null,
