@@ -30,6 +30,8 @@ test("named travelers reuse E-talk and change if you meet them again", () => {
   assert.match(game, /id:"dell"/);
   assert.match(game, /id:"isk"/);
   assert.match(game, /id:"rowan"/);
+  assert.match(game, /id:"ryn"/);
+  assert.match(game, /id:"edan"/);
 
   const calenCastle = npcBlock("calen", 1);
   const calenCliffs = npcBlock("calen", 4);
@@ -61,8 +63,11 @@ test("named travelers reuse E-talk and change if you meet them again", () => {
   const iskEmber = npcBlock("isk", 5);
   const rowanCastle = npcBlock("rowan", 1);
   const rowanHeart = npcBlock("rowan", 6);
+  const rynCliffs = npcBlock("ryn", 4);
+  const rynEmber = npcBlock("ryn", 5);
+  const edanHeart = npcBlock("edan", 6);
 
-  for (const block of [calenCastle, calenCliffs, seraShore, seraEmber, bramHollow, bramHeart, orrinCastle, orrinCliffs, niaShore, niaHeart, vessHollow, vessEmber, tamsinCastle, tamsinEmber, liraShore, liraCliffs, holtHollow, holtHeart, maerCastle, maerEmber, perrinShore, perrinEmber, wrenCastle, wrenCliffs, dellShore, dellHeart, iskHollow, iskEmber, rowanCastle, rowanHeart]) {
+  for (const block of [calenCastle, calenCliffs, seraShore, seraEmber, bramHollow, bramHeart, orrinCastle, orrinCliffs, niaShore, niaHeart, vessHollow, vessEmber, tamsinCastle, tamsinEmber, liraShore, liraCliffs, holtHollow, holtHeart, maerCastle, maerEmber, perrinShore, perrinEmber, wrenCastle, wrenCliffs, dellShore, dellHeart, iskHollow, iskEmber, rowanCastle, rowanHeart, rynCliffs, rynEmber, edanHeart]) {
     assert.match(block, /firstTalk:\[/);
     assert.match(block, /againTalk:\[/);
     assert.match(block, /afterCaptureTalk:\[/);
@@ -86,6 +91,8 @@ test("named travelers reuse E-talk and change if you meet them again", () => {
   assert.match(dellHeart, /We meet again\. Shore dusk, then heart/);
   assert.match(iskEmber, /We meet again\. Cairn twist, then kiln heat/);
   assert.match(rowanHeart, /We meet again\. Castle rain, then heart/);
+  assert.match(rynEmber, /We meet again\. Cliff wind, then kiln gate/);
+  assert.match(edanHeart, /Press E at the altar\. The campaign ends when the signal rests/);
   assert.match(liraShore, /cardId:SUNSET_JACKAL_CARD\.id/);
   assert.match(wrenCastle, /cardId:BABY_DRAGON_CARD\.id/);
   assert.match(dellShore, /cardId:SUNSET_JACKAL_CARD\.id/);
@@ -181,6 +188,9 @@ test("player is Moon Night, never Moon Knight, and Reed/Kest stay", () => {
   assert.match(game, /id:"isk",name:"Isk",map:5/);
   assert.match(game, /id:"rowan",name:"Rowan",map:1/);
   assert.match(game, /id:"rowan",name:"Rowan",map:6/);
+  assert.match(game, /id:"ryn",name:"Ryn",map:4/);
+  assert.match(game, /id:"ryn",name:"Ryn",map:5/);
+  assert.match(game, /id:"edan",name:"Edan",map:6/);
 });
 
 test("E-talk still keys first/again/afterCapture per id:map with no extra engine", () => {
@@ -240,6 +250,16 @@ test("E-talk still keys first/again/afterCapture per id:map with no extra engine
   assert.equal(talk(rowanCastle, []), "first");
   assert.equal(talk(rowanHeart, ["heart-wyrm-card"]), "first");
   assert.equal(talk(rowanHeart, ["heart-wyrm-card"]), "after");
+  const rynCliffs = { id: "ryn", map: 4, cardId: "pale-stag-card" };
+  const rynEmber = { id: "ryn", map: 5, cardId: "ember-lynx-card" };
+  const edanHeart = { id: "edan", map: 6, cardId: "heart-wyrm-card" };
+  assert.equal(talk(rynCliffs, []), "first");
+  assert.equal(talk(rynCliffs, ["pale-stag-card"]), "after");
+  assert.equal(talk(rynEmber, ["pale-stag-card"]), "first");
+  assert.equal(talk(rynEmber, ["pale-stag-card"]), "again");
+  assert.equal(talk(rynEmber, ["ember-lynx-card"]), "after");
+  assert.equal(talk(edanHeart, []), "first");
+  assert.equal(talk(edanHeart, ["heart-wyrm-card"]), "after");
   assert.equal(npcTalkKey(orrinCastle), "orrin:1");
   assert.equal(npcTalkKey(orrinCliffs), "orrin:4");
   assert.equal(npcTalkKey(liraShore), "lira:2");
@@ -254,6 +274,9 @@ test("E-talk still keys first/again/afterCapture per id:map with no extra engine
   assert.equal(npcTalkKey(iskEmber), "isk:5");
   assert.equal(npcTalkKey(rowanCastle), "rowan:1");
   assert.equal(npcTalkKey(rowanHeart), "rowan:6");
+  assert.equal(npcTalkKey(rynCliffs), "ryn:4");
+  assert.equal(npcTalkKey(rynEmber), "ryn:5");
+  assert.equal(npcTalkKey(edanHeart), "edan:6");
   assert.notEqual(npcTalkKey(orrinCastle), npcTalkKey(orrinCliffs));
   assert.notEqual(npcTalkKey(liraShore), npcTalkKey(liraCliffs));
   assert.notEqual(npcTalkKey(holtHollow), npcTalkKey(holtHeart));
@@ -261,6 +284,7 @@ test("E-talk still keys first/again/afterCapture per id:map with no extra engine
   assert.notEqual(npcTalkKey(dellShore), npcTalkKey(dellHeart));
   assert.notEqual(npcTalkKey(iskHollow), npcTalkKey(iskEmber));
   assert.notEqual(npcTalkKey(rowanCastle), npcTalkKey(rowanHeart));
+  assert.notEqual(npcTalkKey(rynCliffs), npcTalkKey(rynEmber));
 });
 
 test("new road people stand on existing maps without overlapping talks", () => {
@@ -297,6 +321,9 @@ test("new road people stand on existing maps without overlapping talks", () => {
     { id: "isk", map: 5, x: 1570 },
     { id: "rowan", map: 1, x: 4730 },
     { id: "rowan", map: 6, x: 2770 },
+    { id: "ryn", map: 4, x: 5565 },
+    { id: "ryn", map: 5, x: 5300 },
+    { id: "edan", map: 6, x: 4900 },
   ];
   for (const npc of placements) {
     assert.match(game, new RegExp(`id:"${npc.id}",name:"[^"]+",map:${npc.map},x:${npc.x},talkRadius:150`));
@@ -326,9 +353,51 @@ test("new road people stand on existing maps without overlapping talks", () => {
   const parsePlatforms = (block) => [...block.matchAll(/\{x:(-?\d+),y:(\d+),w:(\d+),h:(\d+)\}/g)].map((m) => ({
     x: Number(m[1]), y: Number(m[2]), w: Number(m[3]), h: Number(m[4]),
   }));
-  const newcomers = placements.filter((npc) => ["orrin", "nia", "vess", "tamsin", "lira", "holt", "maer", "perrin", "wren", "dell", "isk", "rowan"].includes(npc.id));
+  const newcomers = placements.filter((npc) => ["orrin", "nia", "vess", "tamsin", "lira", "holt", "maer", "perrin", "wren", "dell", "isk", "rowan", "ryn", "edan"].includes(npc.id));
   for (const npc of newcomers) {
     const ground = parsePlatforms(platforms[npc.map]).filter((p) => p.h > 80 && npc.x >= p.x && npc.x <= p.x + p.w);
     assert.ok(ground.length > 0, `${npc.id} on map ${npc.map} is not on solid ground at ${npc.x}`);
+  }
+});
+
+test("late-map E-talk guides the finish and does not block portals or the altar", () => {
+  assert.match(game, /The east gate heals you/);
+  assert.match(game, /Press E at the heart altar/);
+  assert.match(game, /That ends the campaign/);
+  assert.match(game, /const talkTargetAt=\(map:MapId,x:number,footY:number\)=>\{/);
+  assert.match(game, /if\(npc&&landmark\) return Math\.abs\(x-landmark\.x\)<=Math\.abs\(x-npc\.x\)/);
+  assert.match(game, /const target=talkTargetAt\(map,x,player\.current\.y\+PH\)/);
+  const reed = npcBlock("reed", 5);
+  const kest = npcBlock("kest", 6);
+  const tamsin = npcBlock("tamsin", 5);
+  const dell = npcBlock("dell", 6);
+  const rowan = npcBlock("rowan", 6);
+  const nia = npcBlock("nia", 6);
+  const holt = npcBlock("holt", 6);
+  for (const block of [reed, kest, tamsin, dell, rowan, nia, holt]) {
+    assert.match(block, /altar/i);
+  }
+  assert.match(reed, /east gate heals/);
+  assert.match(kest, /That ends the campaign/);
+  const people = [
+    { map: 1, x: 820 }, { map: 1, x: 1550 }, { map: 1, x: 2280 }, { map: 1, x: 3980 }, { map: 1, x: 4730 }, { map: 1, x: 5480 },
+    { map: 2, x: 480 }, { map: 2, x: 1180 }, { map: 2, x: 2480 }, { map: 2, x: 3240 }, { map: 2, x: 4000 },
+    { map: 3, x: 480 }, { map: 3, x: 1560 }, { map: 3, x: 2640 }, { map: 3, x: 5140 },
+    { map: 4, x: 1680 }, { map: 4, x: 3180 }, { map: 4, x: 4480 }, { map: 4, x: 5200 }, { map: 4, x: 5565 },
+    { map: 5, x: 760 }, { map: 5, x: 1570 }, { map: 5, x: 2380 }, { map: 5, x: 3080 }, { map: 5, x: 3600 }, { map: 5, x: 4880 }, { map: 5, x: 5300 }, { map: 5, x: 5720 },
+    { map: 6, x: 920 }, { map: 6, x: 1480 }, { map: 6, x: 2260 }, { map: 6, x: 2770 }, { map: 6, x: 3280 }, { map: 6, x: 4180 }, { map: 6, x: 4900 },
+  ];
+  const gates = {
+    1: [{ x: 7125, r: 145 }],
+    2: [{ x: 160, r: 145 }, { x: 5325, r: 145 }],
+    3: [{ x: 160, r: 145 }, { x: 5725, r: 145 }],
+    4: [{ x: 160, r: 145 }, { x: 5925, r: 145 }],
+    5: [{ x: 160, r: 145 }, { x: 6125, r: 145 }],
+    6: [{ x: 160, r: 145 }, { x: 6470, r: 160 }],
+  };
+  for (const npc of people) {
+    for (const gate of gates[npc.map]) {
+      assert.ok(Math.abs(npc.x - gate.x) >= 150 + gate.r, `map ${npc.map} talk at ${npc.x} blocks gate ${gate.x}`);
+    }
   }
 });

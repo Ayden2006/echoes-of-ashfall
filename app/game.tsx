@@ -140,8 +140,8 @@ const MAP_STORY:Record<MapId,{name:string;objective:string;intro:Line[]}> = {
   2:{name:"Sunset Shore",objective:"Track the Sunset Jackals, then take the eastern portal to Ash Hollow.",intro:[{speaker:"Moon Night",text:"The shore burns gold. Jackals keep this dusk."},{speaker:"Moon Night",text:"If the castle spark was the first note, this hunt is the dusk of it."},{speaker:"Moon Night",text:"Bind one, then push east before the light dies."}]},
   3:{name:"Ash Hollow",objective:"Bind a Cinder Fox, then reach the moonwell gate.",intro:[{speaker:"Moon Night",text:"The first fall still smolders here. Foxfire moves between the trunks."},{speaker:"Moon Night",text:"The signal feels closer to the animals than to the east gate."},{speaker:"Moon Night",text:"A Cinder Fox can walk the ash with me if I earn its card."}]},
   4:{name:"Moonwell Cliffs",objective:"Face the Pale Stag, then take the far gate into The Quiet Ember.",intro:[{speaker:"Moon Night",text:"The moonwell pools the signal. The far gate is open now."},{speaker:"Moon Night",text:"If the hollow told the truth, the stag is holding what I already carry."},{speaker:"Moon Night",text:"A Pale Stag keeps this cliff. East is The Quiet Ember."}]},
-  5:{name:"The Quiet Ember",objective:"Talk to Reed, bind an Ember Lynx, then follow the coals to Ashfall's Heart.",intro:[{speaker:"Moon Night",text:"The fire here does not roar. It waits."},{speaker:"Moon Night",text:"Lynx-shaped coals hunt the dark. Reed keeps the kiln; press E to hear him."},{speaker:"Moon Night",text:"Bind an Ember Lynx, then walk the coals east."}]},
-  6:{name:"Ashfall's Heart",objective:"Speak with Kest, face the Heart Wyrm, then rest the signal at the altar.",intro:[{speaker:"Moon Night",text:"This is the last echo. The heart of Ashfall still beats."},{speaker:"Moon Night",text:"Kest walked this road ahead of me. The Heart Wyrm is the pulse we came to still."},{speaker:"Moon Night",text:"Speak with Kest, bind the wyrm, study the cooled vein, then rest the signal at the altar."}]}
+  5:{name:"The Quiet Ember",objective:"Talk to Reed, bind an Ember Lynx, then take the healing east gate to the heart altar.",intro:[{speaker:"Moon Night",text:"The fire here does not roar. It waits."},{speaker:"Moon Night",text:"Lynx-shaped coals hunt the dark. Reed keeps the kiln; press E to hear him."},{speaker:"Moon Night",text:"Bind an Ember Lynx. The east gate heals you. The heart altar ends the campaign."}]},
+  6:{name:"Ashfall's Heart",objective:"Speak with Kest, bind the Heart Wyrm, then press E at the altar to end the campaign.",intro:[{speaker:"Moon Night",text:"This is the last echo. The heart of Ashfall still beats."},{speaker:"Moon Night",text:"Kest walked this road ahead of me. The Heart Wyrm is the pulse we came to still."},{speaker:"Moon Night",text:"Speak with Kest, bind the wyrm, then press E at the heart altar. That ends the campaign."}]}
 };
 const ENDING_LINES:Line[] = [
   {speaker:"Moon Night",text:"The cards go still against the stone. Dragon, jackal, fox, stag, lynx, wyrm — each was a shard of the same fading call."},
@@ -221,11 +221,12 @@ const NPCS:Npc[] = [
       {speaker:"Reed",text:"The lynx wear the last heat of the echo — coal pelts, tufted ears, bobbed tails. Not jackals."},
       {speaker:"Reed",text:"Bind one if you can. Sit with the kiln if you want. I'll be here when you come back."}
     ],
-    againTalk:[{speaker:"Reed",text:"Still walking, Moon Night. The heart is east. Don't go in cold."},{speaker:"Reed",text:"The kiln remembers the castle. Press E there if you need a moment."}],
+    againTalk:[{speaker:"Reed",text:"Still walking, Moon Night. The heart is east. Don't go in cold."},{speaker:"Reed",text:"Bind a lynx if you haven't. The east gate heals you. Kest is through it."},{speaker:"Reed",text:"Press E at the heart altar to rest the signal. That ends the campaign."}],
     afterCaptureTalk:[
       {speaker:"Reed",text:"That lynx was the last heat the echo could keep without going out."},
       {speaker:"Reed",text:"You are not keeping a pet. You are carrying the signal so the heart still has warmth to receive."},
       {speaker:"Reed",text:"Castle rain, shore dusk, cairn twist — then this kiln. Each bound animal is a shard."},
+      {speaker:"Reed",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
       {speaker:"Reed",text:"If you reach the wyrm, tell Kest I didn't quit the fire."},
       {speaker:"Moon Night",text:"I will."}
     ],
@@ -239,11 +240,12 @@ const NPCS:Npc[] = [
       {speaker:"Kest",text:"Every beast you bound was a shard of that pulse. The altar is past the wyrm. Don't rush the last step."},
       {speaker:"Kest",text:"If we finish this, we walk out together. Not as ghosts. As people."}
     ],
-    againTalk:[{speaker:"Kest",text:"I'm still here. The wyrm hunts farther in. I'm not leaving you to it."},{speaker:"Kest",text:"The first-step stone is east of Bram. Study it if you need the road to slow down."}],
+    againTalk:[{speaker:"Kest",text:"I'm still here. The wyrm hunts farther in. I'm not leaving you to it."},{speaker:"Kest",text:"Bind the wyrm. The cooled vein is east. The heart altar is farther. Press E there."},{speaker:"Kest",text:"That ends the campaign. The gate behind you still heals if you need a breath."}],
     afterCaptureTalk:[
       {speaker:"Kest",text:"The wyrm is the last pulse. Rest it at the altar and the whole road can go quiet."},
       {speaker:"Kest",text:"The cards you carry are the echo's memory. Lay them down as a road, not a cage."},
       {speaker:"Kest",text:"Spark, dusk, leftover fire, pool, coal, pulse. You named the whole road in shards."},
+      {speaker:"Kest",text:"Walk east. Press E at the heart altar. That ends the campaign."},
       {speaker:"Kest",text:"The road remembers us now, Moon Night."},
       {speaker:"Moon Night",text:"Then we walk it together."}
     ],
@@ -309,11 +311,13 @@ const NPCS:Npc[] = [
       {speaker:"Sera",text:"Talk to Reed if you haven't. Don't go into the heart cold."}
     ],
     againTalk:[
-      {speaker:"Sera",text:"We keep crossing roads. Reed is west. The heart is east. Don't go in cold."}
+      {speaker:"Sera",text:"We keep crossing roads. Reed is west. The heart is east. Don't go in cold."},
+      {speaker:"Sera",text:"The east gate heals you. Talk to Kest. Press E at the altar. That ends it."}
     ],
     afterCaptureTalk:[
       {speaker:"Sera",text:"Coal pelt, not dusk fur. You bound the last heat the shore could not keep."},
       {speaker:"Sera",text:"Shore to kiln. Dusk shard, then coal shard. The cairn already told us the rest."},
+      {speaker:"Sera",text:"The east gate heals you. Heart is through. Talk to Kest. Press E at the altar to end the campaign."},
       {speaker:"Sera",text:"If Bram is still walking, tell him the signal isn't hunting us. We're carrying it."}
     ],
     palette:{skin:"#d4a07a",cloak:"#6a3418",trim:"#f08a3a",accent:"#ffd27a"}
@@ -341,11 +345,11 @@ const NPCS:Npc[] = [
       {speaker:"Bram",text:"He's west of the wyrm. Long-bodied, ribbon-finned. Not a fox. The cairn was right — we were never chasing a gate."},
       {speaker:"Bram",text:"Speak with Kest, then finish it. The altar is where the echo can stop running."}
     ],
-    againTalk:[{speaker:"Bram",text:"We meet at the last echo. I'm not leaving until the altar cools."}],
+    againTalk:[{speaker:"Bram",text:"We meet at the last echo. I'm not leaving until the altar cools."},{speaker:"Bram",text:"Bind the wyrm, then walk east. Press E at the heart altar. That ends the campaign."}],
     afterCaptureTalk:[
       {speaker:"Bram",text:"You bound the Heart Wyrm. That's every crossing we walked, still in one place."},
       {speaker:"Bram",text:"Castle rain, shore, cairn twist, kiln, then this heart. Every bound animal was a shard of the same call."},
-      {speaker:"Bram",text:"Rest the signal. Then we all walk out as people. Not as ghosts on the road."}
+      {speaker:"Bram",text:"Walk east. Press E at the heart altar. That ends the campaign. Then we walk out as people."}
     ],
     palette:{skin:"#c09070",cloak:"#3a1c12",trim:"#ff7a3a",accent:"#ffc08a"}
   },
@@ -399,11 +403,11 @@ const NPCS:Npc[] = [
       {speaker:"Nia",text:"The pulse is not dusk. It's every crossing we already walked. Speak with Kest. Then rest it."},
       {speaker:"Nia",text:"Bram came the long way. The cairn was right. We were never chasing a gate."}
     ],
-    againTalk:[{speaker:"Nia",text:"We keep meeting at the edge of the light. The altar is still east."}],
+    againTalk:[{speaker:"Nia",text:"We keep meeting at the edge of the light. The altar is still east."},{speaker:"Nia",text:"Bind the wyrm if you haven't. Press E at the far-east altar. That ends the campaign."}],
     afterCaptureTalk:[
       {speaker:"Nia",text:"You bound the last pulse. That's the dusk I followed, finished."},
       {speaker:"Nia",text:"Castle rain, shore, cairn twist, kiln, heart. The dusk shard was only one note of it."},
-      {speaker:"Nia",text:"Rest it. Then we walk out as people. The shore can go dark without taking us with it."}
+      {speaker:"Nia",text:"Walk east. Press E at the heart altar. That ends the campaign. Then we walk out as people."}
     ],
     palette:{skin:"#d8b090",cloak:"#4a2848",trim:"#e8a060",accent:"#ffd8a0"}
   },
@@ -457,10 +461,11 @@ const NPCS:Npc[] = [
       {speaker:"Tamsin",text:"He does. Lynx-shaped coals, not castle rain. Same echo, later stretch. Don't go into the heart cold."},
       {speaker:"Tamsin",text:"Sera is still farther east. Vess read the cairn. The road remembers all of us now."}
     ],
-    againTalk:[{speaker:"Tamsin",text:"We meet again. Castle merlon, then kiln road. Same watch, later fire."}],
+    againTalk:[{speaker:"Tamsin",text:"We meet again. Castle merlon, then kiln road. Same watch, later fire."},{speaker:"Tamsin",text:"The east gate heals you. Kest is through it. Press E at the heart altar to end the campaign."}],
     afterCaptureTalk:[
       {speaker:"Tamsin",text:"You bound the last heat. The merlon I left behind can finally stop watching."},
       {speaker:"Tamsin",text:"Castle rain to kiln. Spark shard, then coal shard. The heart is still east."},
+      {speaker:"Tamsin",text:"The east gate heals you. Talk to Kest. Press E at the altar. That ends the campaign."},
       {speaker:"Tamsin",text:"If Orrin is still copying rain, tell him the wall already knew the line."}
     ],
     palette:{skin:"#c8b49a",cloak:"#243040",trim:"#7a9ab0",accent:"#d0e8f0"}
@@ -517,11 +522,11 @@ const NPCS:Npc[] = [
       {speaker:"Holt",text:"He's west of the wyrm. Long-bodied, ribbon-finned. Not leftover fire. The twist was right."},
       {speaker:"Holt",text:"Speak with Kest, then rest the pulse. We were never chasing a gate."}
     ],
-    againTalk:[{speaker:"Holt",text:"We meet again. Cairn twist, then heart. Same road, last page."},{speaker:"Holt",text:"The first-step stone is west of me. Study it if the pulse feels too loud."}],
+    againTalk:[{speaker:"Holt",text:"We meet again. Cairn twist, then heart. Same road, last page."},{speaker:"Holt",text:"Bind the wyrm. The first-step stone is west of me. The altar is east. Press E there to end it."}],
     afterCaptureTalk:[
       {speaker:"Holt",text:"You bound the last pulse. That's every shard we named, still in one place."},
       {speaker:"Holt",text:"Castle rain, shore, cairn twist, kiln, heart. Spark, dusk, leftover fire, pool, coal, pulse."},
-      {speaker:"Holt",text:"Rest it. Then we walk out as people. The ash can go quiet without taking us."}
+      {speaker:"Holt",text:"Walk east. Press E at the heart altar. That ends the campaign. Then we walk out as people."}
     ],
     palette:{skin:"#c89878",cloak:"#2c1a14",trim:"#d86838",accent:"#f0b888"}
   },
@@ -637,11 +642,11 @@ const NPCS:Npc[] = [
       {speaker:"Dell",text:"He's west of the wyrm. Long-bodied, ribbon-finned. Not dusk fur. The cairn was right — the animals are the echo."},
       {speaker:"Dell",text:"Speak with Kest, then rest the pulse at the heart altar. We were never chasing a gate."}
     ],
-    againTalk:[{speaker:"Dell",text:"We meet again. Shore dusk, then heart. Same road, last gold."},{speaker:"Dell",text:"The altar is still east. Nia is west if the light feels thin."}],
+    againTalk:[{speaker:"Dell",text:"We meet again. Shore dusk, then heart. Same road, last gold."},{speaker:"Dell",text:"Bind the wyrm if you haven't. The altar is still east. Press E there. That ends the campaign."}],
     afterCaptureTalk:[
       {speaker:"Dell",text:"You bound the last pulse. That's the dusk I followed, finished at the heart altar."},
       {speaker:"Dell",text:"Castle rain, shore dusk, cairn twist — the animals are the echo — kiln heat, then this heart. Each bound animal was a shard."},
-      {speaker:"Dell",text:"Rest it. Then we walk out as people. The shore can go dark without taking us."}
+      {speaker:"Dell",text:"Walk east. Press E at the heart altar. That ends the campaign. The shore can go dark without taking us."}
     ],
     palette:{skin:"#d8a870",cloak:"#4a2018",trim:"#e07030",accent:"#ffc070"}
   },
@@ -697,15 +702,66 @@ const NPCS:Npc[] = [
       {speaker:"Rowan",text:"He's west of the wyrm. Long-bodied, ribbon-finned. Not castle rain. The cairn twist was right — the animals are the echo."},
       {speaker:"Rowan",text:"Speak with Kest, then rest the pulse at the heart altar."}
     ],
-    againTalk:[{speaker:"Rowan",text:"We meet again. Castle rain, then heart. Same leftover walk, last pulse."},{speaker:"Rowan",text:"Holt is west. Nia is east. The altar is farther still."}],
+    againTalk:[{speaker:"Rowan",text:"We meet again. Castle rain, then heart. Same leftover walk, last pulse."},{speaker:"Rowan",text:"Bind the wyrm. Holt is west. The altar is east. Press E there to end the campaign."}],
     afterCaptureTalk:[
       {speaker:"Rowan",text:"You bound the last pulse. That's every leftover step I walked, still in one place."},
       {speaker:"Rowan",text:"Castle rain, shore dusk, cairn twist — the animals are the echo — kiln heat, then this heart altar. Each bound animal was a shard."},
-      {speaker:"Rowan",text:"Rest it. Then we walk out as people. The leftover road can go quiet."}
+      {speaker:"Rowan",text:"Walk east. Press E at the heart altar. That ends the campaign. Then the leftover road can go quiet."}
     ],
     palette:{skin:"#c8b080",cloak:"#1a2830",trim:"#5a8898",accent:"#a8d0d8"}
+  },
+  {id:"ryn",name:"Ryn",map:4,x:5565,talkRadius:150,cardId:PALE_STAG_CARD.id,
+    firstTalk:[
+      {speaker:"Ryn",text:"Last cliff before the kiln. I'm Ryn. I keep this gate so nobody walks in cold."},
+      {speaker:"Moon Night",text:"Reed keeps the quiet fire."},
+      {speaker:"Ryn",text:"He does. The east gate heals you. Bind the stag if you still need the pool shard, then take it."},
+      {speaker:"Ryn",text:"Animals are the echo. Kiln heat is next. The heart altar, farther east, ends the campaign."}
+    ],
+    againTalk:[{speaker:"Ryn",text:"Still on the last cliff, Moon Night. The east gate heals you. Reed is through it."},{speaker:"Ryn",text:"Don't go into the heart cold. Press E at the altar later. That ends the road."}],
+    afterCaptureTalk:[
+      {speaker:"Ryn",text:"You bound the pool shard. The well can dim. The kiln still needs that heat."},
+      {speaker:"Ryn",text:"Castle rain, shore dusk, cairn twist — the animals are the echo — then kiln heat and the heart altar."},
+      {speaker:"Ryn",text:"The east gate heals you. Talk to Reed, then Kest. Press E at the altar to end the campaign."}
+    ],
+    palette:{skin:"#c8a888",cloak:"#2a3038",trim:"#8aa8b8",accent:"#d0e8f0"}
+  },
+  {id:"ryn",name:"Ryn",map:5,x:5300,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
+    firstTalk:[
+      {speaker:"Ryn",text:"Last coals before the heart. I'm Ryn. I left the cliff for this gate."},
+      {speaker:"Moon Night",text:"Reed keeps the kiln."},
+      {speaker:"Ryn",text:"West of here. Bind a lynx if you haven't. The east gate heals you. Kest is through it."},
+      {speaker:"Ryn",text:"Animals are the echo. Press E at the heart altar to rest the signal. That ends the campaign."}
+    ],
+    againTalk:[{speaker:"Ryn",text:"We meet again. Cliff wind, then kiln gate. Same watch, later heat."},{speaker:"Ryn",text:"The east gate heals you. Talk to Kest. Press E at the altar. That ends it."}],
+    afterCaptureTalk:[
+      {speaker:"Ryn",text:"You bound the coal shard. Don't go in cold. The heart still needs that heat."},
+      {speaker:"Ryn",text:"Castle rain, shore dusk, cairn twist — the animals are the echo — then this kiln heat. The heart altar is next."},
+      {speaker:"Ryn",text:"The east gate heals you. Press E at the heart altar. That ends the campaign."}
+    ],
+    palette:{skin:"#c8a888",cloak:"#2a3038",trim:"#8aa8b8",accent:"#d0e8f0"}
+  },
+  {id:"edan",name:"Edan",map:6,x:4900,talkRadius:150,cardId:HEART_WYRM_CARD.id,
+    firstTalk:[
+      {speaker:"Edan",text:"The altar is close. I'm Edan. I keep the last stretch so nobody turns around."},
+      {speaker:"Moon Night",text:"Kest walked ahead."},
+      {speaker:"Edan",text:"Bind the Heart Wyrm if you haven't. The cooled vein is east. The heart altar is farther."},
+      {speaker:"Edan",text:"Press E at the altar. The campaign ends when the signal rests. The gate behind you still heals."}
+    ],
+    againTalk:[{speaker:"Edan",text:"Still here. Bind the wyrm, then walk east. Press E at the altar. That is the finish."},{speaker:"Edan",text:"Animals were the echo the whole road. The altar is where it can stop running."}],
+    afterCaptureTalk:[
+      {speaker:"Edan",text:"You bound the last pulse. That's every shard, still in one place."},
+      {speaker:"Edan",text:"Castle rain, shore dusk, cairn twist — the animals are the echo — kiln heat, then this heart altar."},
+      {speaker:"Edan",text:"Walk east. Press E at the heart altar. That ends the campaign."}
+    ],
+    palette:{skin:"#c09080",cloak:"#2c1828",trim:"#c86878",accent:"#f0c0b0"}
   }
 ];
+const talkTargetAt=(map:MapId,x:number,footY:number)=>{
+  const npc=NPCS.find(n=>n.map===map&&Math.abs(x-n.x)<n.talkRadius)??null;
+  const landmark=landmarkAt(map,x,footY)??null;
+  if(npc&&landmark) return Math.abs(x-landmark.x)<=Math.abs(x-npc.x)?{npc:null,landmark}:{npc,landmark:null};
+  return {npc,landmark:npc?null:landmark};
+};
 const DRAGON_FRAMES:Record<DragonMode,DragonFrame[]> = {
   idle:[
     {x:256,y:25,w:256,h:260,anchorX:128,anchorY:260},{x:512,y:25,w:256,h:258,anchorX:128,anchorY:258},
@@ -1014,8 +1070,9 @@ export default function AshfallGame() {
     if (dialogueRef.current) { advanceDialogue(); return; }
     const x=player.current.x;
     const map=mapRef.current;
-    const npc=NPCS.find(n=>n.map===map&&Math.abs(x-n.x)<n.talkRadius);
-    if(npc){
+    const target=talkTargetAt(map,x,player.current.y+PH);
+    if(target.npc){
+      const npc=target.npc;
       const talkKey=npcTalkKey(npc);
       const hasCard=inventoryRef.current.some(entry=>npc.cardId===SUNSET_JACKAL_CARD.id?isSunsetJackalCardId(entry.id):entry.id===npc.cardId);
       if(!metNpcRef.current.has(talkKey)){metNpcRef.current.add(talkKey);showDialogue(npc.firstTalk);}
@@ -1023,8 +1080,7 @@ export default function AshfallGame() {
       else showDialogue(npc.againTalk);
       return;
     }
-    const landmark=landmarkAt(map,x,player.current.y+PH);
-    if(landmark){showDialogue(landmark.lines);return;}
+    if(target.landmark){showDialogue(target.landmark.lines);return;}
     if(map===1&&Math.abs(x-(MAP1_PORTAL_X+55))<145) enterMap(2,1);
     else if(map===2&&Math.abs(x-(MAP2_PORTAL_X+55))<145) enterMap(1,2);
     else if(map===2&&Math.abs(x-(MAP2_EXIT_X+55))<145) enterMap(3,2);
@@ -3130,8 +3186,9 @@ export default function AshfallGame() {
       }
       let action="";
       if(!dialogueRef.current){
-        const nearNpc=NPCS.find(n=>n.map===map&&Math.abs(pl.x-n.x)<n.talkRadius);
-        const nearLandmark=landmarkAt(map,pl.x,pl.y+PH);
+        const nearTalk=talkTargetAt(map,pl.x,pl.y+PH);
+        const nearNpc=nearTalk.npc;
+        const nearLandmark=nearTalk.landmark;
         if(nearDragonCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Baby Dragon card";
         else if(readyJackal)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Sunset Jackal card";
         else if(readyOtherWild&&otherWildCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up "+otherWildCard.name+" card";
