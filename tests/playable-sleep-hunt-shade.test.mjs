@@ -102,8 +102,8 @@ test("late-map portal and studyable labels keep stroke contrast after lateMapCon
   assert.match(game, /ctx\.lineWidth=late\?4:3;ctx\.strokeStyle=late\?"rgba\(6,2,4,\.96\)":"rgba\(7,3,16,\.9\)";ctx\.strokeText\("PRESS E",x,y\)/);
   assert.match(game, /const late=lateMapContactShade\(map\)/);
   assert.match(game, /ctx\.lineWidth=late\?5:4;ctx\.strokeStyle=late\?"rgba\(6,2,4,\.96\)":"rgba\(6,8,10,\.88\)";ctx\.strokeText\(label,cx,groundY-188\)/);
-  assert.match(game, /ctx\.fillStyle=late\?"#fff6d2":"rgba\("\+portalColor\+","\+tagPulse\+"\)"/);
-  assert.match(game, /ctx\.fillStyle=near\|\|late\?"#fff6d2":"rgba\("\+portalColor\+","\+\(\.55\+tagPulse\*\.25\)\+"\)"/);
+  assert.match(game, /ctx\.fillStyle="#fff6d2";ctx\.fillText\(label,cx,groundY-188\); \/\/ early-map west\/east tags keep cream fill after #48\/#50 late stroke/);
+  assert.match(game, /ctx\.fillStyle="#fff6d2";ctx\.fillText\("PRESS E",cx,groundY-174\)/);
   assert.match(game, /ctx\.strokeText\(bound\?"ALTAR EAST":"PULSE",x,groundY-28\)/);
   assert.match(game, /ctx\.fillStyle="#fff6d2";ctx\.fillText\(bound\?"ALTAR EAST":"PULSE",x,groundY-28\)/);
   assert.match(game, /EAST · HEART/);

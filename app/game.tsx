@@ -1244,7 +1244,7 @@ export default function AshfallGame() {
     }
     slideUntil.current=0;actionUntil.current=0;cameraReset.current=true;
     portalFlashUntil.current=performance.now()+430; // portal flash still fires after companion reseat
-    tone(610,.25,.028);window.setTimeout(()=>tone(360,.2,.02),100);
+    tone(610,.25,.028);window.setTimeout(()=>tone(360,.2,.02),100); // portal enter tone still fires after companion reseat
   },[showDialogue,tone]);
 
   const startGame = useCallback(() => {
@@ -3252,16 +3252,14 @@ export default function AshfallGame() {
         ctx.fillStyle="rgba("+portalColor+","+(.28+i*.045)+")";ctx.fillRect(x+29+(i*13)%46,sy,4+(i%2)*3,2);
       }
       if(label){
-        const near=nearPortalAt(player.current.x,x);
-        const tagPulse=.62+Math.sin(now*.003)*.22;
         const late=lateMapContactShade(map);
         ctx.save();ctx.textAlign="center";ctx.textBaseline="bottom";
         ctx.font="900 11px ui-monospace, SFMono-Regular, Menlo, monospace";
         ctx.lineWidth=late?5:4;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(6,8,10,.88)";ctx.strokeText(label,cx,groundY-188);
-        ctx.fillStyle=late?"#fff6d2":"rgba("+portalColor+","+tagPulse+")";ctx.fillText(label,cx,groundY-188);
+        ctx.fillStyle="#fff6d2";ctx.fillText(label,cx,groundY-188); // early-map west/east tags keep cream fill after #48/#50 late stroke
         ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";
         ctx.strokeText("PRESS E",cx,groundY-174);
-        ctx.fillStyle=near||late?"#fff6d2":"rgba("+portalColor+","+(.55+tagPulse*.25)+")";ctx.fillText("PRESS E",cx,groundY-174);
+        ctx.fillStyle="#fff6d2";ctx.fillText("PRESS E",cx,groundY-174);
         ctx.restore();
       }
     };
@@ -3535,7 +3533,7 @@ export default function AshfallGame() {
               ally.x=creatureEdgeAt(map,summonFloor.x);ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;
               keepCreatureOnRoad(ally,map);
               if(ally.y>ally.groundY)ally.y=ally.groundY;
-              const direction:1|-1=summonX>=pl.x?1:-1;companionCastRef.current={started:now,kind:"summon",direction};pl.facing=direction;setDeployedItemId(item.id);tone(330,.18,.024);
+              const direction:1|-1=summonX>=pl.x?1:-1;companionCastRef.current={started:now,kind:"summon",direction};pl.facing=direction;setDeployedItemId(item.id);tone(330,.18,.024);window.setTimeout(()=>tone(620,.22,.022),170);window.setTimeout(()=>tone(940,.28,.02),420);
             }
           }else{
             const summonX=creatureEdgeAt(map,pl.x+pl.facing*COMPANION_DEPLOY_DISTANCE);
