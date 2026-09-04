@@ -418,8 +418,10 @@ test("late-map E-talk guides the finish and does not block portals or the altar"
     const firstTalk = first.slice(first.indexOf("firstTalk:["), first.indexOf("againTalk:["));
     assert.match(firstTalk, /the animals are the echo/i, `${id}:${map} firstTalk should name the echo twist`);
     assert.match(firstTalk, /Bind /, `${id}:${map} firstTalk should say to bind`);
+    assert.match(firstTalk, /if you still need/, `${id}:${map} firstTalk should bind only if needed`);
     assert.match(firstTalk, /heart altar/, `${id}:${map} firstTalk should name the heart altar`);
     assert.match(firstTalk, /ends the campaign/, `${id}:${map} firstTalk should say the campaign ends`);
+    assert.doesNotMatch(firstTalk, /Don't go in cold|Don't go into the heart cold|Bind one, then go east|Bind the wyrm, then go east|road goes dark|stuck|must capture|have to bind/i, `${id}:${map} firstTalk should not softlock a skipped bind`);
     if (map === 5) assert.match(firstTalk, /The east gate heals you/, `${id}:5 firstTalk should say the east gate heals`);
     else assert.match(firstTalk, /The gate behind you still heals/, `${id}:6 firstTalk should say the west gate still heals`);
     const echoHits = firstTalk.match(/the animals are the echo/gi) || [];
@@ -432,6 +434,16 @@ test("late-map E-talk guides the finish and does not block portals or the altar"
     assert.ok(altarHits.length <= 1, `${id}:${map} firstTalk should not restack the altar`);
     assert.equal(endHits.length, 1, `${id}:${map} firstTalk should end the campaign once`);
     assert.equal(healHits.length, 1, `${id}:${map} firstTalk should name the heal gate once`);
+  }
+
+  const reedFirst = npcBlock("reed", 5);
+  const kestFirst = npcBlock("kest", 6);
+  const edanFirst = npcBlock("edan", 6);
+  assert.match(reedFirst.slice(reedFirst.indexOf("firstTalk:["), reedFirst.indexOf("againTalk:[")), /Bind a lynx if you still need the heat/);
+  assert.match(kestFirst.slice(kestFirst.indexOf("firstTalk:["), kestFirst.indexOf("againTalk:[")), /Bind the wyrm if you still need the pulse/);
+  assert.match(edanFirst.slice(edanFirst.indexOf("firstTalk:["), edanFirst.indexOf("againTalk:[")), /Bind the wyrm if you still need the pulse/);
+  for (const [id, map] of [["reed", 5], ["kest", 6], ["edan", 6], ["ryn", 4], ["ryn", 5], ["calen", 1], ["calen", 4]]) {
+    assert.doesNotMatch(npcBlock(id, map), /Don't go in cold|Don't go into the heart cold|road goes dark|must capture|have to bind|\bstuck\b/i, `${id}:${map} should not imply a skipped bind locks the road`);
   }
 });
 
