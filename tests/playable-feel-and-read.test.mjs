@@ -79,7 +79,7 @@ test("maps 5–6 stay fair after #24/#26/#30 stones without a physics rewrite", 
   assert.match(game, /\{x:6080,y:490,w:150,h:18\}/);
   assert.match(game, /if\(jump&&pl\.jumpsLeft>0\)\{\n {10}const secondJump=pl\.jumpsLeft===1;\n {10}pl\.vy=secondJump\?-465:-500/);
   assert.match(game, /if\(wasGrounded&&!didJump&&!pl\.grounded\)pl\.jumpsLeft=Math\.min\(pl\.jumpsLeft,1\)/);
-  assert.match(game, /if\(pl\.y>WORLD_H\+80\)\{pl\.x=Math\.max\(120,pl\.x-180\);pl\.y=240/);
+  assert.match(game, /if\(pl\.y>WORLD_H\+80\)\{const floor=plantedFloorAt\(map,Math\.max\(120,pl\.x-180\)\);pl\.x=floor\.x;pl\.y=plantedYAt\(map,floor\.x\)/);
   assert.doesNotMatch(game, /coyoteTime|ledgeForgiv|tripleJump|jumpsLeft\s*=\s*3/);
 });
 
@@ -105,6 +105,8 @@ test("enterMap still restores health and fires the portal flash after reseat", (
   assert.match(enterMap[0], /setHealth\(pl\.maxHealth\);setStamina\(MAX_STAMINA\); \/\/ portal heal still fires after companion reseat/);
   assert.match(enterMap[0], /portalFlashUntil\.current=performance\.now\(\)\+430; \/\/ portal flash still fires after companion reseat/);
   assert.match(enterMap[0], /if\(ally\.active&&ally\.itemId\)\{/);
+  assert.match(enterMap[0], /const seat=plantedFloorAt\(map,pl\.x-pl\.facing\*96\)/);
+  assert.match(enterMap[0], /const arrivalGround=seat\.groundY; \/\/ companion portal reseat still plants after #38 floors/);
   assert.match(game, /if\(map===1&&nearPortalAt\(x,MAP1_PORTAL_X\)\) enterMap\(2,1\)/);
   assert.match(game, /else if\(map===5&&nearPortalAt\(x,MAP5_EXIT_X\)\) enterMap\(6,5\)/);
   assert.match(game, /else if\(map===6&&nearPortalAt\(x,MAP6_ENTRY_X\)\) enterMap\(5,6\)/);

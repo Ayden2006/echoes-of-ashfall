@@ -162,7 +162,8 @@ test("companions and wild beasts clamp to PLAYER_EDGE_MARGIN and reseat with sur
   assert.match(game, /keepCreatureOnRoad\(ally,map\)/);
   assert.match(game, /keepCreatureOnRoad\(jackal,mapRef\.current\)/);
   assert.match(game, /keepCreatureOnRoad\(dragon,1\)/);
-  assert.match(game, /ally\.x=creatureEdgeAt\(map,pl\.x-pl\.facing\*96\)/);
+  assert.match(game, /const seat=plantedFloorAt\(map,pl\.x-pl\.facing\*96\)/);
+  assert.match(game, /ally\.x=creatureEdgeAt\(map,seat\.x\)/);
   assert.match(game, /ally\.x=creatureEdgeAt\(map,ally\.x\)/);
   assert.match(game, /const summonX=creatureEdgeAt\(map,pl\.x\+pl\.facing\*COMPANION_DEPLOY_DISTANCE\)/);
   assert.match(game, /if\(ally\.y>ally\.groundY\+28\)ally\.y=ally\.groundY/);

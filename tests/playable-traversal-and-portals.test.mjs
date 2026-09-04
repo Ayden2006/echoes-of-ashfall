@@ -43,8 +43,9 @@ test("portal X and both-direction spawns stay on solid walkable ground", () => {
   assert.match(game, /if\(arrivingFromPrev\)\{const floor=plantedFloorAt\(map,340\);return \{x:floor\.x,y:plantedYAt\(map,floor\.x\),facing:1/);
   assert.match(game, /const floor=plantedFloorAt\(map,x\);return \{x:floor\.x,y:plantedYAt\(map,floor\.x\),facing:-1/);
   assert.match(game, /pl\.y=plantedYAt\(mapRef\.current,pl\.x\)/);
-  assert.match(game, /const arrivalGround=surfaceYAt\(map,ally\.x,pl\.y\+PH\)\?\?surfaceYAt\(map,pl\.x,590\)\?\?pl\.y\+PH/);
-  assert.match(game, /const reseatGround=companionSurfaceAt\(ally\.x,pl\.y\+PH,map\)\?\?surfaceYAt\(map,ally\.x,590\)\?\?pl\.y\+PH/);
+  assert.match(game, /const seat=plantedFloorAt\(map,pl\.x-pl\.facing\*96\)/);
+  assert.match(game, /const arrivalGround=seat\.groundY; \/\/ companion portal reseat still plants after #38 floors/);
+  assert.match(game, /const reseatGround=seat\.groundY; \/\/ companion portal reseat still plants after #38 floors/);
   assert.match(game, /pl\.health=pl\.maxHealth/);
 
   const maps = [
@@ -99,7 +100,7 @@ test("key high-secret ledges stay present and reachable from a stepping stone", 
 test("no softlock markers: companion reseat, underground snap, edge recovery, PR #10 numbers", () => {
   assert.match(game, /if\(ally\.y>ally\.groundY\+28\)ally\.y=ally\.groundY/);
   assert.match(game, /if\(jackal\.y>jackal\.groundY\+28\)jackal\.y=jackal\.groundY/);
-  assert.match(game, /if\(pl\.y>WORLD_H\+80\)\{pl\.x=Math\.max\(120,pl\.x-180\);pl\.y=240/);
+  assert.match(game, /if\(pl\.y>WORLD_H\+80\)\{const floor=plantedFloorAt\(map,Math\.max\(120,pl\.x-180\)\);pl\.x=floor\.x;pl\.y=plantedYAt\(map,floor\.x\)/);
   assert.match(game, /const nextX=clamp\(pl\.x\+pl\.vx\*dt,PLAYER_EDGE_MARGIN,activeWorldW-PLAYER_EDGE_MARGIN\)/);
   assert.match(game, /if\(!pl\.grounded\|\|groundAt\(nextX,oldBottom\)<Infinity\)pl\.x=nextX/);
   assert.match(game, /const COMPANION_HUNT_RANGE = 520/);
