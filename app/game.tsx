@@ -948,6 +948,11 @@ const mixHex = (hex:string,r:number,g:number,b:number,t:number) => {
   const value=parseInt(hex.replace("#",""),16),rr=value>>16,gg=value>>8&255,bb=value&255;
   return `rgb(${Math.round(rr+(r-rr)*t)},${Math.round(gg+(g-gg)*t)},${Math.round(bb+(b-bb)*t)})`;
 };
+const lateMapContactShade = (map:MapId) => map===5
+  ? {core:"rgba(18,6,4,.68)",mid:rgbaFromHex("#ff8c4a",.22),edge:"rgba(255,140,80,0)"}
+  : map===6
+  ? {core:"rgba(16,4,10,.68)",mid:rgbaFromHex("#d45a6a",.2),edge:"rgba(212,90,106,0)"}
+  : null;
 const worldWidthFor = (map:MapId) => map===1?MAP1_W:map===2?MAP2_W:map===3?MAP3_W:map===4?MAP4_W:map===5?MAP5_W:MAP6_W;
 const platformsFor = (map:MapId) => map===1?map1Platforms:map===2?map2Platforms:map===3?map3Platforms:map===4?map4Platforms:map===5?map5Platforms:map6Platforms;
 const surfaceYAt=(map:MapId,x:number,currentY:number)=>{const surfaces=platformsFor(map).filter(p=>p.h>80&&x>=p.x&&x<=p.x+p.w);if(!surfaces.length)return null;return surfaces.reduce((best,p)=>Math.abs(p.y-currentY)<Math.abs(best.y-currentY)?p:best).y;};
@@ -1152,7 +1157,7 @@ export default function AshfallGame() {
       dialogueRef.current=null;setDialogue(null);
     }
     pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
-    pl.health=pl.maxHealth;staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;setHealth(pl.maxHealth);setStamina(MAX_STAMINA);
+    pl.health=pl.maxHealth;staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;setHealth(pl.maxHealth);setStamina(MAX_STAMINA); // portal heal still fires after companion reseat
     const ally=companionRef.current;
     if(ally.active&&ally.itemId){
       const now=performance.now();
@@ -1166,7 +1171,7 @@ export default function AshfallGame() {
       ally.attackUntil=0;ally.attackLanded=false;ally.recallStarted=0;ally.targetX=ally.x;
     }
     slideUntil.current=0;actionUntil.current=0;cameraReset.current=true;
-    portalFlashUntil.current=performance.now()+430;
+    portalFlashUntil.current=performance.now()+430; // portal flash still fires after companion reseat
     tone(610,.25,.028);window.setTimeout(()=>tone(360,.2,.02),100);
   },[showDialogue,tone]);
 
@@ -1621,6 +1626,12 @@ export default function AshfallGame() {
         contact.addColorStop(0,"rgba(2,4,8,.62)");contact.addColorStop(.55,"rgba(2,4,8,.22)");contact.addColorStop(1,"rgba(2,4,8,0)");
         ctx.fillStyle=contact;ctx.beginPath();ctx.ellipse(0,PH+2,40,9,0,0,Math.PI*2);ctx.fill();
         ctx.fillStyle="rgba(1,2,4,.78)";ctx.beginPath();ctx.ellipse(2,PH+3,24,5,0,0,Math.PI*2);ctx.fill();
+        const lateShade=lateMapContactShade(mapRef.current);
+        if(lateShade){
+          const warm=ctx.createRadialGradient(1,PH+3,1,1,PH+3,36);
+          warm.addColorStop(0,lateShade.core);warm.addColorStop(.45,lateShade.mid);warm.addColorStop(1,lateShade.edge);
+          ctx.fillStyle=warm;ctx.beginPath();ctx.ellipse(1,PH+3,34,7,0,0,Math.PI*2);ctx.fill();
+        }
         ctx.fillStyle=mapRef.current===1?"rgba(179,158,235,.3)":mapRef.current===3?"rgba(255,140,80,.36)":mapRef.current===4?"rgba(142,231,255,.36)":mapRef.current===5?"rgba(255,150,90,.36)":mapRef.current===6?"rgba(224,120,160,.36)":"rgba(255,215,139,.36)";ctx.fillRect(-20,PH-1,40,2);
       }
       let list=SPRITE_FRAMES.idle;
@@ -2743,7 +2754,7 @@ export default function AshfallGame() {
         ctx.fillStyle=healthGradient;ctx.fillRect(barX,barY,barW*healthRatio,barH);
         ctx.strokeStyle="rgba(255,210,140,.7)";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barW+1,barH+1);
         if(hurtActive)drawHurtNumber(jackal.x+recoilX,barY-16-hurtProgress*18,jackal.lastDamage,hurtProgress,"#ffe7a8");
-        drawHuntMark(jackal.x+recoilX,barY-26,now,currentHuntTarget()===jackal);
+        drawHuntMark(jackal.x+recoilX,barY-26,now,currentHuntTarget()===jackal); // jackal scout shares stroked hurt + HUNT
         ctx.restore();
       }
     };
@@ -2839,7 +2850,7 @@ export default function AshfallGame() {
         ctx.fillStyle="#401924";ctx.fillRect(barX,barY,barW,barH);
         ctx.fillStyle="#9cf63d";ctx.fillRect(barX,barY,barW*healthRatio,barH);
         if(hurtActive)drawHurtNumber(roost.x+recoilX,barY-16-hurtProgress*16,roost.lastDamage,hurtProgress,"#f4ffb0");
-        drawHuntMark(roost.x+recoilX,barY-26,now,currentHuntTarget()===roost);
+        drawHuntMark(roost.x+recoilX,barY-26,now,currentHuntTarget()===roost); // roostling keep HUNT + stroked hurt
         ctx.restore();
       }
     };
