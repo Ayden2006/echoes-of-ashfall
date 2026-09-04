@@ -23,6 +23,7 @@ test("later-map traveler talk is keyed per map so first/again/afterCapture all p
   assert.match(game, /We meet again\. Castle rain, then cliff wind/);
   assert.match(game, /We keep meeting at the edge of the light/);
   assert.match(game, /We meet where the ash learned to wait/);
+  assert.match(game, /We meet again\. Castle merlon, then kiln road/);
 });
 
 test("existing unique animals stay on the card + E/Q pattern, with extra on-map fights", () => {
@@ -93,6 +94,24 @@ test("combat-only extras never flash a second card", () => {
   assert.doesNotMatch(game, /sunset-jackal-card-d/);
 });
 
+test("maps 1–6 are wider with two-way portals still on the existing road", () => {
+  assert.match(campaign, /width: 7200/);
+  assert.match(campaign, /width: 5400/);
+  assert.match(campaign, /width: 5800/);
+  assert.match(campaign, /width: 6000/);
+  assert.match(campaign, /width: 6200/);
+  assert.match(campaign, /width: 6600/);
+  assert.match(game, /const MAP1_W = 7200/);
+  assert.match(game, /const MAP1_PORTAL_X = 7070/);
+  assert.match(game, /const MAP2_EXIT_X = 5270/);
+  assert.match(game, /const MAP3_EXIT_X = 5670/);
+  assert.match(game, /const MAP4_EXIT_X = 5870/);
+  assert.match(game, /const MAP5_EXIT_X = 6070/);
+  assert.match(game, /const MAP6_HEART_X = 6470/);
+  assert.match(game, /if\(map===1\) return \{x:6860,y:483,facing:-1/);
+  assert.doesNotMatch(game, /map:\s*7|MAP7_/);
+});
+
 test("high secrets have a stepping-stone ledge so a single jump can reach them", () => {
   assert.match(game, /\{x:1418,y:498,w:160,h:18\}/);
   assert.match(game, /\{x:1515,y:430,w:155,h:18\}/);
@@ -100,20 +119,20 @@ test("high secrets have a stepping-stone ledge so a single jump can reach them",
   assert.match(game, /\{x:1510,y:418,w:200,h:18\}/);
   assert.match(game, /\{x:1360,y:508,w:140,h:18\}/);
   assert.match(game, /\{x:1480,y:440,w:170,h:18\}/);
-  assert.match(game, /\{x:3980,y:490,w:150,h:18\}/);
-  assert.match(game, /\{x:4120,y:430,w:180,h:18\}/);
-  assert.match(game, /\{x:4380,y:500,w:150,h:18\}/);
-  assert.match(game, /\{x:4520,y:430,w:170,h:18\}/);
-  assert.match(game, /\{x:3280,y:500,w:140,h:18\}/);
-  assert.match(game, /\{x:3380,y:432,w:160,h:18\}/);
-  assert.match(game, /\{x:2780,y:500,w:140,h:18\}/);
-  assert.match(game, /\{x:2900,y:430,w:160,h:18\}/);
+  assert.match(game, /\{x:5780,y:490,w:150,h:18\}/);
+  assert.match(game, /\{x:5920,y:430,w:180,h:18\}/);
+  assert.match(game, /\{x:6380,y:500,w:150,h:18\}/);
+  assert.match(game, /\{x:6520,y:430,w:170,h:18\}/);
+  assert.match(game, /\{x:5080,y:500,w:140,h:18\}/);
+  assert.match(game, /\{x:5180,y:432,w:160,h:18\}/);
+  assert.match(game, /\{x:4380,y:500,w:140,h:18\}/);
+  assert.match(game, /\{x:4500,y:430,w:160,h:18\}/);
   assert.match(game, /\{x:2460,y:508,w:140,h:18\}/);
   assert.match(game, /\{x:2580,y:440,w:170,h:18\}/);
-  assert.match(game, /\{x:3840,y:488,w:150,h:18\}/);
-  assert.match(game, /\{x:3980,y:422,w:160,h:18\}/);
-  assert.match(game, /\{x:4360,y:490,w:150,h:18\}/);
-  assert.match(game, /\{x:4500,y:430,w:160,h:18\}/);
+  assert.match(game, /\{x:5640,y:488,w:150,h:18\}/);
+  assert.match(game, /\{x:5780,y:422,w:160,h:18\}/);
+  assert.match(game, /\{x:6160,y:490,w:150,h:18\}/);
+  assert.match(game, /\{x:6300,y:430,w:160,h:18\}/);
 });
 
 test("prebuild still uses the Moon Night companion script, not moon-knight", () => {

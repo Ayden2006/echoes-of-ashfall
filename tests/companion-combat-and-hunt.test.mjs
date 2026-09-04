@@ -60,9 +60,9 @@ test("angry extras chase beyond their patrol box without crossing the whole map"
   assert.match(game, /isCombatOnlyBeast\(jackal\.id\)&&pl\.health>0&&playerDistance<COMBAT_ONLY_AGGRO_RANGE/);
   assert.match(game, /const COMBAT_ONLY_AGGRO_RANGE = 220/);
   assert.match(game, /createJackal\("sunset-jackal-scout",2400,2320,2480\)/);
-  assert.match(game, /createBeast\("ash-roost",4380,4180,4560/);
+  assert.match(game, /createBeast\("ash-roost",6180,5980,6360/);
   assert.match(game, /createBeast\("cinder-fox-c",1780,1600,1960/);
-  assert.match(game, /createBeast\("pale-stag-b",3720,3480,4040/);
+  assert.match(game, /createBeast\("pale-stag-b",5320,5080,5640/);
   assert.match(game, /createBeast\("ember-lynx-d",2620,2520,2720/);
 });
 

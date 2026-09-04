@@ -14,44 +14,44 @@ type CardPalette = { dark:string; mid:string; accent:string; glow:string };
 type InventoryItem = { id:string; name:string; type:"animal-card"|"item"; description:string; image:string; palette:CardPalette };
 type Companion = { active:boolean; itemId:string|null; map:MapId; x:number; y:number; groundY:number; vx:number; facing:1|-1; mode:DragonMode; modeStarted:number; summonedAt:number; recallStarted:number; teleportAt:number; attackUntil:number; attackLanded:boolean; targetX:number; lastPlayerAttack:number; health:number; maxHealth:number };
 
-const MAP1_W = 5200;
-const MAP2_W = 3600;
-const MAP3_W = 4000;
-const MAP4_W = 4200;
+const MAP1_W = 7200;
+const MAP2_W = 5400;
+const MAP3_W = 5800;
+const MAP4_W = 6000;
 const WORLD_H = 720;
 const PW = 46;
 const PH = 92;
 const STEP_HEIGHT = 32;
-const MAP1_PORTAL_X = 5070;
+const MAP1_PORTAL_X = 7070;
 const MAP2_PORTAL_X = 105;
-const MAP2_EXIT_X = 3470;
+const MAP2_EXIT_X = 5270;
 const MAP3_ENTRY_X = 105;
-const MAP3_EXIT_X = 3870;
+const MAP3_EXIT_X = 5670;
 const MAP4_ENTRY_X = 105;
-const MAP4_EXIT_X = 4070;
-const MAP5_W = 4400;
-const MAP6_W = 4800;
+const MAP4_EXIT_X = 5870;
+const MAP5_W = 6200;
+const MAP6_W = 6600;
 const MAP5_ENTRY_X = 105;
-const MAP5_EXIT_X = 4270;
+const MAP5_EXIT_X = 6070;
 const MAP5_KILN_X = 2080;
 const MAP6_ENTRY_X = 105;
-const MAP6_VEIN_X = 3820;
-const MAP6_HEART_X = 4670;
+const MAP6_VEIN_X = 5620;
+const MAP6_HEART_X = 6470;
 const MAP4_MOONWELL_X = 2360;
 const MAP1_PLAQUE_X = 2680;
 const MAP2_SHELL_X = 1515;
 const MAP3_HOLLOW_X = 1510;
 const MAP5_COAL_X = 1480;
-const MAP6_ECHO_X = 4120;
+const MAP6_ECHO_X = 5920;
 const MAP1_GROOVE_X = 3360;
 const MAP2_POST_X = 2050;
 const MAP3_CAIRN_X = 2140;
 const MAP4_NOTCH_X = 980;
 const MAP5_BELLOWS_X = 2680;
 const MAP6_STEP_X = 1980;
-const MAP1_MERLON_X = 4520;
-const MAP2_TIDE_X = 3380;
-const MAP3_NEST_X = 2900;
+const MAP1_MERLON_X = 6520;
+const MAP2_TIDE_X = 5180;
+const MAP3_NEST_X = 4500;
 const MAP4_LICHEN_X = 2580;
 const COMBAT_ONLY_BEAST_IDS = new Set(["sunset-jackal-scout","ash-roost","cinder-fox-c","pale-stag-b","ember-lynx-d"]);
 const isCombatOnlyBeast = (id:string) => COMBAT_ONLY_BEAST_IDS.has(id);
@@ -88,7 +88,7 @@ const DRAGON_RENDER_SIZE = 138;
 const DRAGON_SIGHT_RANGE = 720;
 const DRAGON_ATTACK_RANGE = 135;
 const DRAGON_CHASE_MIN = 1100;
-const DRAGON_CHASE_MAX = 3920;
+const DRAGON_CHASE_MAX = 5920;
 const DRAGON_PATROL_MIN = 1475;
 const DRAGON_PATROL_MAX = 1990;
 const DRAGON_CELL = 256;
@@ -296,7 +296,7 @@ const NPCS:Npc[] = [
     ],
     palette:{skin:"#d4a07a",cloak:"#6a3418",trim:"#f08a3a",accent:"#ffd27a"}
   },
-  {id:"sera",name:"Sera",map:5,x:3920,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
+  {id:"sera",name:"Sera",map:5,x:5720,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
     firstTalk:[
       {speaker:"Sera",text:"The coals here wait. I'm Sera. I walked the shore until the light died."},
       {speaker:"Moon Night",text:"Reed keeps the kiln."},
@@ -397,7 +397,7 @@ const NPCS:Npc[] = [
     ],
     palette:{skin:"#d8b090",cloak:"#4a2848",trim:"#e8a060",accent:"#ffd8a0"}
   },
-  {id:"vess",name:"Vess",map:3,x:3340,talkRadius:150,cardId:CINDER_FOX_CARD.id,
+  {id:"vess",name:"Vess",map:3,x:5140,talkRadius:150,cardId:CINDER_FOX_CARD.id,
     firstTalk:[
       {speaker:"Vess",text:"Ash in the writing. I'm Vess. I read the cairn so nobody lies to themselves."},
       {speaker:"Moon Night",text:"The signal feels closer to the animals."},
@@ -424,6 +424,34 @@ const NPCS:Npc[] = [
       {speaker:"Vess",text:"If Nia is still walking dusk, tell her the light didn't fail. It banked."}
     ],
     palette:{skin:"#c4a888",cloak:"#2a2824",trim:"#8a7060",accent:"#e8c8a0"}
+  },
+  {id:"tamsin",name:"Tamsin",map:1,x:3980,talkRadius:150,cardId:BABY_DRAGON_CARD.id,
+    firstTalk:[
+      {speaker:"Tamsin",text:"The east wall still watches a road that already left. I'm Tamsin."},
+      {speaker:"Moon Night",text:"The spark is in the dragon, not the stone."},
+      {speaker:"Tamsin",text:"Then you heard Calen. I keep the last merlon so nobody mistakes the wall for the call."},
+      {speaker:"Tamsin",text:"Bind the spark if you can. The shore is longer than it looks from here."}
+    ],
+    againTalk:[{speaker:"Tamsin",text:"Still on the wall, Moon Night. The merlon is farther east if the rain feels thin."},{speaker:"Tamsin",text:"I walk the kiln road later. If Reed still tends heat, we may share that stretch."}],
+    afterCaptureTalk:[
+      {speaker:"Tamsin",text:"You took the first spark. The wall I watch is quieter now."},
+      {speaker:"Tamsin",text:"I'll take the long road to the kiln. Tell Reed a merlon-watcher still stands."}
+    ],
+    palette:{skin:"#c8b49a",cloak:"#243040",trim:"#7a9ab0",accent:"#d0e8f0"}
+  },
+  {id:"tamsin",name:"Tamsin",map:5,x:4880,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
+    firstTalk:[
+      {speaker:"Tamsin",text:"The wall ended. The kiln road didn't. I'm Tamsin. I left the merlon for this heat."},
+      {speaker:"Moon Night",text:"Reed keeps the fire."},
+      {speaker:"Tamsin",text:"He does. Lynx-shaped coals, not castle rain. Same echo, later stretch. Don't go into the heart cold."},
+      {speaker:"Tamsin",text:"Sera is still farther east. Vess read the cairn. The road remembers all of us now."}
+    ],
+    againTalk:[{speaker:"Tamsin",text:"We meet again. Castle merlon, then kiln road. Same watch, later fire."}],
+    afterCaptureTalk:[
+      {speaker:"Tamsin",text:"You bound the last heat. The merlon I left behind can finally stop watching."},
+      {speaker:"Tamsin",text:"If Orrin is still copying rain, tell him the wall already knew the line."}
+    ],
+    palette:{skin:"#c8b49a",cloak:"#243040",trim:"#7a9ab0",accent:"#d0e8f0"}
   }
 ];
 const DRAGON_FRAMES:Record<DragonMode,DragonFrame[]> = {
@@ -475,57 +503,73 @@ const map1Platforms: Platform[] = [
   {x:0,y:590,w:782,h:180},{x:758,y:610,w:644,h:160},{x:1378,y:570,w:664,h:200},
   {x:2018,y:600,w:544,h:170},{x:2538,y:550,w:594,h:220},{x:3108,y:590,w:564,h:180},
   {x:3648,y:535,w:534,h:235},{x:4158,y:575,w:1042,h:195},
+  {x:5100,y:560,w:720,h:210},{x:5740,y:590,w:680,h:180},{x:6340,y:545,w:860,h:225},
   {x:1020,y:475,w:170,h:18},{x:1600,y:490,w:150,h:18},{x:1740,y:430,w:140,h:18},
   {x:2260,y:470,w:160,h:18},{x:2448,y:428,w:150,h:18},
   {x:2588,y:382,w:210,h:18},{x:3320,y:455,w:180,h:18},{x:3780,y:430,w:170,h:18},
-  {x:4380,y:500,w:150,h:18},{x:4520,y:430,w:170,h:18}
+  {x:5280,y:470,w:170,h:18},{x:5860,y:455,w:160,h:18},
+  {x:6380,y:500,w:150,h:18},{x:6520,y:430,w:170,h:18}
 ];
 const map2Platforms: Platform[] = [
   {x:0,y:590,w:535,h:180},{x:500,y:568,w:470,h:202},{x:940,y:588,w:410,h:182},
   {x:1320,y:562,w:455,h:208},{x:1740,y:538,w:430,h:232},{x:2140,y:560,w:430,h:210},
-  {x:2540,y:585,w:420,h:185},{x:2925,y:558,w:405,h:212},{x:3295,y:578,w:305,h:192},
+  {x:2540,y:585,w:420,h:185},{x:2925,y:558,w:405,h:212},{x:3295,y:578,w:520,h:192},
+  {x:3740,y:562,w:520,h:208},{x:4180,y:548,w:520,h:222},{x:4620,y:570,w:420,h:200},{x:4960,y:558,w:440,h:212},
   {x:610,y:466,w:150,h:18},{x:1140,y:472,w:180,h:18},{x:1418,y:498,w:160,h:18},{x:1515,y:430,w:155,h:18},
   {x:2245,y:445,w:200,h:18},{x:2360,y:448,w:155,h:18},{x:2750,y:468,w:165,h:18},{x:3140,y:438,w:150,h:18},
-  {x:3280,y:500,w:140,h:18},{x:3380,y:432,w:160,h:18}
+  {x:3920,y:458,w:160,h:18},{x:4480,y:448,w:170,h:18},
+  {x:5080,y:500,w:140,h:18},{x:5180,y:432,w:160,h:18}
 ];
 const map3Platforms: Platform[] = [
   {x:0,y:590,w:560,h:180},{x:520,y:566,w:520,h:204},{x:1000,y:600,w:470,h:170},
   {x:1430,y:548,w:520,h:222},{x:1910,y:575,w:500,h:195},{x:2370,y:535,w:520,h:235},
   {x:2850,y:580,w:500,h:190},{x:3310,y:548,w:690,h:222},
+  {x:3920,y:575,w:620,h:195},{x:4480,y:540,w:620,h:230},{x:5040,y:565,w:760,h:205},
   {x:620,y:448,w:180,h:18},{x:1170,y:475,w:170,h:18},{x:1400,y:488,w:150,h:18},{x:1510,y:418,w:200,h:18},
   {x:2160,y:446,w:180,h:18},{x:1780,y:400,w:170,h:18},{x:2520,y:410,w:190,h:18},
-  {x:2780,y:500,w:140,h:18},{x:2900,y:430,w:160,h:18},
-  {x:3150,y:452,w:175,h:18},{x:3540,y:420,w:190,h:18}
+  {x:3150,y:452,w:175,h:18},{x:3540,y:420,w:190,h:18},{x:4080,y:448,w:170,h:18},
+  {x:4380,y:500,w:140,h:18},{x:4500,y:430,w:160,h:18}
 ];
 const map4Platforms: Platform[] = [
   {x:0,y:590,w:1180,h:180},{x:1140,y:560,w:980,h:210},{x:2080,y:575,w:900,h:195},{x:2940,y:545,w:1260,h:225},
+  {x:4100,y:560,w:720,h:210},{x:4760,y:545,w:720,h:225},{x:5420,y:555,w:580,h:215},
   {x:720,y:455,w:160,h:18},{x:1080,y:500,w:140,h:18},{x:1220,y:435,w:160,h:18},
   {x:1760,y:430,w:180,h:18},{x:2460,y:508,w:140,h:18},{x:2580,y:440,w:170,h:18},
-  {x:2860,y:420,w:190,h:18},{x:3480,y:400,w:170,h:18},{x:3720,y:480,w:150,h:18},{x:3880,y:418,w:160,h:18}
+  {x:2860,y:420,w:190,h:18},{x:3480,y:400,w:170,h:18},{x:3720,y:480,w:150,h:18},{x:3880,y:418,w:160,h:18},
+  {x:4680,y:450,w:170,h:18},{x:5320,y:430,w:160,h:18}
 ];
 const map5Platforms: Platform[] = [
   {x:0,y:590,w:1280,h:180},{x:1180,y:570,w:820,h:200},{x:1900,y:590,w:780,h:180},
   {x:2560,y:565,w:720,h:205},{x:3160,y:575,w:640,h:195},{x:3700,y:555,w:700,h:215},
+  {x:4320,y:575,w:680,h:195},{x:4940,y:560,w:680,h:210},{x:5560,y:550,w:640,h:220},
   {x:720,y:455,w:160,h:18},{x:1360,y:508,w:140,h:18},{x:1480,y:440,w:170,h:18},
   {x:2180,y:455,w:180,h:18},{x:1760,y:430,w:160,h:18},{x:2880,y:430,w:160,h:18},{x:3480,y:420,w:150,h:18},
-  {x:3840,y:488,w:150,h:18},{x:3980,y:422,w:160,h:18}
+  {x:4680,y:450,w:160,h:18},{x:5220,y:440,w:150,h:18},
+  {x:5640,y:488,w:150,h:18},{x:5780,y:422,w:160,h:18}
 ];
 const map6Platforms: Platform[] = [
   {x:0,y:590,w:1180,h:180},{x:1140,y:560,w:780,h:210},{x:1920,y:590,w:1160,h:180},
   {x:2960,y:565,w:840,h:205},{x:3660,y:545,w:1140,h:225},
+  {x:4700,y:565,w:720,h:205},{x:5360,y:545,w:1240,h:225},
   {x:720,y:455,w:160,h:18},{x:1680,y:425,w:180,h:18},{x:2680,y:415,w:190,h:18},
-  {x:3380,y:430,w:180,h:18},{x:3480,y:400,w:200,h:18},{x:3980,y:490,w:150,h:18},{x:4120,y:430,w:180,h:18},
-  {x:4360,y:490,w:150,h:18},{x:4500,y:430,w:160,h:18}
+  {x:3380,y:430,w:180,h:18},{x:3480,y:400,w:200,h:18},
+  {x:4880,y:450,w:170,h:18},{x:5280,y:430,w:160,h:18},
+  {x:5780,y:490,w:150,h:18},{x:5920,y:430,w:180,h:18},
+  {x:6160,y:490,w:150,h:18},{x:6300,y:430,w:160,h:18}
 ];
 const clamp = (n:number,a:number,b:number) => Math.max(a,Math.min(b,n));
 const rgbaFromHex = (hex:string,alpha:number) => {const value=parseInt(hex.replace("#",""),16);return `rgba(${value>>16},${value>>8&255},${value&255},${alpha})`;};
+const mixHex = (hex:string,r:number,g:number,b:number,t:number) => {
+  const value=parseInt(hex.replace("#",""),16),rr=value>>16,gg=value>>8&255,bb=value&255;
+  return `rgb(${Math.round(rr+(r-rr)*t)},${Math.round(gg+(g-gg)*t)},${Math.round(bb+(b-bb)*t)})`;
+};
 const worldWidthFor = (map:MapId) => map===1?MAP1_W:map===2?MAP2_W:map===3?MAP3_W:map===4?MAP4_W:map===5?MAP5_W:MAP6_W;
 const platformsFor = (map:MapId) => map===1?map1Platforms:map===2?map2Platforms:map===3?map3Platforms:map===4?map4Platforms:map===5?map5Platforms:map6Platforms;
 const surfaceYAt=(map:MapId,x:number,currentY:number)=>{const surfaces=platformsFor(map).filter(p=>p.h>80&&x>=p.x&&x<=p.x+p.w);if(!surfaces.length)return null;return surfaces.reduce((best,p)=>Math.abs(p.y-currentY)<Math.abs(best.y-currentY)?p:best).y;};
 const sixMapWorldPolishApplied=true;
 const spawnFor = (map:MapId, from:MapId|null) => {
   if(from===null) return {x:230,y:498,facing:1 as 1|-1};
-  if(map===1) return {x:4860,y:483,facing:-1 as 1|-1};
+  if(map===1) return {x:6860,y:483,facing:-1 as 1|-1};
   const arrivingFromPrev = (map===2&&from===1)||(map===3&&from===2)||(map===4&&from===3)||(map===5&&from===4)||(map===6&&from===5);
   if(arrivingFromPrev) return {x:340,y:498,facing:1 as 1|-1};
   return {x:Math.max(240,worldWidthFor(map)-340),y:498,facing:-1 as 1|-1};
@@ -791,7 +835,7 @@ export default function AshfallGame() {
     ];
     const createBeast=(id:string,x:number,patrolMin:number,patrolMax:number,health:number,damage:number):Jackal=>({...createJackal(id,x,patrolMin,patrolMax),health,maxHealth:health,attackDamage:damage,y:590,groundY:590});
     const roosts:Jackal[]=[
-      createBeast("ash-roost",4380,4180,4560,80,8)
+      createBeast("ash-roost",6180,5980,6360,80,8)
     ];
     const foxes:Jackal[]=[
       createBeast("cinder-fox-a",920,620,1480,FOX_MAX_HEALTH,FOX_ATTACK_DAMAGE),
@@ -800,13 +844,13 @@ export default function AshfallGame() {
     ];
     const stags:Jackal[]=[
       createBeast("pale-stag-a",1760,1180,2680,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE),
-      createBeast("pale-stag-b",3720,3480,4040,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE)
+      createBeast("pale-stag-b",5320,5080,5640,STAG_MAX_HEALTH,STAG_ATTACK_DAMAGE)
     ];
     const lynxes:Jackal[]=[
       createBeast("ember-lynx-a",1280,980,1680,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE),
       createBeast("ember-lynx-d",2620,2520,2720,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE),
       createBeast("ember-lynx-b",2140,1960,2480,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE),
-      createBeast("ember-lynx-c",3120,2760,3580,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE)
+      createBeast("ember-lynx-c",4520,4160,4980,LYNX_MAX_HEALTH,LYNX_ATTACK_DAMAGE)
     ];
     const wyrmPack:Jackal[]=[
       createBeast("heart-wyrm",2480,1880,3180,WYRM_MAX_HEALTH,WYRM_ATTACK_DAMAGE)
@@ -853,9 +897,11 @@ export default function AshfallGame() {
     if(knight.complete&&knight.naturalWidth)prepareActualEyes();
     const pixelLayer=document.createElement("canvas");
     const pixelCtx=pixelLayer.getContext("2d");
+    const shadeLayer=document.createElement("canvas");
+    const shadeCtx=shadeLayer.getContext("2d");
     const rain=Array.from({length:115},(_,i)=>({x:(i*157)%1500,y:(i*83)%800,l:8+(i%5)*3,s:7+(i%7)}));
     const stars=Array.from({length:48},(_,i)=>({x:(i*193)%1600,y:22+(i*71)%285,p:i*.61,r:i%9===0?1.7:1}));
-    const motes=Array.from({length:20},(_,i)=>({x:1300+(i*509)%3600,y:290+(i*71)%210,p:i*.7}));
+    const motes=Array.from({length:28},(_,i)=>({x:1300+(i*509)%5600,y:290+(i*71)%210,p:i*.7}));
     const leaves=Array.from({length:18},(_,i)=>({x:(i*311)%1600,y:120+(i*97)%460,p:i*.83,s:18+(i%5)*5}));
     const resize=()=>{
       const dpr=Math.min(window.devicePixelRatio||1,2);
@@ -1101,7 +1147,10 @@ export default function AshfallGame() {
     const drawPlayer=(pl:Player,now:number)=>{
       ctx.save();ctx.translate(pl.x,pl.y);ctx.scale(pl.facing,1);
       if(pl.grounded){
-        ctx.fillStyle="rgba(1,2,4,.72)";ctx.beginPath();ctx.ellipse(0,PH+1,31,7,0,0,Math.PI*2);ctx.fill();
+        const contact=ctx.createRadialGradient(0,PH+2,2,0,PH+2,42);
+        contact.addColorStop(0,"rgba(2,4,8,.62)");contact.addColorStop(.55,"rgba(2,4,8,.22)");contact.addColorStop(1,"rgba(2,4,8,0)");
+        ctx.fillStyle=contact;ctx.beginPath();ctx.ellipse(0,PH+2,40,9,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle="rgba(1,2,4,.78)";ctx.beginPath();ctx.ellipse(2,PH+3,24,5,0,0,Math.PI*2);ctx.fill();
         ctx.fillStyle=mapRef.current===1?"rgba(179,158,235,.3)":mapRef.current===3?"rgba(255,140,80,.36)":mapRef.current===4?"rgba(142,231,255,.36)":mapRef.current===5?"rgba(255,150,90,.36)":mapRef.current===6?"rgba(224,120,160,.36)":"rgba(255,215,139,.36)";ctx.fillRect(-20,PH-1,40,2);
       }
       let list=SPRITE_FRAMES.idle;
@@ -1118,11 +1167,30 @@ export default function AshfallGame() {
       const dw=f.w/f.h*dh,spriteScale=dh/f.h,drawY=PH-(f.h-spriteBottomPadding(f))*spriteScale;
       if(knight.complete&&knight.naturalWidth){
         ctx.imageSmoothingEnabled=false;
-        ctx.shadowColor="rgba(103,45,179,.36)";ctx.shadowBlur=8;
-        if(casting&&castBodyLayer.width)ctx.drawImage(castBodyLayer,f.x,f.y,f.w,f.h,-dw/2,drawY,dw,dh);
-        else if(attacking&&attackBodyLayer.width)ctx.drawImage(attackBodyLayer,f.x,f.y,f.w,f.h,-dw/2,drawY,dw,dh);
-        else ctx.drawImage(knight,f.x,f.y,f.w,f.h,-dw/2,drawY,dw,dh);
-        ctx.shadowBlur=0;ctx.imageSmoothingEnabled=true;
+        ctx.shadowColor="rgba(103,45,179,.42)";ctx.shadowBlur=10;
+        const sheet=casting&&castBodyLayer.width?castBodyLayer:attacking&&attackBodyLayer.width?attackBodyLayer:knight;
+        ctx.drawImage(sheet,f.x,f.y,f.w,f.h,-dw/2,drawY,dw,dh);
+        ctx.shadowBlur=0;
+        if(shadeCtx){
+          const sw=Math.max(1,Math.ceil(dw)),sh=Math.max(1,Math.ceil(dh));
+          if(shadeLayer.width!==sw||shadeLayer.height!==sh){shadeLayer.width=sw;shadeLayer.height=sh;}
+          shadeCtx.clearRect(0,0,sw,sh);shadeCtx.imageSmoothingEnabled=false;
+          shadeCtx.drawImage(sheet,f.x,f.y,f.w,f.h,0,0,sw,sh);
+          shadeCtx.globalCompositeOperation="source-atop";
+          const rim=shadeCtx.createLinearGradient(0,0,sw*.58,sh*.42);
+          rim.addColorStop(0,"rgba(214,232,255,.46)");rim.addColorStop(.32,"rgba(214,232,255,.1)");rim.addColorStop(1,"rgba(214,232,255,0)");
+          shadeCtx.fillStyle=rim;shadeCtx.fillRect(0,0,sw,sh);
+          const bounce=shadeCtx.createLinearGradient(0,sh*.52,0,sh);
+          const bounceColor=mapRef.current===1?"rgba(120,140,190,.2)":mapRef.current===3?"rgba(255,120,70,.2)":mapRef.current===4?"rgba(142,231,255,.22)":mapRef.current===5?"rgba(255,140,80,.2)":mapRef.current===6?"rgba(224,120,160,.2)":"rgba(255,200,120,.2)";
+          bounce.addColorStop(0,"rgba(0,0,0,0)");bounce.addColorStop(1,bounceColor);
+          shadeCtx.fillStyle=bounce;shadeCtx.fillRect(0,0,sw,sh);
+          const occlude=shadeCtx.createLinearGradient(sw*.62,0,sw,sh*.7);
+          occlude.addColorStop(0,"rgba(10,6,18,0)");occlude.addColorStop(1,"rgba(10,6,18,.28)");
+          shadeCtx.fillStyle=occlude;shadeCtx.fillRect(0,0,sw,sh);
+          shadeCtx.globalCompositeOperation="source-over";
+          ctx.drawImage(shadeLayer,-dw/2,drawY,dw,dh);
+        }
+        ctx.imageSmoothingEnabled=true;
       }else{
         ctx.fillStyle="#6f35a9";ctx.fillRect(-19,18,38,PH-18);
         ctx.fillStyle="#ffe14d";ctx.fillRect(-13,30,26,8);
@@ -2240,25 +2308,45 @@ export default function AshfallGame() {
         if(npc.map!==map)continue;
         const bob=Math.sin(now*.0026+npc.x*.01)*2.2,groundY=surfaceYAt(map,npc.x,590)??590,x=npc.x,y=groundY-2+bob;
         const near=Math.abs(pl.x-npc.x)<npc.talkRadius;
+        const cloakDark=mixHex(npc.palette.cloak,8,6,12,.38);
+        const cloakLight=mixHex(npc.palette.cloak,230,236,255,.34);
+        const skinShade=mixHex(npc.palette.skin,40,24,18,.32);
+        const skinLit=mixHex(npc.palette.skin,255,236,214,.28);
         ctx.save();
-        ctx.fillStyle="rgba(2,4,5,.5)";ctx.beginPath();ctx.ellipse(x,groundY+2,17,4.5,0,0,Math.PI*2);ctx.fill();
-        const glow=ctx.createRadialGradient(x,y-30,4,x,y-30,58);
-        glow.addColorStop(0,rgbaFromHex(npc.palette.accent,.22));glow.addColorStop(1,rgbaFromHex(npc.palette.accent,0));
-        ctx.fillStyle=glow;ctx.fillRect(x-58,y-88,116,110);
+        const contact=ctx.createRadialGradient(x+2,groundY+3,1,x+2,groundY+3,28);
+        contact.addColorStop(0,"rgba(2,4,8,.58)");contact.addColorStop(.5,"rgba(2,4,8,.2)");contact.addColorStop(1,"rgba(2,4,8,0)");
+        ctx.fillStyle=contact;ctx.beginPath();ctx.ellipse(x+2,groundY+3,26,7,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle="rgba(2,4,5,.55)";ctx.beginPath();ctx.ellipse(x,groundY+2,16,4.2,0,0,Math.PI*2);ctx.fill();
+        const glow=ctx.createRadialGradient(x-6,y-54,3,x,y-30,62);
+        glow.addColorStop(0,rgbaFromHex(npc.palette.accent,.28));glow.addColorStop(1,rgbaFromHex(npc.palette.accent,0));
+        ctx.fillStyle=glow;ctx.fillRect(x-62,y-92,124,114);
         ctx.translate(x,y);
-        ctx.fillStyle=npc.palette.cloak;ctx.beginPath();ctx.moveTo(-13,0);ctx.quadraticCurveTo(-17,-40,-10,-56);ctx.lineTo(10,-56);ctx.quadraticCurveTo(17,-40,13,0);ctx.closePath();ctx.fill();
+        ctx.fillStyle=cloakDark;ctx.beginPath();ctx.moveTo(-15,2);ctx.quadraticCurveTo(-19,-38,-12,-56);ctx.lineTo(12,-56);ctx.quadraticCurveTo(18,-38,14,2);ctx.closePath();ctx.fill();
+        ctx.fillStyle=npc.palette.cloak;ctx.beginPath();ctx.moveTo(-12,0);ctx.quadraticCurveTo(-16,-40,-9,-55);ctx.lineTo(9,-55);ctx.quadraticCurveTo(15,-40,11,0);ctx.closePath();ctx.fill();
+        ctx.fillStyle=cloakLight;ctx.beginPath();ctx.moveTo(-11,-8);ctx.quadraticCurveTo(-13,-36,-8,-52);ctx.lineTo(-3,-52);ctx.quadraticCurveTo(-7,-30,-6,-6);ctx.closePath();ctx.fill();
+        ctx.fillStyle=mixHex(npc.palette.cloak,12,10,16,.5);ctx.fillRect(-7,0,6,8);ctx.fillRect(2,0,6,8);
         ctx.fillStyle=npc.palette.trim;ctx.fillRect(-13,-8,26,4);
-        ctx.fillStyle=npc.palette.accent;ctx.beginPath();ctx.ellipse(0,-50,3.6,3.6,0,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle=npc.palette.skin;ctx.beginPath();ctx.ellipse(0,-64,10,11,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=mixHex(npc.palette.trim,255,230,200,.28);ctx.fillRect(-13,-8,26,1.5);
+        ctx.fillStyle=npc.palette.accent;ctx.beginPath();ctx.ellipse(-1,-50,3.6,3.6,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=rgbaFromHex(npc.palette.accent,.45);ctx.beginPath();ctx.ellipse(-2,-51,1.6,1.4,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=skinShade;ctx.beginPath();ctx.ellipse(1,-63,10,11,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=npc.palette.skin;ctx.beginPath();ctx.ellipse(-1,-64,9.2,10.4,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=skinLit;ctx.beginPath();ctx.ellipse(-3,-67,4.2,3.4,0,0,Math.PI*2);ctx.fill();
         if(npc.helm){
+          ctx.fillStyle=mixHex(npc.palette.trim,20,24,32,.28);ctx.beginPath();ctx.ellipse(1,-69,11.4,8.2,0,0,Math.PI*2);ctx.fill();
           ctx.fillStyle=npc.palette.trim;ctx.beginPath();ctx.ellipse(0,-70,11,8,0,0,Math.PI*2);ctx.fill();
+          ctx.fillStyle=cloakLight;ctx.beginPath();ctx.ellipse(-4,-73,4,2.2,0,0,Math.PI*2);ctx.fill();
           ctx.fillStyle=npc.palette.cloak;ctx.fillRect(-11,-70,22,5);
           ctx.fillStyle="rgba(8,10,16,.72)";ctx.fillRect(-8,-66,16,4);
           ctx.fillStyle=npc.palette.accent;ctx.fillRect(10,-28,3,18);
+          ctx.fillStyle=rgbaFromHex(npc.palette.accent,.5);ctx.fillRect(10,-28,1.4,18);
         }else{
+          ctx.fillStyle=cloakDark;ctx.beginPath();ctx.ellipse(1,-70,11.4,7.2,0,0,Math.PI);ctx.fill();
           ctx.fillStyle=npc.palette.cloak;ctx.beginPath();ctx.ellipse(0,-71,11,7,0,0,Math.PI);ctx.fill();
+          ctx.fillStyle=cloakLight;ctx.beginPath();ctx.ellipse(-4,-73,4.5,2.4,0,0,Math.PI);ctx.fill();
         }
         ctx.fillStyle="#160e0a";ctx.beginPath();ctx.ellipse(-4,-65,1.4,1.8,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(4,-65,1.4,1.8,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle="rgba(255,255,255,.28)";ctx.beginPath();ctx.ellipse(-4.5,-65.8,.5,.6,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(3.5,-65.8,.5,.6,0,0,Math.PI*2);ctx.fill();
         ctx.restore();
         ctx.save();ctx.globalAlpha=near?(.55+Math.sin(now*.005)*.18):.32;ctx.fillStyle=npc.palette.accent;ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText(npc.name.toUpperCase(),x,y-100);ctx.restore();
       }
@@ -2288,6 +2376,7 @@ export default function AshfallGame() {
       drawKilnMouth(1420,570,now,.72,false);
       drawKilnMouth(MAP5_KILN_X,590,now,1,true);
       drawKilnMouth(3340,575,now,.78,false);
+      drawKilnMouth(5120,560,now,.7,false);
     };
     const drawCooledVein=(now:number)=>{
       if(mapRef.current!==6)return;
@@ -2306,7 +2395,7 @@ export default function AshfallGame() {
     };
     const drawHeartColumns=(now:number,viewW:number)=>{
       if(mapRef.current!==6)return;
-      for(let i=0;i<10;i++){
+      for(let i=0;i<15;i++){
         const tx=240+i*430;
         if(tx<cameraX-80||tx>cameraX+viewW+80)continue;
         const sway=Math.sin(now*.0007+i)*2;
@@ -2331,7 +2420,7 @@ export default function AshfallGame() {
     };
     const drawAshTrees=(now:number,viewW:number)=>{
       if(mapRef.current!==3)return;
-      for(let i=0;i<14;i++){
+      for(let i=0;i<21;i++){
         const tx=180+i*270;
         if(tx<cameraX-80||tx>cameraX+viewW+80)continue;
         const sway=Math.sin(now*.0008+i)*4;
@@ -2400,7 +2489,7 @@ export default function AshfallGame() {
     };
     const drawRegionalScenery=(now:number,viewW:number,map:MapId)=>{
       if(map===1)return;
-      const props=[380,760,1110,1490,1810,2190,2570,2940,3310,3710,4100,4510];
+      const props=[380,760,1110,1490,1810,2190,2570,2940,3310,3710,4100,4510,4980,5420,5860,6280];
       for(let i=0;i<props.length;i++){const x=props[i];if(x>worldWidthFor(map)-90||x<cameraX-120||x>cameraX+viewW+120)continue;const ground=surfaceYAt(map,x,590);if(ground===null)continue;ctx.save();ctx.translate(x,ground);
         if(map===2){if(i%3===0){ctx.strokeStyle="rgba(94,76,48,.85)";ctx.lineWidth=3;for(let b=-3;b<=3;b++){const sway=Math.sin(now*.0028+x*.01+b)*4;ctx.beginPath();ctx.moveTo(b*5,0);ctx.quadraticCurveTo(b*5+sway*.3,-18,b*5+sway,-36-Math.abs(b)*2);ctx.stroke();}}else{const rock=ctx.createLinearGradient(-25,-48,22,0);rock.addColorStop(0,"#d49a68");rock.addColorStop(.45,"#85584d");rock.addColorStop(1,"#403236");ctx.fillStyle=rock;ctx.beginPath();ctx.moveTo(-30,0);ctx.lineTo(-23,-28);ctx.lineTo(-7,-45);ctx.lineTo(17,-37);ctx.lineTo(29,-13);ctx.lineTo(24,0);ctx.closePath();ctx.fill();}}
         else if(map===3){ctx.fillStyle="#1b0d08";ctx.fillRect(-7,-68,14,68);ctx.strokeStyle="#2d160d";ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(0,-48);ctx.lineTo(-25,-78);ctx.moveTo(1,-40);ctx.lineTo(28,-66);ctx.stroke();ctx.fillStyle="rgba(255,104,40,.22)";ctx.fillRect(-9,-3,18,3);}
@@ -2551,7 +2640,7 @@ export default function AshfallGame() {
         }
         ctx.strokeStyle="rgba(156,202,199,.28)";ctx.lineWidth=1.5;
         for(let i=0;i<16;i++){
-          const rx=180+(i*337)%4700;
+          const rx=180+(i*337)%(MAP1_W-400);
           const surface=activePlatforms.find(p=>rx>p.x&&rx<p.x+p.w&&p.h>80)?.y;
           if(!surface||rx<cameraX-100||rx>cameraX+viewW+100)continue;
           const phase=(now*.055+i*17)%70,alpha=1-phase/70;
