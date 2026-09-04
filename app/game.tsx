@@ -771,7 +771,8 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Ryn",text:"We meet again. Cliff wind, then kiln gate. Same watch, later heat."}],
     afterCaptureTalk:[
       {speaker:"Ryn",text:"You bound the coal shard. The heart can take that heat now."},
-      {speaker:"Ryn",text:"The east gate heals you. Press E at the heart altar. That ends the campaign."}
+      {speaker:"Ryn",text:"The east gate heals you. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Ryn",text:"Then we walk out as people. I'll keep this last gate."}
     ],
     palette:{skin:"#c8a888",cloak:"#2a3038",trim:"#8aa8b8",accent:"#d0e8f0"}
   },
@@ -815,11 +816,12 @@ const NPCS:Npc[] = [
       {speaker:"Hale",text:"The animals are the echo. Bind a lynx if you still need the heat."},
       {speaker:"Hale",text:"The east gate heals you. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Hale",text:"We meet again. Cliff quiet, then this kiln."},{speaker:"Hale",text:"The kiln can forget the cliff, Moon Night. I still keep this stretch."},{speaker:"Hale",text:"The quiet kiln still sits west. Press E there if the coals feel thin."}],
+    againTalk:[{speaker:"Hale",text:"We meet again. Cliff quiet, then this kiln."},{speaker:"Hale",text:"The kiln can forget the cliff, Moon Night. I still keep this stretch."},{speaker:"Hale",text:"The quiet kiln still sits west. Press E there if the coals feel thin."},{speaker:"Hale",text:"When this kiln can rest, we walk out as people. I'll keep this stretch."}],
     afterCaptureTalk:[
       {speaker:"Hale",text:"You bound the coal shard. That's kiln heat the heart can take."},
       {speaker:"Hale",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
-      {speaker:"Hale",text:"The wind can forget the cliff now. The kiln heat remembers."}
+      {speaker:"Hale",text:"The wind can forget the cliff now. The kiln heat remembers."},
+      {speaker:"Hale",text:"Then we walk out as people. This stretch can stay quiet."}
     ],
     palette:{skin:"#d2a890",cloak:"#3a2432",trim:"#c87888",accent:"#f0c8d0"}
   }

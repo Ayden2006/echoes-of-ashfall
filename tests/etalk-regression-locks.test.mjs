@@ -315,11 +315,13 @@ test("talk clearance stays 300px apart and clear of altar 200px, portals, and ca
   }
 });
 
-test("Reed, Kest, and Edan again/afterCapture walk out as people without dating or dump", () => {
+test("Reed, Kest, Edan, Hale, and Ryn again/afterCapture walk out as people without dating or dump", () => {
   const reed = npcs.find((npc) => npc.id === "reed" && npc.map === 5);
   const kest = npcs.find((npc) => npc.id === "kest" && npc.map === 6);
   const edan = npcs.find((npc) => npc.id === "edan" && npc.map === 6);
-  assert.ok(reed && kest && edan, "Reed/Kest/Edan walk-out roster should stay present");
+  const haleKiln = npcs.find((npc) => npc.id === "hale" && npc.map === 5);
+  const rynKiln = npcs.find((npc) => npc.id === "ryn" && npc.map === 5);
+  assert.ok(reed && kest && edan && haleKiln && rynKiln, "Reed/Kest/Edan/Hale/Ryn walk-out roster should stay present");
 
   const dating = /bondMeter|dating|affection|romance|love you|stay with me|walk out together/;
   const campaignDump = /spark, dusk|Castle rain, shore dusk, cairn/;
@@ -358,8 +360,30 @@ test("Reed, Kest, and Edan again/afterCapture walk out as people without dating 
   assert.match(edan.afterCaptureTalk, /You bound the last pulse/);
   assert.match(edan.afterCaptureTalk, /Press E at the heart altar\. That ends the campaign/);
 
-  for (const npc of [reed, kest, edan]) {
-    for (const [label, talk] of [["again", npc.againTalk], ["after", npc.afterCaptureTalk]]) {
+  assert.match(haleKiln.againTalk, WALK_OUT);
+  assert.match(haleKiln.againTalk, /When this kiln can rest, we walk out as people/);
+  assert.match(haleKiln.againTalk, /We meet again\. Cliff quiet, then this kiln/);
+  assert.match(haleKiln.againTalk, /The quiet kiln still sits west/);
+  assert.match(haleKiln.againTalk, /Press E there if the coals feel thin/);
+  assert.doesNotMatch(haleKiln.againTalk, FINISH_DUMP);
+  assert.match(haleKiln.afterCaptureTalk, /Then we walk out as people\. This stretch can stay quiet/);
+  assert.match(haleKiln.afterCaptureTalk, /You bound the coal shard\. That's kiln heat the heart can take/);
+  assert.match(haleKiln.afterCaptureTalk, /The wind can forget the cliff now\. The kiln heat remembers/);
+  assert.match(haleKiln.afterCaptureTalk, /The east gate heals you\. Talk to Kest\. Press E at the heart altar/);
+  assert.doesNotMatch(haleKiln.afterCaptureTalk, /last pulse|quit the fire/);
+
+  assert.match(rynKiln.afterCaptureTalk, WALK_OUT);
+  assert.match(rynKiln.afterCaptureTalk, /Then we walk out as people\. I'll keep this last gate/);
+  assert.match(rynKiln.afterCaptureTalk, /You bound the coal shard/);
+  assert.match(rynKiln.afterCaptureTalk, /The east gate heals you\. Press E at the heart altar/);
+  assert.doesNotMatch(rynKiln.againTalk, WALK_OUT);
+  assert.doesNotMatch(rynKiln.againTalk, FINISH_DUMP);
+
+  for (const npc of [reed, kest, edan, haleKiln, rynKiln]) {
+    const talks = npc.id === "ryn"
+      ? [["after", npc.afterCaptureTalk]]
+      : [["again", npc.againTalk], ["after", npc.afterCaptureTalk]];
+    for (const [label, talk] of talks) {
       const lines = talkLinesFrom(talk);
       assert.deepEqual(lines.filter((line) => line.text.length > 110), [], `${npc.id}:${npc.map} ${label}Talk lines should stay at or under 110 characters`);
       assert.doesNotMatch(talk, dating, `${npc.id}:${npc.map} ${label}Talk should stay off dating/bond`);
