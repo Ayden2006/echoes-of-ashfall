@@ -184,7 +184,7 @@ test("E-talk still keys first/again/afterCapture per id:map with no extra engine
   assert.equal(talk(liraShore, ["sunset-jackal-card-a"]), "first");
   assert.equal(talk(liraShore, ["sunset-jackal-card-a"]), "after");
   assert.equal(talk(liraCliffs, ["sunset-jackal-card-a"]), "first");
-  assert.equal(talk(liraCliffs, ["pale-stag-card"]), "again");
+  assert.equal(talk(liraCliffs, ["sunset-jackal-card-a"]), "again");
   assert.equal(talk(liraCliffs, ["pale-stag-card"]), "after");
   assert.equal(talk(holtHollow, []), "first");
   assert.equal(talk(holtHeart, ["heart-wyrm-card"]), "first");
