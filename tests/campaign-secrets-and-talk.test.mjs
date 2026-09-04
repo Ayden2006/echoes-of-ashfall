@@ -20,6 +20,9 @@ test("later-map traveler talk is keyed per map so first/again/afterCapture all p
   assert.match(game, /I left the castle rain for this watch/);
   assert.match(game, /We keep crossing roads/);
   assert.match(game, /We meet at the last echo/);
+  assert.match(game, /We meet again\. Castle rain, then cliff wind/);
+  assert.match(game, /We keep meeting at the edge of the light/);
+  assert.match(game, /We meet where the ash learned to wait/);
 });
 
 test("existing unique animals stay on the card + E/Q pattern, with extra on-map fights", () => {
