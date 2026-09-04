@@ -261,6 +261,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Calen",text:"That dragon wasn't hunting you. It was the first spark of the signal."},
       {speaker:"Calen",text:"Carry it. If the spark stays in the ruins, the rest of the road goes dark."},
+      {speaker:"Calen",text:"Castle rain starts the road. Shore dusk, cairn twist — the animals are the echo — then kiln heat and the heart altar."},
       {speaker:"Calen",text:"If we meet again, I'll know you kept the echo walking."}
     ],
     palette:{skin:"#c9b08a",cloak:"#2a3348",trim:"#8aa4c8",accent:"#c8e4ff"}
@@ -295,6 +296,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Sera",text:"You took a jackal card. That's the dusk of the signal walking with you."},
       {speaker:"Sera",text:"Leave the extra scout to the sand. One shard is enough to carry."},
+      {speaker:"Sera",text:"Castle rain, then this shore dusk. The cairn twist is next — the animals are the echo — then kiln heat and the heart altar."},
       {speaker:"Sera",text:"Ash Hollow smolders past that gate. I walk when the light fails. We may share the road again."}
     ],
     palette:{skin:"#d4a07a",cloak:"#6a3418",trim:"#f08a3a",accent:"#ffd27a"}
@@ -327,6 +329,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Bram",text:"You took the leftover fire. That's foxfire — the echo shedding heat."},
       {speaker:"Bram",text:"Don't think the cliffs will be quieter. The stag will try to hold what you just carried."},
+      {speaker:"Bram",text:"The cairn twist is this: the animals are the echo. Castle rain, shore dusk, this leftover fire, then kiln heat and the heart altar."},
       {speaker:"Bram",text:"I'll take the long way around. If the road holds, we'll speak again."}
     ],
     palette:{skin:"#c09070",cloak:"#3a1c12",trim:"#ff7a3a",accent:"#ffc08a"}
@@ -581,6 +584,126 @@ const NPCS:Npc[] = [
       {speaker:"Perrin",text:"If Holt is still on the cairn road, tell him the ash banked."}
     ],
     palette:{skin:"#d4a878",cloak:"#3a2418",trim:"#e88840",accent:"#ffd090"}
+  },
+  {id:"wren",name:"Wren",map:1,x:1550,talkRadius:150,cardId:BABY_DRAGON_CARD.id,
+    firstTalk:[
+      {speaker:"Wren",text:"The rain speaks if you stand still. I'm Wren."},
+      {speaker:"Moon Night",text:"I came for that echo."},
+      {speaker:"Wren",text:"Calen watches the spark. Orrin copies the line. I listen so we don't chase the wall."},
+      {speaker:"Wren",text:"Bind the first spark if you can. The shore dusk is longer than this rain looks."}
+    ],
+    againTalk:[{speaker:"Wren",text:"Still listening, Moon Night. East is the shore. The dragon still keeps the ruins."},{speaker:"Wren",text:"There is a rain-cut groove farther along the floor if the signal feels thin."}],
+    afterCaptureTalk:[
+      {speaker:"Wren",text:"You took the first spark. That's why the rain I listen to is quieter."},
+      {speaker:"Wren",text:"Castle rain starts here. Shore dusk, then the cairn twist — the animals are the echo — then kiln heat and the heart altar."},
+      {speaker:"Wren",text:"Each bound animal is a shard. I walk the cliffs later. If the well still pools light, we may share that watch."}
+    ],
+    palette:{skin:"#d0b898",cloak:"#243848",trim:"#7ab0c8",accent:"#b8e8f0"}
+  },
+  {id:"wren",name:"Wren",map:4,x:5200,talkRadius:150,cardId:PALE_STAG_CARD.id,
+    firstTalk:[
+      {speaker:"Wren",text:"The rain ended. The well didn't. I'm Wren. I left the castle to listen here."},
+      {speaker:"Moon Night",text:"The stag is holding the pool."},
+      {speaker:"Wren",text:"Pale antlers, not castle rain. Same echo, later shard. Bind the pool if you can."},
+      {speaker:"Wren",text:"Lira counts the light. Orrin copies the well. I listen so the wind does not lie."}
+    ],
+    againTalk:[{speaker:"Wren",text:"We meet again. Castle rain, then this cliff. Same listen, later wind."},{speaker:"Wren",text:"The kiln is still east. Don't go into the heart without that heat."}],
+    afterCaptureTalk:[
+      {speaker:"Wren",text:"You bound the pool shard. The rain I listened to in the castle is finally still."},
+      {speaker:"Wren",text:"Castle rain, shore dusk, cairn twist — the animals are the echo — then kiln heat and the heart altar."},
+      {speaker:"Wren",text:"Reed's kiln is east. Tell him a rain-listener still walks."}
+    ],
+    palette:{skin:"#d0b898",cloak:"#243848",trim:"#7ab0c8",accent:"#b8e8f0"}
+  },
+  {id:"dell",name:"Dell",map:2,x:3240,talkRadius:150,cardId:SUNSET_JACKAL_CARD.id,
+    firstTalk:[
+      {speaker:"Dell",text:"The gold thins and then holds. I'm Dell. I walk the stretch Lira counted."},
+      {speaker:"Moon Night",text:"Jackals hunt the dusk of the echo."},
+      {speaker:"Dell",text:"They do. Lira keeps the count. Perrin watches the late sand. I keep the middle honest."},
+      {speaker:"Dell",text:"Bind one dusk shard. Leave the extra scout. The cairn twist is through that gate."}
+    ],
+    againTalk:[{speaker:"Dell",text:"Still on the mid gold, Moon Night. Three jackals. The hollow is east when the light fails."},{speaker:"Dell",text:"One dusk shard is enough to carry. The extra scout can keep the sand."}],
+    afterCaptureTalk:[
+      {speaker:"Dell",text:"You took the dusk shard. That's why this gold looks thinner."},
+      {speaker:"Dell",text:"Castle rain, then this shore dusk. Next is the cairn twist — the animals are the echo — then kiln heat and the heart altar."},
+      {speaker:"Dell",text:"I walk the heart later. If Kest is still ahead, tell him the dusk already knew."}
+    ],
+    palette:{skin:"#d8a870",cloak:"#4a2018",trim:"#e07030",accent:"#ffc070"}
+  },
+  {id:"dell",name:"Dell",map:6,x:4180,talkRadius:150,cardId:HEART_WYRM_CARD.id,
+    firstTalk:[
+      {speaker:"Dell",text:"So the gold ends here. I'm Dell. I walked the shore this far."},
+      {speaker:"Moon Night",text:"Kest walked ahead."},
+      {speaker:"Dell",text:"He's west of the wyrm. Long-bodied, ribbon-finned. Not dusk fur. The cairn was right — the animals are the echo."},
+      {speaker:"Dell",text:"Speak with Kest, then rest the pulse at the heart altar. We were never chasing a gate."}
+    ],
+    againTalk:[{speaker:"Dell",text:"We meet again. Shore dusk, then heart. Same road, last gold."},{speaker:"Dell",text:"The altar is still east. Nia is west if the light feels thin."}],
+    afterCaptureTalk:[
+      {speaker:"Dell",text:"You bound the last pulse. That's the dusk I followed, finished at the heart altar."},
+      {speaker:"Dell",text:"Castle rain, shore dusk, cairn twist — the animals are the echo — kiln heat, then this heart. Each bound animal was a shard."},
+      {speaker:"Dell",text:"Rest it. Then we walk out as people. The shore can go dark without taking us."}
+    ],
+    palette:{skin:"#d8a870",cloak:"#4a2018",trim:"#e07030",accent:"#ffc070"}
+  },
+  {id:"isk",name:"Isk",map:3,x:1560,talkRadius:150,cardId:CINDER_FOX_CARD.id,
+    firstTalk:[
+      {speaker:"Isk",text:"Ash in the breath. I'm Isk. I walk the leftover heat so the foxes don't lie."},
+      {speaker:"Moon Night",text:"The signal feels closer to the animals."},
+      {speaker:"Isk",text:"That's the cairn twist. Bram scouts west. Holt walks the stones. I keep the early ash honest."},
+      {speaker:"Isk",text:"Bind leftover heat. Then the well. East is only where kiln heat and the last pulse wait."}
+    ],
+    againTalk:[{speaker:"Isk",text:"Still in the early ash, Moon Night. The foxes don't share the path."},{speaker:"Isk",text:"The split cairn is east. Press E on it. The animals are the echo."}],
+    afterCaptureTalk:[
+      {speaker:"Isk",text:"You took the leftover-fire shard. That's foxfire — the echo shedding what the shore dropped."},
+      {speaker:"Isk",text:"Castle rain, shore dusk, then this cairn twist: the animals are the echo. Kiln heat and the heart altar come after."},
+      {speaker:"Isk",text:"I'll take the kiln road. If Reed still tends heat, tell him the ash already knew."}
+    ],
+    palette:{skin:"#c08868",cloak:"#2a1810",trim:"#c05028",accent:"#e8a070"}
+  },
+  {id:"isk",name:"Isk",map:5,x:1570,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
+    firstTalk:[
+      {speaker:"Isk",text:"The leftover fire banked. I'm Isk. I left the cairn for this kiln heat."},
+      {speaker:"Moon Night",text:"Reed keeps the fire."},
+      {speaker:"Isk",text:"He does. Lynx-shaped coals, not foxes. Same echo, later shard. Don't go into the heart cold."},
+      {speaker:"Isk",text:"Vess is farther east. The cairn already told us: the animals are the echo."}
+    ],
+    againTalk:[{speaker:"Isk",text:"We meet again. Cairn twist, then kiln heat. Same leftover walk, later fire."},{speaker:"Isk",text:"Reed is west. The heart altar is east. Carry the coal shard."}],
+    afterCaptureTalk:[
+      {speaker:"Isk",text:"You bound the coal shard. The leftover fire I walked in the hollow banked here."},
+      {speaker:"Isk",text:"Castle rain, shore dusk, cairn twist — the animals are the echo — then this kiln heat. The heart altar is the last page."},
+      {speaker:"Isk",text:"If Wren is still listening on the cliffs, tell her the rain banked."}
+    ],
+    palette:{skin:"#c08868",cloak:"#2a1810",trim:"#c05028",accent:"#e8a070"}
+  },
+  {id:"rowan",name:"Rowan",map:1,x:4730,talkRadius:150,cardId:BABY_DRAGON_CARD.id,
+    firstTalk:[
+      {speaker:"Rowan",text:"The wall keeps a leftover road. I'm Rowan. I walk it so nobody turns around."},
+      {speaker:"Moon Night",text:"The spark is in the dragon, not the stone."},
+      {speaker:"Rowan",text:"Then you heard Calen and Tamsin. I keep the stretch after the merlon watch."},
+      {speaker:"Rowan",text:"Bind the first spark. Shore dusk is longer than this rain looks."}
+    ],
+    againTalk:[{speaker:"Rowan",text:"Still on the leftover wall-road, Moon Night. East is the shore. The dragon still keeps the ruins."},{speaker:"Rowan",text:"Tamsin is west. Maer is farther east. I walk the heart later."}],
+    afterCaptureTalk:[
+      {speaker:"Rowan",text:"You took the first spark. The leftover road I walk is quieter now."},
+      {speaker:"Rowan",text:"Castle rain starts here. Shore dusk, cairn twist — the animals are the echo — then kiln heat and the heart altar. Shards, not quarry."},
+      {speaker:"Rowan",text:"I'll take the long road to the heart. If Kest is still ahead, tell him a leftover-walker still stands."}
+    ],
+    palette:{skin:"#c8b080",cloak:"#1a2830",trim:"#5a8898",accent:"#a8d0d8"}
+  },
+  {id:"rowan",name:"Rowan",map:6,x:2770,talkRadius:150,cardId:HEART_WYRM_CARD.id,
+    firstTalk:[
+      {speaker:"Rowan",text:"The leftover rain ended here. I'm Rowan. I walked the castle this far."},
+      {speaker:"Moon Night",text:"Kest walked ahead."},
+      {speaker:"Rowan",text:"He's west of the wyrm. Long-bodied, ribbon-finned. Not castle rain. The cairn twist was right — the animals are the echo."},
+      {speaker:"Rowan",text:"Speak with Kest, then rest the pulse at the heart altar."}
+    ],
+    againTalk:[{speaker:"Rowan",text:"We meet again. Castle rain, then heart. Same leftover walk, last pulse."},{speaker:"Rowan",text:"Holt is west. Nia is east. The altar is farther still."}],
+    afterCaptureTalk:[
+      {speaker:"Rowan",text:"You bound the last pulse. That's every leftover step I walked, still in one place."},
+      {speaker:"Rowan",text:"Castle rain, shore dusk, cairn twist — the animals are the echo — kiln heat, then this heart altar. Each bound animal was a shard."},
+      {speaker:"Rowan",text:"Rest it. Then we walk out as people. The leftover road can go quiet."}
+    ],
+    palette:{skin:"#c8b080",cloak:"#1a2830",trim:"#5a8898",accent:"#a8d0d8"}
   }
 ];
 const DRAGON_FRAMES:Record<DragonMode,DragonFrame[]> = {
