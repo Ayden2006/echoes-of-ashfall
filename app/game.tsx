@@ -340,6 +340,90 @@ const NPCS:Npc[] = [
       {speaker:"Bram",text:"Rest the signal. Then we all walk out as people. Not as ghosts on the road."}
     ],
     palette:{skin:"#c09070",cloak:"#3a1c12",trim:"#ff7a3a",accent:"#ffc08a"}
+  },
+  {id:"orrin",name:"Orrin",map:1,x:2280,talkRadius:150,cardId:BABY_DRAGON_CARD.id,
+    firstTalk:[
+      {speaker:"Orrin",text:"The rain writes the same line every night. I'm Orrin. I copy it so we don't forget."},
+      {speaker:"Moon Night",text:"The echo is already in the walls."},
+      {speaker:"Orrin",text:"Aye. Calen watches the spark. I watch the writing. East is longer than it looks."},
+      {speaker:"Orrin",text:"If you bind the dragon, the rain still writes. The road just has a name walking it."}
+    ],
+    againTalk:[{speaker:"Orrin",text:"Still copying, Moon Night. The plaque higher up says the same thing in older stone."},{speaker:"Orrin",text:"I will leave when I have the line in moonwater. The well is farther east."}],
+    afterCaptureTalk:[
+      {speaker:"Orrin",text:"You took the first spark. The rain I copy is quieter now."},
+      {speaker:"Orrin",text:"If the well still pools light, I'll meet you there. I want the same line in moonwater."}
+    ],
+    palette:{skin:"#b8a090",cloak:"#1e2a38",trim:"#6a8aa0",accent:"#c8dce8"}
+  },
+  {id:"orrin",name:"Orrin",map:4,x:1680,talkRadius:150,cardId:PALE_STAG_CARD.id,
+    firstTalk:[
+      {speaker:"Orrin",text:"Cliff wind. I left the castle rain to copy the well."},
+      {speaker:"Moon Night",text:"The stag is holding the pool."},
+      {speaker:"Orrin",text:"That's the line I came for. Pale antlers, not castle rain. Bind it if you can."},
+      {speaker:"Orrin",text:"Calen keeps the east watch. I keep the words so the well does not lie later."}
+    ],
+    againTalk:[{speaker:"Orrin",text:"We meet again. Castle rain, then cliff wind. Same road."},{speaker:"Orrin",text:"The well is still trying to bottle what you already carry."}],
+    afterCaptureTalk:[
+      {speaker:"Orrin",text:"You bound the pool I came to copy. The well looks dimmer, and the rain I wrote is finally still."},
+      {speaker:"Orrin",text:"Reed's kiln is east. Tell him a scribe still walks."}
+    ],
+    palette:{skin:"#b8a090",cloak:"#1e2a38",trim:"#6a8aa0",accent:"#c8dce8"}
+  },
+  {id:"nia",name:"Nia",map:2,x:1180,talkRadius:150,cardId:SUNSET_JACKAL_CARD.id,
+    firstTalk:[
+      {speaker:"Nia",text:"The light dies slow here. I'm Nia. I walk dusk until it fails."},
+      {speaker:"Moon Night",text:"Jackals hunt in threes."},
+      {speaker:"Nia",text:"They do. Sera counts them. I follow the gold until it goes out. Bind one shard. Leave the rest."},
+      {speaker:"Nia",text:"The hollow waits when the light fails. I walk that way too."}
+    ],
+    againTalk:[{speaker:"Nia",text:"Still here, Moon Night. The hollow waits when the light fails."},{speaker:"Nia",text:"A dusk-shell sits on the mid-beach ledge if you need the gold to last a little longer."}],
+    afterCaptureTalk:[
+      {speaker:"Nia",text:"You took the dusk. That's why the shore looks thinner."},
+      {speaker:"Nia",text:"I walk when the light dies. If the heart still beats, we may share that last road."}
+    ],
+    palette:{skin:"#d8b090",cloak:"#4a2848",trim:"#e8a060",accent:"#ffd8a0"}
+  },
+  {id:"nia",name:"Nia",map:6,x:3280,talkRadius:150,cardId:HEART_WYRM_CARD.id,
+    firstTalk:[
+      {speaker:"Nia",text:"So this is the last gold. I'm Nia. I walked the shore until the light died."},
+      {speaker:"Moon Night",text:"Kest walked ahead."},
+      {speaker:"Nia",text:"The pulse is not dusk. It's every crossing we already walked. Speak with Kest. Then rest it."},
+      {speaker:"Nia",text:"Bram came the long way. The cairn was right. We were never chasing a gate."}
+    ],
+    againTalk:[{speaker:"Nia",text:"We keep meeting at the edge of the light. The altar is still east."}],
+    afterCaptureTalk:[
+      {speaker:"Nia",text:"You bound the last pulse. That's the dusk I followed, finished."},
+      {speaker:"Nia",text:"Rest it. Then we walk out as people. The shore can go dark without taking us with it."}
+    ],
+    palette:{skin:"#d8b090",cloak:"#4a2848",trim:"#e8a060",accent:"#ffd8a0"}
+  },
+  {id:"vess",name:"Vess",map:3,x:3340,talkRadius:150,cardId:CINDER_FOX_CARD.id,
+    firstTalk:[
+      {speaker:"Vess",text:"Ash in the writing. I'm Vess. I read the cairn so nobody lies to themselves."},
+      {speaker:"Moon Night",text:"The signal feels closer to the animals."},
+      {speaker:"Vess",text:"That's the twist. Bram scouts the foxes. I read the stones. Bind leftover heat. Then the well."},
+      {speaker:"Vess",text:"East is only where the last pulse waits. Don't mistake the gate for the call."}
+    ],
+    againTalk:[{speaker:"Vess",text:"Still reading, Moon Night. The cairn does not change. East is only where the last pulse waits."},{speaker:"Vess",text:"If you skipped the cairn, walk back. The hollow is the part nobody wants to hear."}],
+    afterCaptureTalk:[
+      {speaker:"Vess",text:"You took the leftover fire. The cairn was right."},
+      {speaker:"Vess",text:"I'll walk the kiln road. If Reed still tends heat, tell him the ash already knew."}
+    ],
+    palette:{skin:"#c4a888",cloak:"#2a2824",trim:"#8a7060",accent:"#e8c8a0"}
+  },
+  {id:"vess",name:"Vess",map:5,x:2380,talkRadius:150,cardId:EMBER_LYNX_CARD.id,
+    firstTalk:[
+      {speaker:"Vess",text:"The cairn sent me here. I'm Vess. I read ash until the kiln."},
+      {speaker:"Moon Night",text:"Reed keeps the fire."},
+      {speaker:"Vess",text:"He does. Lynx-shaped coals, not foxes. Same echo, later heat. Don't go into the heart cold."},
+      {speaker:"Vess",text:"Sera is farther east if the shore still walks. Talk to Reed if you haven't."}
+    ],
+    againTalk:[{speaker:"Vess",text:"We meet where the ash learned to wait. Reed is west. The heart is east."}],
+    afterCaptureTalk:[
+      {speaker:"Vess",text:"Coal pelt, not foxfire. You bound the last heat the cairn promised."},
+      {speaker:"Vess",text:"If Nia is still walking dusk, tell her the light didn't fail. It banked."}
+    ],
+    palette:{skin:"#c4a888",cloak:"#2a2824",trim:"#8a7060",accent:"#e8c8a0"}
   }
 ];
 const DRAGON_FRAMES:Record<DragonMode,DragonFrame[]> = {
