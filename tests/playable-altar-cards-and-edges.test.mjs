@@ -18,16 +18,33 @@ const surfaceAt = (plats, x) => {
   return hits.length ? Math.min(...hits.map((p) => p.y)) : null;
 };
 
-const plantedFloorAt = (plats, width, x) => {
+const SCENERY_PROP_XS = [380,760,1110,1490,1810,2190,2570,2940,3310,3710,4100,4510,4780,4980,5150,5420,5580,5860,6040,6280,6460,6640,6820,6980];
+const CARD_FLOOR_INSET = 22;
+const CARD_WALL_CLEAR = 28;
+
+const cardBlockedAt = (plats, map, x) => {
+  if (SCENERY_PROP_XS.some((px) => Math.abs(px - x) < CARD_WALL_CLEAR)) return true;
+  if (map === 6) {
+    for (let i = 0; i < 17; i++) {
+      if (Math.abs((240 + i * 430) - x) < 26) return true;
+    }
+  }
+  const plat = plats.filter((p) => p.h > 80 && x >= p.x && x <= p.x + p.w).sort((a, b) => Math.abs(a.y - 590) - Math.abs(b.y - 590))[0];
+  if (!plat) return true;
+  return x < plat.x + CARD_FLOOR_INSET || x > plat.x + plat.w - CARD_FLOOR_INSET;
+};
+
+const plantedFloorAt = (plats, width, x, map = 0) => {
   let px = Math.max(48, Math.min(width - 48, x));
   const hit = (nx) => surfaceAt(plats, nx);
-  if (hit(px) != null) return { x: px, groundY: hit(px) };
+  const clear = (nx) => hit(nx) != null && !cardBlockedAt(plats, map, nx) ? hit(nx) : null;
+  if (clear(px) != null) return { x: px, groundY: clear(px) };
   for (let d = 8; d <= 420; d += 8) {
     const left = px - d, right = px + d;
-    if (left >= 48 && hit(left) != null) return { x: left, groundY: hit(left) };
-    if (right <= width - 48 && hit(right) != null) return { x: right, groundY: hit(right) };
+    if (left >= 48 && clear(left) != null) return { x: left, groundY: clear(left) };
+    if (right <= width - 48 && clear(right) != null) return { x: right, groundY: clear(right) };
   }
-  return { x: px, groundY: 590 };
+  return { x: px, groundY: hit(px) ?? 590 };
 };
 
 const maps = {
@@ -97,17 +114,71 @@ test("card floors plant onto solid ground and stay inside the map for E pickup",
   for (const drop of cardDrops) {
     const map = maps[drop.map];
     for (const x of drop.xs) {
-      const floor = plantedFloorAt(map.plats, map.w, x);
+      const floor = plantedFloorAt(map.plats, map.w, x, drop.map);
       assert.notEqual(floor.groundY, null, `map ${drop.map} card x=${x} must plant`);
       assert.ok(floor.x >= 48 && floor.x <= map.w - 48, `map ${drop.map} card x=${x} stays in bounds`);
       assert.notEqual(surfaceAt(map.plats, floor.x), null, `map ${drop.map} planted card x=${floor.x} needs road`);
       assert.ok(Math.abs(floor.x - x) < 400 || surfaceAt(map.plats, x) == null, `map ${drop.map} plant should stay near the fall`);
+      assert.equal(cardBlockedAt(map.plats, drop.map, floor.x), false, `map ${drop.map} planted card x=${floor.x} stays off walls and perch lips`);
     }
   }
 
-  const voidPlant = plantedFloorAt(maps[6].plats, maps[6].w, 8000);
+  const wallPlant = plantedFloorAt(maps[6].plats, maps[6].w, 2390, 6);
+  assert.ok(Math.abs(wallPlant.x - 2390) >= 26, "heart-column drops slide off the wall");
+  assert.equal(cardBlockedAt(maps[6].plats, 6, wallPlant.x), false, "nudged heart-column card is pickable");
+  const perchPlant = plantedFloorAt(maps[6].plats, maps[6].w, 2680, 6);
+  assert.notEqual(surfaceAt(maps[6].plats, perchPlant.x), null, "perch deaths still plant on the road");
+  assert.ok(perchPlant.groundY > 80, "perch deaths do not stay on the thin ledge");
+  assert.match(game, /strokeText\("PRESS E",x,riseY\+cardH\/2\*scale\+6\)/);
+  assert.match(game, /promptAt=\{x:dragonFloor\.x,y:dragonFloor\.groundY\}/);
+  assert.match(game, /className=\{"interaction"\+\(promptAnchor\?" near-card":""\)\}/);
+
+  const voidPlant = plantedFloorAt(maps[6].plats, maps[6].w, 8000, 6);
   assert.ok(voidPlant.x <= maps[6].w - 48, "past-edge drops pull back onto the road");
   assert.notEqual(surfaceAt(maps[6].plats, voidPlant.x), null, "past-edge drops still land on ground");
+});
+
+test("companions and wild beasts clamp to PLAYER_EDGE_MARGIN and reseat with surfaceYAt", () => {
+  assert.match(game, /const creatureEdgeAt=\(map:MapId,x:number\)=>clamp\(x,PLAYER_EDGE_MARGIN,worldWidthFor\(map\)-PLAYER_EDGE_MARGIN\)/);
+  assert.match(game, /const keepCreatureOnRoad=\(creature:\{x:number;y:number;groundY:number\},map:MapId\)=>\{/);
+  assert.match(game, /creature\.x=creatureEdgeAt\(map,creature\.x\)/);
+  assert.match(game, /const ground=surfaceYAt\(map,creature\.x,creature\.groundY\)\?\?surfaceYAt\(map,creature\.x,590\)/);
+  assert.match(game, /if\(creature\.y>ground\+28\)creature\.y=ground/);
+  assert.match(game, /keepCreatureOnRoad\(ally,map\)/);
+  assert.match(game, /keepCreatureOnRoad\(jackal,mapRef\.current\)/);
+  assert.match(game, /keepCreatureOnRoad\(dragon,1\)/);
+  assert.match(game, /ally\.x=creatureEdgeAt\(map,pl\.x-pl\.facing\*96\)/);
+  assert.match(game, /ally\.x=creatureEdgeAt\(map,ally\.x\)/);
+  assert.match(game, /const summonX=creatureEdgeAt\(map,pl\.x\+pl\.facing\*COMPANION_DEPLOY_DISTANCE\)/);
+  assert.match(game, /if\(ally\.y>ally\.groundY\+28\)ally\.y=ally\.groundY/);
+  assert.match(game, /if\(jackal\.y>jackal\.groundY\+28\)jackal\.y=jackal\.groundY/);
+
+  const margin = num(/const PLAYER_EDGE_MARGIN = (\d+)/, "PLAYER_EDGE_MARGIN");
+  const creatureEdgeAt = (width, x) => Math.max(margin, Math.min(width - margin, x));
+  assert.equal(creatureEdgeAt(6600, -40), 28);
+  assert.equal(creatureEdgeAt(6600, 8000), 6572);
+  assert.equal(creatureEdgeAt(6600, 3300), 3300);
+  const edge = creatureEdgeAt(maps[6].w, 0);
+  assert.notEqual(surfaceAt(maps[6].plats, edge), null, "clamped west companion still has road");
+  const east = creatureEdgeAt(maps[6].w, 9999);
+  assert.notEqual(surfaceAt(maps[6].plats, east), null, "clamped east companion still has road");
+});
+
+test("map 6 keeps a mid-road pulse cue after the wyrm on the altar road", () => {
+  const pulseX = num(/const MAP6_PULSE_X = (\d+)/, "MAP6_PULSE_X");
+  const heartX = num(/const MAP6_HEART_X = (\d+)/, "MAP6_HEART_X");
+  const veinX = num(/const MAP6_VEIN_X = (\d+)/, "MAP6_VEIN_X");
+  const map = maps[6];
+  assert.equal(pulseX, 4400);
+  assert.ok(pulseX > 3180 && pulseX < veinX, "pulse sits between wyrm road and the cooled vein");
+  assert.ok(pulseX < heartX, "pulse is west of the altar");
+  assert.notEqual(surfaceAt(map.plats, pulseX), null, "pulse stands on the heart road");
+  assert.match(game, /const drawHeartRoadPulse=\(now:number\)=>\{/);
+  assert.match(game, /drawHeartRoadPulse\(now\)/);
+  assert.match(game, /const bound=otherWildCollected\.has\(HEART_WYRM_CARD\.id\)/);
+  assert.match(game, /ctx\.fillText\(bound\?"ALTAR EAST":"PULSE",x,groundY-28\)/);
+  assert.match(game, /Press E at Ashfall's Heart/);
+  assert.match(game, /const atHeartAltar=\(x:number\)=>Math\.abs\(x-MAP6_HEART_X\)<ALTAR_INTERACT_RANGE/);
 });
 
 test("east/west edges stay walkable and the camera can look a little past the rim", () => {

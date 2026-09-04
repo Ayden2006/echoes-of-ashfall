@@ -36,11 +36,15 @@ const MAP5_EXIT_X = 6070;
 const MAP5_KILN_X = 2080;
 const MAP6_ENTRY_X = 105;
 const MAP6_VEIN_X = 5620;
+const MAP6_PULSE_X = 4400;
 const MAP6_HEART_X = 6470;
 const MAP6_ALTAR_X = MAP6_HEART_X+40;
 const ALTAR_INTERACT_RANGE = 200;
 const PLAYER_EDGE_MARGIN = 28;
 const CAM_EDGE_PAD = 180;
+const CARD_FLOOR_INSET = 22;
+const CARD_WALL_CLEAR = 28;
+const SCENERY_PROP_XS = [380,760,1110,1490,1810,2190,2570,2940,3310,3710,4100,4510,4780,4980,5150,5420,5580,5860,6040,6280,6460,6640,6820,6980] as const;
 const MAP4_MOONWELL_X = 2360;
 const MAP1_PLAQUE_X = 2680;
 const MAP2_SHELL_X = 1515;
@@ -930,23 +934,48 @@ const worldWidthFor = (map:MapId) => map===1?MAP1_W:map===2?MAP2_W:map===3?MAP3_
 const platformsFor = (map:MapId) => map===1?map1Platforms:map===2?map2Platforms:map===3?map3Platforms:map===4?map4Platforms:map===5?map5Platforms:map6Platforms;
 const surfaceYAt=(map:MapId,x:number,currentY:number)=>{const surfaces=platformsFor(map).filter(p=>p.h>80&&x>=p.x&&x<=p.x+p.w);if(!surfaces.length)return null;return surfaces.reduce((best,p)=>Math.abs(p.y-currentY)<Math.abs(best.y-currentY)?p:best).y;};
 const plantedYAt=(map:MapId,x:number)=>(surfaceYAt(map,x,590)??590)-PH;
+const creatureEdgeAt=(map:MapId,x:number)=>clamp(x,PLAYER_EDGE_MARGIN,worldWidthFor(map)-PLAYER_EDGE_MARGIN);
+const cardBlockedAt=(map:MapId,x:number)=>{
+  if(SCENERY_PROP_XS.some(px=>Math.abs(px-x)<CARD_WALL_CLEAR))return true;
+  if(map===6){for(let i=0;i<17;i++){if(Math.abs((240+i*430)-x)<26)return true;}}
+  const plat=platformsFor(map).filter(p=>p.h>80&&x>=p.x&&x<=p.x+p.w).sort((a,b)=>Math.abs(a.y-590)-Math.abs(b.y-590))[0];
+  if(!plat)return true;
+  return x<plat.x+CARD_FLOOR_INSET||x>plat.x+plat.w-CARD_FLOOR_INSET;
+};
 const plantedFloorAt=(map:MapId,x:number)=>{
   const worldW=worldWidthFor(map);
   let px=clamp(x,48,worldW-48);
   const hit=(nx:number)=>surfaceYAt(map,nx,590);
-  const first=hit(px);
+  const clear=(nx:number)=>{const g=hit(nx);return g!==null&&!cardBlockedAt(map,nx)?g:null;};
+  const first=clear(px);
   if(first!==null)return {x:px,groundY:first};
   for(let d=8;d<=420;d+=8){
     const left=px-d,right=px+d;
-    if(left>=48){const g=hit(left);if(g!==null)return {x:left,groundY:g};}
-    if(right<=worldW-48){const g=hit(right);if(g!==null)return {x:right,groundY:g};}
+    if(left>=48){const g=clear(left);if(g!==null)return {x:left,groundY:g};}
+    if(right<=worldW-48){const g=clear(right);if(g!==null)return {x:right,groundY:g};}
   }
+  const fallback=hit(px);
+  if(fallback!==null)return {x:px,groundY:fallback};
   return {x:px,groundY:590};
 };
 const seatDeadBeast=(beast:{x:number;groundY:number;vx:number},map:MapId)=>{
   const floor=plantedFloorAt(map,beast.x);
   beast.x=floor.x;beast.groundY=floor.groundY;beast.vx=0;
   return floor;
+};
+const keepCreatureOnRoad=(creature:{x:number;y:number;groundY:number},map:MapId)=>{
+  creature.x=creatureEdgeAt(map,creature.x);
+  const ground=surfaceYAt(map,creature.x,creature.groundY)??surfaceYAt(map,creature.x,590);
+  if(ground!==null){
+    creature.groundY=ground;
+    if(creature.y>ground+28)creature.y=ground;
+    return ground;
+  }
+  const floor=plantedFloorAt(map,creature.x);
+  creature.x=creatureEdgeAt(map,floor.x);
+  creature.groundY=floor.groundY;
+  if(creature.y>floor.groundY+28)creature.y=floor.groundY;
+  return floor.groundY;
 };
 const atHeartAltar=(x:number)=>Math.abs(x-MAP6_HEART_X)<ALTAR_INTERACT_RANGE;
 const lateObjectiveFor=(map:MapId,held:string[],ended:boolean)=>{
@@ -1009,6 +1038,7 @@ export default function AshfallGame() {
   const [dialogue,setDialogue] = useState<Line[]|null>(null);
   const [dialogueIndex,setDialogueIndex] = useState(0);
   const [nearAction,setNearAction] = useState<string|null>(null);
+  const [promptAnchor,setPromptAnchor] = useState<{left:number;bottom:number}|null>(null);
   const [objective,setObjective] = useState(MAP_STORY[1].objective);
   const [campaignEnded,setCampaignEnded] = useState(false);
   const [soundOn,setSoundOn] = useState(true);
@@ -1104,7 +1134,7 @@ export default function AshfallGame() {
     if(ally.active&&ally.itemId){
       const now=performance.now();
       const groundAlly=cardStats(ally.itemId).ground;
-      ally.map=map;ally.x=clamp(pl.x-pl.facing*96,28,worldWidthFor(map)-28);
+      ally.map=map;ally.x=creatureEdgeAt(map,pl.x-pl.facing*96);
       const arrivalGround=surfaceYAt(map,ally.x,pl.y+PH)??surfaceYAt(map,pl.x,590)??pl.y+PH;
       rememberModeChange(ally,groundAlly?"run":"fly",now);
       ally.groundY=arrivalGround;
@@ -1208,7 +1238,7 @@ export default function AshfallGame() {
   useEffect(()=>{
     const canvas=canvasRef.current, ctx=canvas?.getContext("2d");
     if (!canvas||!ctx) return;
-    let raf=0,last=performance.now(),cameraX=0,lastAction="",lastHealth=player.current.health,lastStamina=Math.round(staminaRef.current),lastMapProgress=-1,lastHudMap:MapId=1;
+    let raf=0,last=performance.now(),cameraX=0,lastAction="",lastPromptLeft=-1,lastPromptBottom=-1,lastHealth=player.current.health,lastStamina=Math.round(staminaRef.current),lastMapProgress=-1,lastHudMap:MapId=1;
     const backdrop=new Image(); backdrop.src=assetUrl("/pixel-castle-night.png");
     const beachBackdrop=new Image(); beachBackdrop.src=assetUrl("/map2-sunset-beach.png");
     const knight=new Image(); knight.src=assetUrl("/knight-sprite-sheet.png");
@@ -1749,6 +1779,7 @@ export default function AshfallGame() {
           }
           dragon.attackLanded=true;
         }
+        keepCreatureOnRoad(dragon,1);
         if(now>=dragon.modeUntil){
           const targetDistance=Math.hypot(pl.x-dragon.x,(pl.y+PH*.45)-(dragon.y-48));
           const verticalDistance=Math.abs((pl.y+42)-dragon.y);
@@ -1816,6 +1847,7 @@ export default function AshfallGame() {
         dragon.vx+=(0-dragon.vx)*(1-Math.exp(-8*dt));
         dragon.y+=(dragon.groundY-dragon.y)*(1-Math.exp(-12*dt));
       }
+      keepCreatureOnRoad(dragon,1);
 
       if(playerRespawnAt&&now>=playerRespawnAt){
         pl.health=pl.maxHealth;pl.x=respawnXFor(mapRef.current);pl.y=plantedYAt(mapRef.current,pl.x);pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
@@ -1904,6 +1936,7 @@ export default function AshfallGame() {
         const terrainY=surfaceYAt(mapRef.current,jackal.x,jackal.groundY)??surfaceYAt(mapRef.current,jackal.x,590);
         if(terrainY!==null)jackal.groundY+=(terrainY-jackal.groundY)*(1-Math.exp(-13*dt));
         if(jackal.y>jackal.groundY+28)jackal.y=jackal.groundY;
+        keepCreatureOnRoad(jackal,mapRef.current);
         if(jackal.health<=0){
           jackal.angry=false;
           seatDeadBeast(jackal,mapRef.current);
@@ -1996,6 +2029,7 @@ export default function AshfallGame() {
           const hop=now<jackal.leapUntil&&!jackal.id.startsWith("heart-wyrm")&&!jackal.id.startsWith("ash-roost")&&(jackal.mode==="walk"||jackal.mode==="run")?hopArc(hopT,52):0;
           jackal.y+=(jackal.groundY-hop-jackal.y)*(1-Math.exp(-12*dt));
         }
+        keepCreatureOnRoad(jackal,mapRef.current);
       }
       if(playerRespawnAt&&now>=playerRespawnAt){
         pl.health=pl.maxHealth;pl.x=respawnXFor(mapRef.current);pl.y=plantedYAt(mapRef.current,pl.x);pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
@@ -2022,6 +2056,7 @@ export default function AshfallGame() {
       const pl=player.current,map=mapRef.current;
       if(ally.recallStarted>0){
         ally.attackUntil=0;ally.vx+=(0-ally.vx)*(1-Math.exp(-12*dt));ally.x+=ally.vx*dt;
+        keepCreatureOnRoad(ally,map);
         const recallGround=companionSurfaceAt(ally.x,ally.groundY,map);
         if(recallGround!==null)ally.groundY+=(recallGround-ally.groundY)*(1-Math.exp(-10*dt));
         ally.y+=(ally.groundY-ally.y)*(1-Math.exp(-5.4*dt));
@@ -2030,7 +2065,7 @@ export default function AshfallGame() {
       }
       const groundAlly=cardStats(ally.itemId).ground;
       if(ally.map!==map){
-        ally.map=map;ally.x=clamp(pl.x-pl.facing*96,28,worldWidthFor(map)-28);
+        ally.map=map;ally.x=creatureEdgeAt(map,pl.x-pl.facing*96);
         const reseatGround=companionSurfaceAt(ally.x,pl.y+PH,map)??surfaceYAt(map,ally.x,590)??pl.y+PH;
         ally.groundY=reseatGround;ally.y=groundAlly?reseatGround:reseatGround-52;ally.vx=0;
         setCompanionMode(groundAlly?"run":"fly",now);ally.teleportAt=now;
@@ -2041,7 +2076,7 @@ export default function AshfallGame() {
       const hunted=nearestHuntTarget(ally.x,mapHostiles,COMPANION_HUNT_RANGE);
       const hunting=Boolean(hunted);
       if(hunting&&hunted){ally.targetX=hunted.x;ally.attackUntil=now+1600;}
-      const followX=clamp(pl.x-pl.facing*104,28,worldWidthFor(map)-28);
+      const followX=creatureEdgeAt(map,pl.x-pl.facing*104);
       const playerGround=pl.y+PH;
       const stayForHunt=hunted&&Math.abs(pl.x-hunted.x)<COMPANION_HUNT_RANGE+140;
       if(Math.abs(pl.x-ally.x)>COMPANION_TELEPORT_DISTANCE&&!stayForHunt){
@@ -2082,6 +2117,7 @@ export default function AshfallGame() {
           }
         }
         if(attackElapsed>COMPANION_STRIKE_RECOVERY){ally.modeStarted=now;ally.attackLanded=false;}
+        keepCreatureOnRoad(ally,map);
         return;
       }
 
@@ -2096,7 +2132,7 @@ export default function AshfallGame() {
         const speed=followMode==="fly"?128:followMode==="run"?(groundAlly?176:158):64;
         const response=followMode==="walk"?4.2:followMode==="fly"?4.8:6.6;
         ally.vx+=(ally.facing*speed-ally.vx)*(1-Math.exp(-response*dt));ally.x+=ally.vx*dt;
-        ally.x=clamp(ally.x,28,worldWidthFor(map)-28);
+        ally.x=creatureEdgeAt(map,ally.x);
         const nextSurface=companionSurfaceAt(ally.x,ally.groundY,map);
         if(nextSurface!==null)ally.groundY+=(nextSurface-ally.groundY)*(1-Math.exp(-10*dt));
         const hop=groundAlly&&distance>190?Math.abs(Math.sin(ally.gait*.008))*38:0;
@@ -2112,6 +2148,7 @@ export default function AshfallGame() {
         if(ally.y>ally.groundY+28)ally.y=ally.groundY;
         ally.facing=hunting&&hunted?(hunted.x>=ally.x?1:-1):(pl.x>=ally.x?1:-1);
       }
+      keepCreatureOnRoad(ally,map);
     };
     const currentHuntTarget=()=>{
       const ally=companionRef.current;
@@ -2151,6 +2188,7 @@ export default function AshfallGame() {
       const attack=mode==="attack"?clamp(elapsed/920,0,1):0;
       const pounce=attack>0?hopArc(attack,1):0;
       const sleepBlend=mode==="sleep"?easeInOut(clamp(elapsed/MODE_BLEND_MS,0,1)):0;
+      const landSquash=prevMode==="fly"&&(mode==="idle"||mode==="walk"||mode==="run")?(1-easeInOut(clamp((now-modeBlendAt)/240,0,1)))*.12:0;
       const sleepPose=sleepPoseAmt(mode,prevMode,modeBlendAt,now,elapsed);
       const sleep=sleepPose>=0.62;
       const waking=prevMode==="sleep"&&mode!=="sleep";
@@ -2173,7 +2211,7 @@ export default function AshfallGame() {
       ctx.save();
       ctx.translate(x+facing*(lunge*18+weightShift*.55),poseY);
       ctx.rotate(facing*(standRot+(0.12-standRot)*sleepPose));
-      ctx.scale(facing*scale*(1+pounce*.14+wakeStretch),(kind==="stag"?scale*1.08:scale)*(1-pounce*.08-wakeStretch*.4+(sleepPose>0.2?Math.sin(now*.0028)*.02:0)));
+      ctx.scale(facing*scale*(1+pounce*.14+wakeStretch+landSquash),(kind==="stag"?scale*1.08:scale)*(1-pounce*.08-wakeStretch*.4-landSquash+(sleepPose>0.2?Math.sin(now*.0028)*.02:0)));
       const tint=variant?.tint;
       const fur=tint?.fur??"#c45a28",furDark=tint?.furDark??"#6b2e18",furLight=tint?.furLight??"#f0a056",chest=tint?.chest??"#ffd2a0",outline="#2a1410",eye=tint?.eye??"#ffe27a";
       const map=mapRef.current;
@@ -2265,6 +2303,7 @@ export default function AshfallGame() {
       const attack=mode==="attack"?clamp(elapsed/920,0,1):0;
       const lunge=attack>0.32&&attack<.72?(attack-.32)/.4:0;
       const sleepPose=sleepPoseAmt(mode, prevMode??mode, modeBlendAt??0, now, elapsed);
+      const landSquash=(prevMode??mode)==="fly"&&(mode==="idle"||mode==="walk"||mode==="run")?(1-easeInOut(clamp((now-(modeBlendAt??0))/240,0,1)))*.1:0;
       const curl=sleepPose*(14+Math.sin(now*.0024)*1.4);
       ctx.save();
       ctx.fillStyle="rgba(16,6,12,"+(0.58-(flyAmt*0.24)+sleepPose*.08)+")";
@@ -2272,7 +2311,7 @@ export default function AshfallGame() {
       ctx.fillStyle="rgba(10,4,8,.7)";ctx.fillRect(x-18*scale,groundY+4,36*scale,2);
       ctx.translate(x+facing*lunge*16,y-hover+curl);
       ctx.rotate(facing*(-0.18*flyAmt+(attack>0?-0.1+lunge*.3:wave*.04)*(1-flyAmt*.35)+sleepPose*.18));
-      ctx.scale(facing*scale*(1+lunge*.1),(scale)*(1-sleepPose*.08-lunge*.05));
+      ctx.scale(facing*scale*(1+lunge*.1+landSquash),(scale)*(1-sleepPose*.08-lunge*.05-landSquash));
       if(hurt&&pixelHurtFlash(now))ctx.globalAlpha=.4;
       const body="#4a2048",bodyDark="#140816",belly="#d45a6a",glow="#ffc8a0",outline="#1a0810";
       for(let i=6;i>=0;i--){
@@ -2511,6 +2550,9 @@ export default function AshfallGame() {
         ctx.lineWidth=3;ctx.strokeStyle="rgba(7,3,16,.9)";ctx.strokeText("MAGICAL CARD FORMED",x,riseY-cardH/2*scale-13);
         ctx.fillStyle="#eaff9f";ctx.fillText("MAGICAL CARD FORMED",x,riseY-cardH/2*scale-13);
       }
+      ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="top";
+      ctx.lineWidth=3;ctx.strokeStyle="rgba(7,3,16,.9)";ctx.strokeText("PRESS E",x,riseY+cardH/2*scale+6);
+      ctx.fillStyle="#fff6d2";ctx.fillText("PRESS E",x,riseY+cardH/2*scale+6);
       ctx.restore();
     };
     const drawDragonCardTransformation=(now:number)=>{
@@ -2872,6 +2914,23 @@ export default function AshfallGame() {
       drawKilnMouth(3340,575,now,.78,false);
       drawKilnMouth(5120,560,now,.7,false);
     };
+    const drawHeartRoadPulse=(now:number)=>{
+      if(mapRef.current!==6)return;
+      const x=MAP6_PULSE_X,groundY=surfaceYAt(6,x,590)??545;
+      const bound=otherWildCollected.has(HEART_WYRM_CARD.id);
+      const pulse=.4+Math.sin(now*.0024)*.22+(bound?.18:0);
+      ctx.save();
+      const glow=ctx.createRadialGradient(x,groundY-10,6,x,groundY-10,bound?150:110);
+      glow.addColorStop(0,"rgba(212,90,106,"+(.16+pulse*.18)+")");glow.addColorStop(1,"rgba(212,90,106,0)");
+      ctx.fillStyle=glow;ctx.fillRect(x-160,groundY-90,320,110);
+      ctx.fillStyle="#1c0c14";ctx.beginPath();ctx.ellipse(x,groundY-3,36,9,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="rgba(224,120,150,"+(.28+pulse*.3)+")";ctx.beginPath();ctx.ellipse(x,groundY-5,24,5,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#341020";ctx.beginPath();ctx.moveTo(x-4,groundY-8);ctx.lineTo(x+18,groundY-16);ctx.lineTo(x-2,groundY-12);ctx.closePath();ctx.fill();
+      ctx.fillStyle="rgba(255,180,196,"+(.4+pulse*.32)+")";ctx.beginPath();ctx.moveTo(x-2,groundY-9);ctx.lineTo(x+16,groundY-15);ctx.lineTo(x,groundY-11);ctx.closePath();ctx.fill();
+      ctx.globalAlpha=.34+pulse*.2;ctx.fillStyle="#ffc8a0";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";
+      ctx.fillText(bound?"ALTAR EAST":"PULSE",x,groundY-28);
+      ctx.restore();
+    };
     const drawCooledVein=(now:number)=>{
       if(mapRef.current!==6)return;
       const x=MAP6_VEIN_X,groundY=545,pulse=.5+Math.sin(now*.002)*.24;
@@ -2982,7 +3041,7 @@ export default function AshfallGame() {
       }
     };
     const drawRegionalScenery=(now:number,viewW:number,map:MapId)=>{
-      const props=[380,760,1110,1490,1810,2190,2570,2940,3310,3710,4100,4510,4780,4980,5150,5420,5580,5860,6040,6280,6460,6640,6820,6980];
+      const props=SCENERY_PROP_XS;
       for(let i=0;i<props.length;i++){const x=props[i];if(x>worldWidthFor(map)-90||x<cameraX-120||x>cameraX+viewW+120)continue;const ground=surfaceYAt(map,x,590);if(ground===null)continue;ctx.save();ctx.translate(x,ground);
         if(map===1){if(i%3===0){ctx.strokeStyle="rgba(61,82,96,.82)";ctx.lineWidth=3;for(let b=-3;b<=3;b++){const sway=Math.sin(now*.0025+x*.04+b)*5;ctx.beginPath();ctx.moveTo(b*5,0);ctx.quadraticCurveTo(b*5+sway*.2,-12,b*5+sway,-20-Math.abs(b)*2);ctx.stroke();}}else{const rock=ctx.createLinearGradient(-25,-48,22,0);rock.addColorStop(0,"#71869e");rock.addColorStop(.45,"#3c485a");rock.addColorStop(1,"#151d2a");ctx.fillStyle=rock;ctx.beginPath();ctx.moveTo(-28,0);ctx.lineTo(-20,-26);ctx.lineTo(-6,-40);ctx.lineTo(14,-34);ctx.lineTo(26,-12);ctx.lineTo(22,0);ctx.closePath();ctx.fill();ctx.fillStyle="rgba(156,202,199,.22)";ctx.fillRect(-10,-20,12,3);}}
         else if(map===2){if(i%3===0){ctx.strokeStyle="rgba(94,76,48,.85)";ctx.lineWidth=3;for(let b=-3;b<=3;b++){const sway=Math.sin(now*.0028+x*.01+b)*4;ctx.beginPath();ctx.moveTo(b*5,0);ctx.quadraticCurveTo(b*5+sway*.3,-18,b*5+sway,-36-Math.abs(b)*2);ctx.stroke();}}else{const rock=ctx.createLinearGradient(-25,-48,22,0);rock.addColorStop(0,"#d49a68");rock.addColorStop(.45,"#85584d");rock.addColorStop(1,"#403236");ctx.fillStyle=rock;ctx.beginPath();ctx.moveTo(-30,0);ctx.lineTo(-23,-28);ctx.lineTo(-7,-45);ctx.lineTo(17,-37);ctx.lineTo(29,-13);ctx.lineTo(24,0);ctx.closePath();ctx.fill();}}
@@ -3208,6 +3267,7 @@ export default function AshfallGame() {
       }else if(map===6){
         drawHeartColumns(now,viewW);
         drawCooledVein(now);
+        drawHeartRoadPulse(now);
         drawPortal(MAP6_ENTRY_X,portalGround(MAP6_ENTRY_X),now,map,"212,90,106","WEST · EMBER");
         drawAshfallHeartAltar(now);
         const heartPulse=.2+Math.sin(now*.0016)*.12;
@@ -3280,9 +3340,10 @@ export default function AshfallGame() {
           if(ally.active&&ally.itemId===item.id){
             if(ally.recallStarted===0){const direction:1|-1=ally.x>=pl.x?1:-1;ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;companionCastRef.current={started:now,kind:"recall",direction};pl.facing=direction;tone(470,.16,.022);window.setTimeout(()=>tone(280,.22,.024),180);window.setTimeout(()=>tone(135,.34,.022),610);}
           }else{
-            const summonX=clamp(pl.x+pl.facing*COMPANION_DEPLOY_DISTANCE,30,activeWorldW-30);
-            const summonGround=companionSurfaceAt(summonX,pl.y+PH,map)??pl.y+PH;
+            const summonX=creatureEdgeAt(map,pl.x+pl.facing*COMPANION_DEPLOY_DISTANCE);
+            const summonGround=companionSurfaceAt(summonX,pl.y+PH,map)??surfaceYAt(map,summonX,pl.y+PH)??pl.y+PH;
             ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=summonX;ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.prevMode="idle";ally.modeBlendAt=now;ally.gait=0;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.recallStarted=0;ally.teleportAt=0;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;
+            keepCreatureOnRoad(ally,map);
             ally.maxHealth=cardStats(item.id).hp;ally.health=ally.maxHealth;
             const direction:1|-1=summonX>=pl.x?1:-1;companionCastRef.current={started:now,kind:"summon",direction};pl.facing=direction;setDeployedItemId(item.id);tone(330,.18,.024);window.setTimeout(()=>tone(620,.22,.022),170);window.setTimeout(()=>tone(940,.28,.02),420);
           }
@@ -3329,13 +3390,14 @@ export default function AshfallGame() {
         aimAngle.current=Math.atan2(aimWorldY-(pl.y+34),aimWorldX-pl.x);
       }
       let action="";
+      let promptAt:{x:number;y:number}|null=null;
       if(!dialogueRef.current){
         const nearTalk=talkTargetAt(map,pl.x,pl.y+PH);
         const nearNpc=nearTalk.npc;
         const nearLandmark=nearTalk.landmark;
-        if(nearDragonCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Baby Dragon card";
-        else if(readyJackal)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Sunset Jackal card";
-        else if(readyOtherWild&&otherWildCard)action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up "+otherWildCard.name+" card";
+        if(nearDragonCard){action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Baby Dragon card";promptAt={x:dragonFloor.x,y:dragonFloor.groundY};}
+        else if(readyJackal){action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up Sunset Jackal card";const floor=plantedFloorAt(2,readyJackal.x);promptAt={x:floor.x,y:floor.groundY};}
+        else if(readyOtherWild&&otherWildCard){action=inventoryRef.current.length>=INVENTORY_CAPACITY?"Inventory full":"Pick up "+otherWildCard.name+" card";const floor=plantedFloorAt(map,readyOtherWild.x);promptAt={x:floor.x,y:floor.groundY};}
         else if(nearNpc)action="Talk to "+nearNpc.name;
         else if(nearLandmark)action=nearLandmark.action;
         else if(map===1&&nearPortalAt(pl.x,MAP1_PORTAL_X))action="Enter Sunset Shore";
@@ -3351,6 +3413,9 @@ export default function AshfallGame() {
         else if(map===6&&atHeartAltar(pl.x))action=campaignEndedRef.current?"Rest at Ashfall's Heart":"Press E at Ashfall's Heart";
       }
       if(action!==lastAction){lastAction=action;setNearAction(action||null);}
+      const nextAnchor=promptAt?{left:Math.round(clamp((promptAt.x-cameraX)*scale,78,w-78)),bottom:Math.round(clamp(h-(promptAt.y-88)*scale,96,h*.58))}:null;
+      const nextLeft=nextAnchor?.left??-1,nextBottom=nextAnchor?.bottom??-1;
+      if(nextLeft!==lastPromptLeft||nextBottom!==lastPromptBottom){lastPromptLeft=nextLeft;lastPromptBottom=nextBottom;setPromptAnchor(nextAnchor);}
       ctx.clearRect(0,0,w,h);drawBackdrop(w,h,now,map);drawWorld(w,h,scale,now);
       if(playerHurtUntil>now){ctx.fillStyle="rgba(111,255,55,"+((playerHurtUntil-now)/360*.11)+")";ctx.fillRect(0,0,w,h);}
       if(map===1){
@@ -3442,7 +3507,7 @@ export default function AshfallGame() {
     </section>}
     {dialogue&&<div className="dialogue-wrap"><div className="dialogue-box" onClick={advanceDialogue}><p className="speaker">{dialogue[dialogueIndex]?.speaker}</p><p className="dialogue-text">{dialogue[dialogueIndex]?.text}</p><p className="continue-hint">Click or press E to continue</p></div></div>}
     {campaignEnded&&!dialogue&&<section className="title-screen" aria-live="polite"><div className="title-card"><p className="title-kicker">The road ends here</p><h1 className="game-title">Echoes<br/>of Ashfall<span>Chapter Six — Ashfall&apos;s Heart</span></h1><p className="start-hint">The echo is still. Moon Night carried the signal home. Thank you for playing.</p></div></section>}
-    {nearAction&&<div className="interaction"><span className="keycap">E</span>{nearAction}</div>}
+    {nearAction&&<div className={"interaction"+(promptAnchor?" near-card":"")} style={promptAnchor?{left:promptAnchor.left,bottom:promptAnchor.bottom}:undefined}><span className="keycap">E</span>{nearAction}</div>}
     <div className="controls"><span><b>A D</b> Move</span><span><b>W / Space ×2</b> Double jump</span><span><b>S</b> Crouch / slide</span><span><b>Shift</b> Run</span><span><b>Mouse 1</b> Attack</span><span><b>E</b> Interact</span><span><b>1–5 + Q</b> Select / deploy</span><span><b>Tab</b> Inventory</span><span><b>M</b> World map</span></div>
     <button className="sound-button" onClick={toggleSound} aria-label={soundOn?"Mute sound":"Turn sound on"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}</button>
     <div className="touch-controls" aria-label="Touch controls">

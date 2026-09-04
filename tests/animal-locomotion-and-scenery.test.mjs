@@ -38,10 +38,12 @@ test("walk/run/fly/sleep/leap/pounce use gait or eased pose, and Q deploy still 
   assert.match(game, /const summonLift=\(1-summonCreature\)\*34,recallPull=\(1-recallCreature\)\*30/);
   assert.match(game, /ally\.prevMode="idle";ally\.modeBlendAt=now;ally\.gait=0;ally\.mode="idle"/);
   assert.match(game, /const hop=groundAlly&&distance>190\?Math\.abs\(Math\.sin\(ally\.gait\*\.008\)\)\*38:0/);
+  assert.match(game, /const landSquash=prevMode==="fly"&&\(mode==="idle"\|\|mode==="walk"\|\|mode==="run"\)\?\(1-easeInOut\(clamp\(\(now-modeBlendAt\)\/240,0,1\)\)\)\*\.12:0/);
 });
 
 test("eastern roam stretches get more map-local scenery without restoring Map 1 buildings", () => {
-  assert.match(game, /const props=\[380,760,1110,1490,1810,2190,2570,2940,3310,3710,4100,4510,4780,4980,5150,5420,5580,5860,6040,6280,6460,6640,6820,6980\]/);
+  assert.match(game, /const SCENERY_PROP_XS = \[380,760,1110,1490,1810,2190,2570,2940,3310,3710,4100,4510,4780,4980,5150,5420,5580,5860,6040,6280,6460,6640,6820,6980\] as const/);
+  assert.match(game, /const props=SCENERY_PROP_XS/);
   assert.doesNotMatch(game, /drawRegionalScenery=\(now:number,viewW:number,map:MapId\)=>\{\s*if\(map===1\)return/);
   assert.match(game, /if\(map===1\)\{if\(i%3===0\)\{ctx\.strokeStyle="rgba\(61,82,96,\.82\)"/);
   assert.match(game, /for\(let i=0;i<24;i\+\+\)\{\s*const tx=180\+i\*270/);

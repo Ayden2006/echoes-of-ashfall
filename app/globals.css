@@ -58,7 +58,8 @@ button { font:inherit; }
 .speaker { margin:0 0 9px; color:var(--signal); font-size:10px; font-weight:900; letter-spacing:.25em; text-transform:uppercase; }
 .dialogue-text { margin:0; min-height:46px; font-family:Georgia,serif; font-size:clamp(18px,2.1vw,25px); line-height:1.45; }
 .continue-hint { margin:10px 0 0; color:rgba(231,238,233,.42); font-size:9px; letter-spacing:.18em; text-align:right; text-transform:uppercase; }
-.interaction { position:absolute; left:50%; bottom:22%; display:flex; align-items:center; gap:9px; transform:translateX(-50%); padding:7px 11px; border:1px solid rgba(231,238,233,.18); border-radius:2px; background:rgba(5,10,12,.75); color:rgba(231,238,233,.85); font-size:9px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; backdrop-filter:blur(5px); }
+.interaction { position:absolute; left:50%; bottom:22%; display:flex; align-items:center; gap:9px; transform:translateX(-50%); padding:7px 11px; border:1px solid rgba(231,238,233,.18); border-radius:2px; background:rgba(5,10,12,.75); color:rgba(231,238,233,.85); font-size:9px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; backdrop-filter:blur(5px); pointer-events:none; z-index:9; }
+.interaction.near-card { border-color:rgba(186,255,120,.42); box-shadow:0 0 16px rgba(154,255,76,.16); }
 .keycap { display:grid; width:23px; height:23px; place-items:center; border:1px solid rgba(116,230,226,.55); color:var(--signal); }
 .controls { position:absolute; left:clamp(18px,4vw,52px); bottom:clamp(16px,3.5vh,36px); display:flex; gap:18px; color:rgba(231,238,233,.46); font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; pointer-events:none; }
 .controls b { color:rgba(231,238,233,.82); }
