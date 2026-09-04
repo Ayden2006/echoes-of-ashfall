@@ -4,10 +4,13 @@ A 2D story-action game starring Moon Night, built as a React canvas game with a 
 
 ## Play / download
 
+- **Play in the browser:** https://ayden2006.github.io/echoes-of-ashfall/
 - **Play from the published source (`main`):** download the zip, then run locally:
   - Zip: https://github.com/Ayden2006/echoes-of-ashfall/archive/refs/heads/main.zip
   - `npm ci` then `npm run dev`
 - **Repo:** https://github.com/Ayden2006/echoes-of-ashfall
+
+GitHub Pages serves a static Vite build of the same canvas game. Enable **Settings → Pages → GitHub Actions** once if the URL 404s; pushes to `main` publish it.
 
 Requirements for a local run:
 
@@ -47,7 +50,7 @@ Moon Night follows a fading signal through Ashfall. The road runs castle → bea
 
 Maps 2 and 3 use multi-height terrain instead of a single flat strip, ground animals track the terrain surface they stand on, later maps use layered regional backdrops, and the world map only reveals regions the player has unlocked.
 
-Moon Night has 100 health and 15 sword damage. Defeat an animal to form its magical card, press `E` to collect it, equip it, then press `Q` to deploy or recall the companion. A deployed companion hunts nearby hostile animals on the current map and keeps attacking until they fall or leave sight. Extra combat-only animals (scout, roostling, third fox, second stag, fourth lynx) chase and attack the same way, but they do not drop cards. Animals keep chasing and attacking whoever hurt them until that target is defeated or escapes sight range. Every unique animal uses that same card + Q pattern. Extra road fights stay combat-only: they do not drop a second card.
+Moon Night has 100 health and 15 sword damage. Defeat an animal to form its magical card, press `E` to collect it, equip it, then press `Q` to deploy or recall the companion. A deployed companion hunts nearby hostile animals on the current map and keeps attacking until they fall or leave sight, without picking idle extra fights. Extra combat-only animals (scout, roostling, third fox, second stag, fourth lynx) stay in their stretch of the road instead of stacking into every nearby bind, and they do not drop cards. Portals restore health so a new map starts playable. Every unique animal uses that same card + Q pattern.
 
 Named travelers and knights stand on the road and talk if you press `E` — the same talk used by Reed and Kest. First words, a later talk, and talk after you bind that map's animal all change. After-capture lines name each bound creature as a shard of the fading signal. Meet Calen, Sera, or Bram again farther east and they remember the last crossing. This is not a dating sim: there are no bond meters, romance choices, or extra relationship systems.
 

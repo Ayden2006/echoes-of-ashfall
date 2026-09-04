@@ -32,8 +32,8 @@ test("existing unique animals stay on the card + E/Q pattern, with extra on-map 
   assert.match(game, /createBeast\("pale-stag-b"/);
   assert.match(game, /createBeast\("ember-lynx-d"/);
   assert.match(game, /id:"baby-dragon-card"/);
-  assert.match(game, /id:"cinder-fox-card".*image:"\/cinder-fox-card\.svg"/);
-  assert.match(game, /image:"\/sunset-jackal-card\.svg"/);
+  assert.match(game, /id:"cinder-fox-card".*assetUrl\("\/cinder-fox-card\.svg"\)/);
+  assert.match(game, /assetUrl\("\/sunset-jackal-card\.svg"\)/);
   assert.doesNotMatch(game, /sunset-jackal-card-d/);
   assert.match(game, /droppedJackalCard&&!jackalCardsCollected\.has\(droppedJackalCard\.id\)/);
 });

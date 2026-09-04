@@ -23,7 +23,7 @@ test("each Sunset Jackal drops its own card with jackal art", async () => {
   assert.match(game, /sunset-jackal-card-a/);
   assert.match(game, /sunset-jackal-card-b/);
   assert.match(game, /sunset-jackal-card-c/);
-  assert.match(game, /image:"\/sunset-jackal-card\.svg"/);
+  assert.match(game, /assetUrl\("\/sunset-jackal-card\.svg"\)/);
   const jackalCard = game.match(/const SUNSET_JACKAL_CARD:InventoryItem = \{[\s\S]*?\};/);
   assert.ok(jackalCard);
   assert.match(jackalCard[0], /sunset-jackal-card\.svg/);
@@ -38,7 +38,7 @@ test("Map 2 world-pickup jackal card does not use baby-dragon art", async () => 
   assert.match(fn[0], /jackalCardArt/);
   assert.doesNotMatch(fn[0], /dragonImage/);
   assert.doesNotMatch(fn[0], /baby-dragon-sprite-sheet/);
-  assert.match(game, /jackalCardArt\.src="\/sunset-jackal-card\.svg"/);
+  assert.match(game, /jackalCardArt\.src=assetUrl\("\/sunset-jackal-card\.svg"\)/);
   assert.match(game, /GROUND_BEAST_CARD_IDS = new Set\(\[SUNSET_JACKAL_CARD\.id/);
 });
 
