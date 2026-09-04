@@ -562,6 +562,47 @@ test("E-talk radii stay clear of high secrets and each other", () => {
   }
 });
 
+test("each map's againTalk quietly points to a nearby studyable with press E", () => {
+  const againOf = (id, map) => {
+    const block = npcBlock(id, map);
+    return block.slice(block.indexOf("againTalk:["), block.indexOf("afterCaptureTalk:["));
+  };
+  const cues = [
+    ["calen", 1, /rain-cut groove/, /Press E there/],
+    ["orrin", 1, /plaque higher up/, /Press E there/],
+    ["sera", 2, /dusk-shell/, /Press E there/],
+    ["lira", 2, /drowned post/, /Press E there/],
+    ["bram", 3, /cairn/, /Press E on it/],
+    ["isk", 3, /foxfire hollow/, /Press E there/],
+    ["orrin", 4, /cliff notch/, /Press E there/],
+    ["calen", 4, /moonwell/, /Press E there/],
+    ["reed", 5, /quiet kiln/, /Press E there/],
+    ["isk", 5, /banked coal-bed/, /Press E there/],
+    ["vess", 5, /Quiet bellows/, /Press E there/],
+    ["edan", 6, /echo-stone/, /Press E there/],
+    ["kest", 6, /heart altar/, /Press E at the heart altar/],
+  ];
+  for (const [id, map, secret, press] of cues) {
+    const again = againOf(id, map);
+    assert.match(again, secret, `${id}:${map} againTalk should name the nearby studyable`);
+    assert.match(again, press, `${id}:${map} againTalk should say to press E`);
+    const named = [
+      /rain-cut groove/i, /plaque/i, /dusk-shell/i, /drowned post/i,
+      /foxfire hollow/i, /split cairn|the cairn/i, /cliff notch/i, /moonwell/i,
+      /quiet kiln/i, /coal-bed/i, /bellows/i, /echo-stone/i,
+    ].filter((re) => re.test(again));
+    assert.ok(named.length <= 2, `${id}:${map} againTalk should not dump every secret at once`);
+  }
+
+  assert.match(againOf("reed", 5), /Bind a lynx if you still need the heat/);
+  assert.match(againOf("kest", 6), /Bind the wyrm if you still need the pulse/);
+  assert.match(againOf("edan", 6), /Bind the wyrm if you still need the pulse/);
+  assert.doesNotMatch(againOf("calen", 4), /ends the campaign|Bind the (stag|wyrm)|The east gate heals you/);
+  assert.doesNotMatch(againOf("orrin", 4), /ends the campaign|Bind the (stag|wyrm)|The east gate heals you/);
+  assert.doesNotMatch(againOf("isk", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
+  assert.doesNotMatch(againOf("vess", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
+});
+
 test("maps 4–6 reunion againTalk remembers the last crossing without the finish dump", () => {
   const reunions = [
     ["calen", 4, /castle rain/i],
