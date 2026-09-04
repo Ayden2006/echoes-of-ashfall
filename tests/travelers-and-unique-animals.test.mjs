@@ -761,6 +761,43 @@ test("ending-stretch Kest, Edan, and Hale map5 talks keep one last-crossing and 
   }
 });
 
+test("Reed, Kest, and Edan again/afterCapture walk out as people without dating or dump", () => {
+  const againOf = (id, map) => {
+    const block = npcBlock(id, map);
+    return block.slice(block.indexOf("againTalk:["), block.indexOf("afterCaptureTalk:["));
+  };
+  const afterOf = (id, map) => {
+    const block = npcBlock(id, map);
+    return block.slice(block.indexOf("afterCaptureTalk:["), block.indexOf("palette:"));
+  };
+  const talkLinesFrom = (src) => [...src.matchAll(/\{speaker:"([^"]+)",text:"((?:\\.|[^"\\])*)"\}/g)].map((m) => ({
+    speaker: m[1],
+    text: m[2],
+  }));
+  const dating = /bondMeter|dating|affection|romance|love you|stay with me|walk out together/;
+  const campaignDump = /spark, dusk|Castle rain, shore dusk, cairn/;
+  const softlock = /road goes dark|must capture|have to bind|Don't go in cold|Don't go into the heart cold|the echo dies|\bstuck\b/;
+
+  assert.match(againOf("reed", 5), /When the kiln can rest, we walk out as people/);
+  assert.match(afterOf("reed", 5), /When that kiln can rest, we walk out as people/);
+  assert.match(againOf("kest", 6), /After that, we walk out as people/);
+  assert.match(afterOf("kest", 6), /Come on\. We walk out as people/);
+  assert.match(againOf("edan", 6), /When the signal rests, we walk out as people/);
+  assert.match(afterOf("edan", 6), /Then we walk out as people\. The last stone can stay empty/);
+
+  for (const [id, map] of [["reed", 5], ["kest", 6], ["edan", 6]]) {
+    for (const [label, talk] of [["again", againOf(id, map)], ["after", afterOf(id, map)]]) {
+      assert.match(talk, /we walk out as people/i, `${id}:${map} ${label}Talk should walk out as people`);
+      assert.doesNotMatch(talk, dating, `${id}:${map} ${label}Talk should stay off dating/bond`);
+      assert.doesNotMatch(talk, campaignDump, `${id}:${map} ${label}Talk should not dump the whole road`);
+      assert.doesNotMatch(talk, softlock, `${id}:${map} ${label}Talk should not softlock a skipped bind`);
+      const lines = talkLinesFrom(talk);
+      assert.deepEqual(lines.filter((line) => line.text.length > 110), [], `${id}:${map} ${label}Talk lines should stay at or under 110 characters`);
+    }
+    assert.match(npcBlock(id, map), /Moon Night/);
+  }
+});
+
 test("firstTalk openings keep one distinct tell per traveler", () => {
   const openingOf = (id, map) => {
     const block = npcBlock(id, map);
