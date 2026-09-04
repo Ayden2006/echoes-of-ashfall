@@ -937,7 +937,7 @@ const finishInCameraAt=(landmarkX:number,playerX:number,worldW:number,viewW:numb
 const nextUsableLoadout=(equipped:(string|null)[],itemId:string,selected:number)=>{
   const next=equipped.slice() as (string|null)[];
   const already=next.indexOf(itemId);
-  if(already>=0)return {equipped:next,selected,replaced:null as string|null};
+  if(already>=0)return {equipped:next,selected:already,replaced:null as string|null};
   const open=next.indexOf(null);
   if(open>=0){next[open]=itemId;return {equipped:next,selected:open,replaced:null as string|null};}
   const slot=clamp(selected,0,ACTIVE_SLOT_COUNT-1);
@@ -2610,6 +2610,14 @@ export default function AshfallGame() {
       ctx.lineWidth=3;ctx.strokeStyle="rgba(7,3,16,.9)";ctx.strokeText("PRESS E",x,y);
       ctx.fillStyle="#fff6d2";ctx.fillText("PRESS E",x,y);
     };
+    const drawLateStudyableTag=(x:number,y:number,label:string)=>{
+      ctx.save();ctx.globalAlpha=1;
+      ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="bottom";
+      ctx.lineWidth=3;ctx.strokeStyle="rgba(7,3,16,.9)";ctx.strokeText(label,x,y);
+      ctx.fillStyle="#fff6d2";ctx.fillText(label,x,y);
+      drawCardPressE(x,y+3);
+      ctx.restore();
+    };
     const drawMagicalAnimalCard=(name:string,x:number,groundY:number,now:number,formedAt:number,image:HTMLImageElement|null,portrait:{x:number;y:number;w:number;h:number}|null,palette:CardPalette)=>{
       const elapsed=now-formedAt;
       const reveal=clamp(elapsed/620,0,1);
@@ -3052,10 +3060,7 @@ export default function AshfallGame() {
         const sparkY=groundY-40*scale-((now*.04+i*37)%(90*scale));
         ctx.fillStyle="rgba(255,170,90,"+(.2+i*.08)+")";ctx.fillRect(x-6*scale+(i%3)*5*scale,sparkY,2*scale,3*scale);
       }
-      if(labeled){
-        ctx.globalAlpha=.32+pulse*.18;ctx.fillStyle="#ffb060";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";
-        ctx.fillText("KILN",x,groundY-78*scale);
-      }
+      if(labeled)drawLateStudyableTag(x,groundY-78*scale,"KILN");
       ctx.restore();
     };
     const drawQuietKiln=(now:number)=>{
@@ -3093,8 +3098,7 @@ export default function AshfallGame() {
       ctx.fillStyle="rgba(224,120,150,"+(.3+pulse*.28)+")";ctx.beginPath();ctx.ellipse(x,groundY-6,42,8,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle="#341020";ctx.fillRect(x-3,groundY-18,6,22);
       ctx.fillStyle="rgba(255,180,196,"+(.4+pulse*.3)+")";ctx.fillRect(x-2,groundY-16,4,18);
-      ctx.globalAlpha=.32+pulse*.18;ctx.fillStyle="#ffc8a0";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";
-      ctx.fillText("VEIN",x,groundY-36);
+      drawLateStudyableTag(x,groundY-36,"VEIN");
       ctx.restore();
     };
     const drawHeartColumns=(now:number,viewW:number)=>{
@@ -3308,21 +3312,21 @@ export default function AshfallGame() {
             const sparkY=groundY-22-((now*.045+i*29)%48);
             ctx.fillStyle="rgba(255,170,90,"+(.18+i*.08)+")";ctx.fillRect(x-6+(i%3)*5,sparkY,2,3);
           }
-          ctx.globalAlpha=.34+pulse*.16;ctx.fillStyle="#ffb060";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("COAL",x,groundY-36);
+          drawLateStudyableTag(x,groundY-36,"COAL");
         }else if(mark.kind==="bellows"){
           ctx.fillStyle="#2b130d";ctx.fillRect(x-24,groundY-28,48,28);
           ctx.fillStyle="#4b2416";ctx.fillRect(x-28,groundY-34,56,8);
           ctx.fillStyle="rgba(255,130,62,"+(.22+pulse*.18)+")";ctx.beginPath();ctx.ellipse(x,groundY-14,8,10,0,0,Math.PI*2);ctx.fill();
-          ctx.globalAlpha=.34+pulse*.16;ctx.fillStyle="#ffb060";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("BELLOWS",x,groundY-46);
+          drawLateStudyableTag(x,groundY-46,"BELLOWS");
         }else if(mark.kind==="echo"){
           ctx.fillStyle="#2a1420";ctx.beginPath();ctx.moveTo(x-14,groundY);ctx.lineTo(x-8,groundY-46);ctx.lineTo(x+2,groundY-58);ctx.lineTo(x+12,groundY-40);ctx.lineTo(x+16,groundY);ctx.closePath();ctx.fill();
           ctx.fillStyle="rgba(224,120,150,"+(.28+pulse*.22)+")";ctx.fillRect(x-2,groundY-44,4,28);
-          ctx.globalAlpha=.34+pulse*.16;ctx.fillStyle="#ffc8a0";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("ECHO",x,groundY-68);
+          drawLateStudyableTag(x,groundY-68,"ECHO");
         }else if(mark.kind==="step"){
           ctx.fillStyle="#281422";ctx.fillRect(x-26,groundY-10,52,10);
           ctx.fillStyle="#3a2030";ctx.fillRect(x-22,groundY-16,44,6);
           ctx.fillStyle="rgba(224,120,150,"+(.24+pulse*.2)+")";ctx.fillRect(x-12,groundY-14,24,3);
-          ctx.globalAlpha=.34+pulse*.16;ctx.fillStyle="#ffc8a0";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.fillText("STEP",x,groundY-28);
+          drawLateStudyableTag(x,groundY-28,"STEP");
         }else if(mark.kind==="merlon"){
           const glow=ctx.createRadialGradient(x,groundY-24,4,x,groundY-24,70);
           glow.addColorStop(0,"rgba(116,230,226,"+(.16+pulse*.12)+")");glow.addColorStop(1,"rgba(116,230,226,0)");
@@ -3509,6 +3513,16 @@ export default function AshfallGame() {
         if(item?.type==="animal-card"){
           if(ally.active&&ally.itemId===item.id){
             if(ally.recallStarted===0){const direction:1|-1=ally.x>=pl.x?1:-1;ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;companionCastRef.current={started:now,kind:"recall",direction};pl.facing=direction;tone(470,.16,.022);window.setTimeout(()=>tone(280,.22,.024),180);window.setTimeout(()=>tone(135,.34,.022),610);}
+            else{
+              ally.recallStarted=0;
+              const summonX=creatureEdgeAt(map,pl.x+pl.facing*COMPANION_DEPLOY_DISTANCE);
+              const summonFloor=plantedFloorAt(map,summonX);
+              const summonGround=companionSurfaceAt(summonFloor.x,pl.y+PH,map)??surfaceYAt(map,summonFloor.x,pl.y+PH)??summonFloor.groundY;
+              ally.x=creatureEdgeAt(map,summonFloor.x);ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;
+              keepCreatureOnRoad(ally,map);
+              if(ally.y>ally.groundY)ally.y=ally.groundY;
+              const direction:1|-1=summonX>=pl.x?1:-1;companionCastRef.current={started:now,kind:"summon",direction};pl.facing=direction;setDeployedItemId(item.id);tone(330,.18,.024);
+            }
           }else{
             const summonX=creatureEdgeAt(map,pl.x+pl.facing*COMPANION_DEPLOY_DISTANCE);
             const summonFloor=plantedFloorAt(map,summonX);

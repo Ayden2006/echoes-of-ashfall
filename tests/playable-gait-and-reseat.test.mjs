@@ -100,7 +100,7 @@ const keepCreatureOnRoad = (creature, plats, width, map = 0) => {
 const nextUsableLoadout = (equipped, itemId, selected) => {
   const next = equipped.slice();
   const already = next.indexOf(itemId);
-  if (already >= 0) return { equipped: next, selected, replaced: null };
+  if (already >= 0) return { equipped: next, selected: already, replaced: null };
   const open = next.indexOf(null);
   if (open >= 0) {
     next[open] = itemId;

@@ -31,6 +31,7 @@ button { font:inherit; }
 .quick-slot>span { position:absolute; top:2px; left:4px; z-index:2; font-size:7px; font-weight:900; }
 .quick-slot.selected { border-color:#f2d47d; box-shadow:0 0 0 1px rgba(242,212,125,.22),0 0 14px rgba(242,212,125,.18); }
 .quick-slot.deployed { border-color:#8dea4d; box-shadow:0 0 0 1px rgba(141,234,77,.2),0 0 17px rgba(105,231,61,.25); }
+.quick-slot.selected.deployed { border-color:#d8ef7a; box-shadow:0 0 0 1px rgba(242,212,125,.28),0 0 12px rgba(242,212,125,.2),0 0 16px rgba(105,231,61,.22); }
 .quick-card-thumb { display:block; width:20px; height:29px; border:1px solid #72db35; border-radius:2px; background-color:#090d0c; background-repeat:no-repeat; background-size:400% 600%; background-position:0 0; }
 .quick-card-thumb.portrait-art,.inventory-card-thumb.portrait-art { background-size:cover; background-position:50% 42%; }
 .quick-empty { width:13px; height:18px; border:1px dashed rgba(231,238,233,.12); border-radius:2px; }
