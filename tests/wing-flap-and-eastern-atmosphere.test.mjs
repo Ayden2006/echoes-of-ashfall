@@ -43,7 +43,7 @@ test("locks hold after flap and atmosphere polish", () => {
   assert.doesNotMatch(game, /radio encounter|tune the radio/i);
   assert.match(game, /const COMPANION_HUNT_RANGE = 520/);
   assert.match(game, /if\(hunting&&hunted\)\{ally\.targetX=hunted\.x;ally\.attackUntil=now\+1600;\}/);
-  assert.equal((game.match(/firstTalk:\[/g) || []).length, 36);
+  assert.equal((game.match(/firstTalk:\[/g) || []).length, 37);
   assert.match(game, /id:"lira"/);
   assert.match(game, /id:"holt"/);
   assert.match(game, /id:"wren"/);

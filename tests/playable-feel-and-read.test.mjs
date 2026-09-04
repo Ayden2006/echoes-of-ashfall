@@ -142,7 +142,7 @@ test("locks hold: Moon Night, planted helpers, PR #10 numbers, no dating, no map
   assert.doesNotMatch(game, /Moon Knight|bondMeter|dating sim|affectionMeter|romanceChoice|MAP7_/);
   assert.doesNotMatch(game, /radio encounter|tune the radio|drawPixelHouse|drawCastleKeep/i);
   assert.doesNotMatch(game, /map:\s*7|Map 7/);
-  assert.equal((game.match(/firstTalk:\[/g) || []).length, 36);
-  assert.equal((game.match(/againTalk:\[/g) || []).length, 36);
-  assert.equal((game.match(/afterCaptureTalk:\[/g) || []).length, 36);
+  assert.equal((game.match(/firstTalk:\[/g) || []).length, 37);
+  assert.equal((game.match(/againTalk:\[/g) || []).length, 37);
+  assert.equal((game.match(/afterCaptureTalk:\[/g) || []).length, 37);
 });
