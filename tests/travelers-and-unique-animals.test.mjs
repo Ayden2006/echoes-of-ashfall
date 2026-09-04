@@ -653,6 +653,42 @@ test("maps 4–6 reunion againTalk remembers the last crossing without the finis
   }
 });
 
+test("ending-stretch Kest, Edan, and Hale map5 talks keep one last-crossing and a clear altar end", () => {
+  const firstOf = (id, map) => {
+    const block = npcBlock(id, map);
+    return block.slice(block.indexOf("firstTalk:["), block.indexOf("againTalk:["));
+  };
+  const againOf = (id, map) => {
+    const block = npcBlock(id, map);
+    return block.slice(block.indexOf("againTalk:["), block.indexOf("afterCaptureTalk:["));
+  };
+  const campaignDump = /spark, dusk|Castle rain, shore dusk, cairn|named the whole road/;
+  const dating = /bondMeter|dating|affection|romance|love you|stay with me|walk out together/;
+
+  assert.match(firstOf("kest", 6), /Rain, then this heart/);
+  assert.match(firstOf("kest", 6), /Press E at the heart altar\. That ends the campaign/);
+  assert.match(againOf("kest", 6), /Rain to this heart/);
+  assert.match(againOf("kest", 6), /Press E at the heart altar\. That ends the campaign/);
+
+  assert.match(firstOf("edan", 6), /He waited west\. I keep the last stone/);
+  assert.match(firstOf("edan", 6), /Press E at the heart altar\. That ends the campaign/);
+  assert.match(againOf("edan", 6), /last stone/);
+  assert.match(againOf("edan", 6), /Press E at the altar\. The campaign ends when the signal rests/);
+
+  assert.match(firstOf("hale", 5), /Cliff quiet, then this kiln/);
+  assert.match(firstOf("hale", 5), /Press E at the heart altar\. That ends the campaign/);
+  assert.match(againOf("hale", 5), /We meet again\. Cliff quiet, then this kiln/);
+  assert.doesNotMatch(againOf("hale", 5), /ends the campaign|Press E at the (heart )?altar|Bind the (stag|wyrm)|The east gate heals you/);
+
+  for (const [id, map] of [["kest", 6], ["edan", 6], ["hale", 5]]) {
+    assert.doesNotMatch(firstOf(id, map), campaignDump, `${id}:${map} firstTalk should not dump the whole road`);
+    assert.doesNotMatch(againOf(id, map), campaignDump, `${id}:${map} againTalk should not dump the whole road`);
+    assert.doesNotMatch(firstOf(id, map), dating, `${id}:${map} firstTalk should stay off dating/bond`);
+    assert.doesNotMatch(againOf(id, map), dating, `${id}:${map} againTalk should stay off dating/bond`);
+    assert.match(npcBlock(id, map), /Moon Night/);
+  }
+});
+
 test("firstTalk openings keep one distinct tell per traveler", () => {
   const openingOf = (id, map) => {
     const block = npcBlock(id, map);
