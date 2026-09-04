@@ -594,9 +594,11 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
   };
   const cues = [
     ["calen", 1, /rain-cut groove/, /Press E there/],
+    ["wren", 1, /rain-cut groove/, /Press E there/],
     ["orrin", 1, /plaque higher up/, /Press E there/],
     ["sera", 2, /dusk-shell/, /Press E there/],
     ["lira", 2, /drowned post/, /Press E there/],
+    ["perrin", 2, /tide-cut step/, /Press E there if the shore feels thin/],
     ["bram", 3, /cairn/, /Press E there if the stones feel thin/],
     ["vess", 3, /cairn/, /Press E there if the stones feel thin/],
     ["holt", 3, /split cairn/, /Press E there if the stones feel thin/],
@@ -608,14 +610,16 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
     ["vess", 5, /Quiet bellows/, /Press E there/],
     ["hale", 5, /quiet kiln/, /Press E there/],
     ["edan", 6, /echo-stone/, /Press E there/],
+    ["kest", 6, /first-step stone/, /Press E there if the pulse feels thin/],
     ["kest", 6, /heart altar/, /Press E at the heart altar/],
+    ["edan", 6, /cooled vein/, /Press E at the cooled vein/],
   ];
   for (const [id, map, secret, press] of cues) {
     const again = againOf(id, map);
     assert.match(again, secret, `${id}:${map} againTalk should name the nearby studyable`);
     assert.match(again, press, `${id}:${map} againTalk should say to press E`);
     const named = [
-      /rain-cut groove/i, /plaque/i, /dusk-shell/i, /drowned post/i,
+      /rain-cut groove/i, /plaque/i, /dusk-shell/i, /drowned post/i, /tide-cut step/i,
       /foxfire hollow/i, /split cairn|the cairn/i, /cliff notch/i, /moonwell/i,
       /quiet kiln/i, /coal-bed/i, /bellows/i, /echo-stone/i, /cooled vein/i, /first-step stone/i,
     ].filter((re) => re.test(again));
@@ -630,9 +634,11 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
   assert.match(againOf("edan", 6), /Press E at the cooled vein/);
   assert.match(againOf("hale", 5), /The quiet kiln still sits west\. Press E there if the coals feel thin/);
   assert.match(againOf("calen", 1), /Press E there if the road feels thin/);
+  assert.match(againOf("wren", 1), /Press E there if the signal feels thin/);
   assert.match(againOf("orrin", 1), /Press E there if the rain feels thin/);
   assert.match(againOf("sera", 2), /Press E there if the gold feels thin/);
   assert.match(againOf("lira", 2), /Press E there if the light feels thin/);
+  assert.match(againOf("perrin", 2), /Press E there if the shore feels thin/);
   assert.match(againOf("isk", 3), /Press E there if the ash feels thin/);
   assert.match(againOf("orrin", 4), /Press E there if the wind feels thin/);
   assert.doesNotMatch(againOf("bram", 3), /Press E on it/);
@@ -641,6 +647,49 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
   assert.doesNotMatch(againOf("isk", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
   assert.doesNotMatch(againOf("vess", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
   assert.doesNotMatch(againOf("hale", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
+});
+
+test("full-road studyable-pointing againTalk on maps 1–6 still says Press E", () => {
+  const againOf = (id, map) => {
+    const block = npcBlock(id, map);
+    return block.slice(block.indexOf("againTalk:["), block.indexOf("afterCaptureTalk:["));
+  };
+  const pointers = [
+    [/rain-cut groove/i, "groove"],
+    [/plaque/i, "plaque"],
+    [/dusk-shell/i, "shell"],
+    [/drowned post/i, "post"],
+    [/\bsplit cairn\b|\bthe cairn\b/i, "cairn"],
+    [/foxfire hollow/i, "foxfire"],
+    [/cliff notch/i, "notch"],
+    [/moonwell/i, "moonwell"],
+    [/quiet kiln/i, "kiln"],
+    [/banked coal-bed|coal-bed/i, "coal"],
+    [/bellows/i, "bellows"],
+    [/tide-cut step|first-step stone/i, "step"],
+    [/cooled vein/i, "vein"],
+    [/echo-stone/i, "echo"],
+    [/heart altar|\bthe altar\b/i, "altar"],
+  ];
+  const npcStart = game.indexOf("const NPCS:Npc[] = [");
+  const npcEnd = game.indexOf("];\nconst talkTargetAt=");
+  assert.ok(npcStart >= 0 && npcEnd > npcStart, "NPC talk table should stay in game.tsx");
+  const hits = [...game.slice(npcStart, npcEnd).matchAll(/\{id:"([^"]+)",name:"[^"]+",map:(\d+),/g)];
+  assert.equal(hits.length, 37, "should still have 37 traveler talk tables");
+  const found = new Set();
+  const misses = [];
+  for (const [, id, mapStr] of hits) {
+    const map = Number(mapStr);
+    assert.ok(map >= 1 && map <= 6, `${id}:${map} should stay on maps 1–6`);
+    const again = againOf(id, map);
+    const pointed = pointers.filter(([re]) => re.test(again));
+    if (!pointed.length) continue;
+    if (!/[Pp]ress E/.test(again)) misses.push(`${id}:${map}`);
+    for (const [, name] of pointed) found.add(name);
+  }
+  assert.deepEqual(misses, [], "every studyable-pointing againTalk should say Press E");
+  const needed = ["groove", "plaque", "shell", "post", "cairn", "foxfire", "notch", "moonwell", "kiln", "coal", "bellows", "step", "vein", "echo", "altar"];
+  assert.deepEqual(needed.filter((name) => !found.has(name)), [], "maps 1–6 againTalk should still cover every studyable pointer");
 });
 
 test("maps 4–6 reunion againTalk remembers the last crossing without the finish dump", () => {

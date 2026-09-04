@@ -594,7 +594,7 @@ const NPCS:Npc[] = [
       {speaker:"Perrin",text:"It does. Lira counts mid-beach. I watch the gate. The animals are the echo."},
       {speaker:"Perrin",text:"Bind one dusk shard, then go east. The east portal heals you. Leave the rest. The hollow is through that gate."}
     ],
-    againTalk:[{speaker:"Perrin",text:"Still on the late sand, Moon Night. Bind a dusk shard if you haven't, then go east. The east portal heals you."},{speaker:"Perrin",text:"A tide-cut step sits farther east if you need the shore to slow down."}],
+    againTalk:[{speaker:"Perrin",text:"Still on the late sand, Moon Night. Bind a dusk shard if you haven't, then go east. The east portal heals you."},{speaker:"Perrin",text:"A tide-cut step sits farther east. Press E there if the shore feels thin."}],
     afterCaptureTalk:[
       {speaker:"Perrin",text:"You took the dusk shard. The late sand can go dark without taking you."},
       {speaker:"Perrin",text:"The east portal heals you. The hollow is through that gate."},
