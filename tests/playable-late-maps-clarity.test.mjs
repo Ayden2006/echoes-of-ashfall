@@ -61,6 +61,7 @@ const hasMidStone = (plats, secret, side) => {
 
 test("new mid-height stones keep named secrets and portal perches on a single-jump chain", () => {
   const added = [
+    { name: "plaque-west-approach", plat: "{x:2320,y:508,w:140,h:18}" },
     { name: "plaque-east", plat: "{x:2780,y:468,w:150,h:18}" },
     { name: "merlon-east", plat: "{x:6680,y:500,w:150,h:18}" },
     { name: "shell-east", plat: "{x:1680,y:498,w:150,h:18}" },
@@ -68,6 +69,7 @@ test("new mid-height stones keep named secrets and portal perches on a single-ju
     { name: "nest-east", plat: "{x:4640,y:500,w:140,h:18}" },
     { name: "lichen-east", plat: "{x:2720,y:508,w:140,h:18}" },
     { name: "map4-east-perch", plat: "{x:5200,y:500,w:140,h:18}" },
+    { name: "map4-east-perch-east", plat: "{x:5460,y:500,w:140,h:18}" },
     { name: "coal-east", plat: "{x:1620,y:508,w:140,h:18}" },
     { name: "map5-east-gate", plat: "{x:5920,y:488,w:140,h:18}" },
     { name: "echo-east", plat: "{x:6080,y:490,w:150,h:18}" },
@@ -100,7 +102,7 @@ test("new mid-height stones keep named secrets and portal perches on a single-ju
     { map: 3, x: 1510, y: 418, w: 200, needEast: true },
     { map: 3, x: 4500, y: 430, w: 160, needEast: true },
     { map: 4, x: 2580, y: 440, w: 170, needEast: true },
-    { map: 4, x: 5320, y: 430, w: 160, needEast: false },
+    { map: 4, x: 5320, y: 430, w: 160, needEast: true },
     { map: 5, x: 1480, y: 440, w: 170, needEast: true },
     { map: 5, x: 5780, y: 422, w: 160, needEast: true },
     { map: 6, x: 5920, y: 430, w: 180, needEast: true },

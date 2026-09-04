@@ -75,6 +75,8 @@ test("portal X and both-direction spawns stay on solid walkable ground", () => {
 test("key high-secret ledges stay present and reachable from a stepping stone", () => {
   const secrets = [
     { name: "plaque", plat: "{x:2588,y:382,w:210,h:18}", stone: "{x:2448,y:428,w:150,h:18}" },
+    { name: "plaque-approach", plat: "{x:2320,y:508,w:140,h:18}", stone: "{x:2320,y:508,w:140,h:18}" },
+    { name: "map4-east", plat: "{x:5320,y:430,w:160,h:18}", stone: "{x:5460,y:500,w:140,h:18}" },
     { name: "merlon", plat: "{x:6520,y:430,w:170,h:18}", stone: "{x:6380,y:500,w:150,h:18}" },
     { name: "shell", plat: "{x:1515,y:430,w:155,h:18}", stone: "{x:1418,y:498,w:160,h:18}" },
     { name: "tide", plat: "{x:5180,y:432,w:160,h:18}", stone: "{x:5080,y:500,w:140,h:18}" },

@@ -876,7 +876,7 @@ const map1Platforms: Platform[] = [
   {x:3648,y:535,w:534,h:235},{x:4158,y:575,w:1042,h:195},
   {x:5100,y:560,w:720,h:210},{x:5740,y:590,w:680,h:180},{x:6340,y:545,w:860,h:225},
   {x:1020,y:475,w:170,h:18},{x:1600,y:490,w:150,h:18},{x:1740,y:430,w:140,h:18},
-  {x:2260,y:470,w:160,h:18},{x:2448,y:428,w:150,h:18},
+  {x:2260,y:470,w:160,h:18},{x:2320,y:508,w:140,h:18},{x:2448,y:428,w:150,h:18},
   {x:2588,y:382,w:210,h:18},{x:2780,y:468,w:150,h:18},{x:3320,y:455,w:180,h:18},{x:3780,y:430,w:170,h:18},
   {x:5280,y:470,w:170,h:18},{x:5860,y:455,w:160,h:18},
   {x:6380,y:500,w:150,h:18},{x:6520,y:430,w:170,h:18},{x:6680,y:500,w:150,h:18}
@@ -907,7 +907,7 @@ const map4Platforms: Platform[] = [
   {x:720,y:455,w:160,h:18},{x:1080,y:500,w:140,h:18},{x:1220,y:435,w:160,h:18},
   {x:1760,y:430,w:180,h:18},{x:2460,y:508,w:140,h:18},{x:2580,y:440,w:170,h:18},{x:2720,y:508,w:140,h:18},
   {x:2860,y:420,w:190,h:18},{x:3480,y:400,w:170,h:18},{x:3720,y:480,w:150,h:18},{x:3880,y:418,w:160,h:18},
-  {x:4680,y:450,w:170,h:18},{x:5200,y:500,w:140,h:18},{x:5320,y:430,w:160,h:18}
+  {x:4680,y:450,w:170,h:18},{x:5200,y:500,w:140,h:18},{x:5320,y:430,w:160,h:18},{x:5460,y:500,w:140,h:18}
 ];
 const map5Platforms: Platform[] = [
   {x:0,y:590,w:1280,h:180},{x:1180,y:570,w:820,h:200},{x:1900,y:590,w:780,h:180},
@@ -980,6 +980,8 @@ const locoCadence = (mode:DragonMode, walk=180, run=110)=>mode==="run"?run:walk;
 const locoPoseMode = (animal:{mode:DragonMode;prevMode:DragonMode;modeBlendAt:number}, now:number):DragonMode => {
   const blend=gaitBlendAmt(animal.modeBlendAt,now);
   if(animal.mode==="sleep"||animal.prevMode==="sleep") return animal.mode;
+  if(blend<0.58&&animal.prevMode==="fly"&&(animal.mode==="idle"||animal.mode==="walk"||animal.mode==="run")) return animal.prevMode;
+  if(blend<0.5&&(animal.prevMode==="walk"||animal.prevMode==="idle"||animal.prevMode==="run")&&animal.mode==="fly") return animal.prevMode;
   if(blend<0.5&&(animal.prevMode==="fly"||animal.prevMode==="run")&&(animal.mode==="idle"||animal.mode==="walk")) return animal.prevMode;
   if(blend<0.42&&(animal.prevMode==="walk"||animal.prevMode==="run"||animal.prevMode==="attack")&&(animal.mode==="walk"||animal.mode==="run"||animal.mode==="attack"||animal.mode==="idle")) return animal.prevMode;
   return animal.mode;
@@ -2163,10 +2165,11 @@ export default function AshfallGame() {
       if(hunting&&hunted){ally.targetX=hunted.x;ally.attackUntil=now+1600;}
       const followX=creatureEdgeAt(map,pl.x-pl.facing*104);
       const playerGround=pl.y+PH;
-      const stayForHunt=hunted&&Math.abs(pl.x-hunted.x)<COMPANION_HUNT_RANGE+140;
+      const stayForHunt=hunted&&Math.abs(pl.x-hunted.x)<COMPANION_HUNT_RANGE+140&&Math.abs(ally.x-hunted.x)<COMPANION_TELEPORT_DISTANCE;
       if(Math.abs(pl.x-ally.x)>COMPANION_TELEPORT_DISTANCE&&!stayForHunt){
         const arrivalGround=companionSurfaceAt(followX,playerGround,map)??surfaceYAt(map,followX,590)??playerGround;
         ally.x=followX;ally.groundY=arrivalGround;ally.y=groundAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.attackUntil=0;ally.teleportAt=now;ally.facing=pl.facing;setCompanionMode(groundAlly?"run":"fly",now);
+        keepCreatureOnRoad(ally,map);
       }
       const targetX=hunting?hunted!.x:followX;
       const holdX=hunting?targetX-(targetX>=ally.x?1:-1)*96:targetX;
@@ -2223,7 +2226,8 @@ export default function AshfallGame() {
         const hop=groundAlly&&distance>190?Math.abs(Math.sin(ally.gait*.008))*38:0;
         const hopPrev=groundAlly&&(ally.prevMode==="run"||ally.mode==="run")&&distance>80?Math.abs(Math.sin(ally.gait*.008))*38:0;
         const hopBlend=hopPrev+(hop-hopPrev)*easeInOut(clamp((now-ally.modeBlendAt)/MODE_BLEND_MS,0,1));
-        const targetY=followMode==="fly"?Math.min(playerGround-68,ally.groundY-76):ally.groundY-hopBlend;
+        const huntSeat=hunting&&hunted&&"groundY" in hunted?(hunted as {groundY:number}).groundY:playerGround;
+        const targetY=followMode==="fly"?Math.min(huntSeat-68,ally.groundY-76):ally.groundY-hopBlend;
         ally.y+=(targetY-ally.y)*(1-Math.exp(-(followMode==="fly"?5:12)*dt));
       }else{
         setCompanionMode("idle",now);ally.vx+=(0-ally.vx)*(1-Math.exp(-9*dt));ally.x+=ally.vx*dt;
@@ -2881,11 +2885,20 @@ export default function AshfallGame() {
           const wake=easeInOut(clamp((now-roost.modeBlendAt)/WAKE_BLEND_MS,0,1));
           if(wake<0.3)index=3;else if(wake<0.58)index=2;else if(wake<0.82)index=1;
         }
-        const frame=frames[index];
+        const poseMode=locoPoseMode(roost,now);
+        const poseFrames=DRAGON_FRAMES[poseMode==="fly"?"fly":poseMode==="attack"?"attack":poseMode==="sleep"?"sleep":poseMode==="run"||poseMode==="walk"?"run":"idle"];
+        if(poseMode!==roost.mode&&poseMode==="fly")index=flapFrame(roost.gait||elapsed,poseFrames.length);
+        else if(poseMode!==roost.mode&&(poseMode==="walk"||poseMode==="run"))index=Math.min(poseFrames.length-1,Math.floor(loco/(poseMode==="run"?95:220))%poseFrames.length);
+        const frame=poseFrames[Math.min(index,poseFrames.length-1)]??frames[index];
         const hurtActive=roost.hurtUntil>now,hurtProgress=hurtActive?clamp((now-roost.hurtStarted)/480,0,1):1;
         const recoilX=hurtActive?Math.sin(hurtProgress*Math.PI)*10*roost.hitDirection:0;
         ctx.save();ctx.fillStyle="rgba(1,4,5,.5)";ctx.beginPath();ctx.ellipse(roost.x,roost.groundY+3,26,5.5,0,0,Math.PI*2);ctx.fill();ctx.restore();
-        ctx.save();ctx.translate(roost.x+recoilX,roost.y);ctx.scale(roost.facing,1);ctx.imageSmoothingEnabled=true;
+        ctx.save();ctx.translate(roost.x+recoilX,roost.y);
+        if(roost.mode==="fly"||poseMode==="fly"){
+          const beat=flapPhase(roost.gait||elapsed);
+          ctx.rotate((beat.tilt)*roost.facing*(poseMode==="fly"&&roost.mode!=="fly"?1-gaitBlendAmt(roost.modeBlendAt,now):1));
+        }
+        ctx.scale(roost.facing,1);ctx.imageSmoothingEnabled=true;
         ctx.globalAlpha=hurtActive&&pixelHurtFlash(now)?.4:1;
         ctx.shadowColor=hurtActive?"rgba(255,245,151,.9)":roost.angry?"rgba(255,92,58,.5)":"rgba(81,188,41,.22)";ctx.shadowBlur=hurtActive?18:roost.angry?11:6;
         ctx.drawImage(dragonImage,frame.x,frame.y,frame.w,frame.h,-frame.anchorX*spriteScale,-frame.anchorY*spriteScale,frame.w*spriteScale,frame.h*spriteScale);
