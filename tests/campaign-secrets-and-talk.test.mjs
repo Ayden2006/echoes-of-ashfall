@@ -42,6 +42,20 @@ test("later-map traveler talk is keyed per map so first/again/afterCapture all p
   assert.match(game, /Bind it, then go east\. The east portal heals you/);
 });
 
+test("NPC E-talk speaker lines stay short enough to read on the canvas", () => {
+  const npcStart = game.indexOf("const NPCS:Npc[] = [");
+  const npcEnd = game.indexOf("];\nconst talkTargetAt=");
+  assert.ok(npcStart >= 0 && npcEnd > npcStart, "NPC talk table should stay in game.tsx");
+  const block = game.slice(npcStart, npcEnd);
+  const lines = [...block.matchAll(/\{speaker:"([^"]+)",text:"((?:\\.|[^"\\])*)"\}/g)].map((m) => ({
+    speaker: m[1],
+    text: m[2].replace(/\\"/g, '"'),
+  }));
+  assert.ok(lines.length >= 300, "NPC talk should still have a full road of speaker lines");
+  const overlong = lines.filter((line) => line.text.length > 110);
+  assert.deepEqual(overlong, [], "each speaker line should stay at or under 110 characters");
+});
+
 test("existing unique animals stay on the card + E/Q pattern, with extra on-map fights", () => {
   assert.match(game, /createJackal\("sunset-jackal-a"/);
   assert.match(game, /createJackal\("sunset-jackal-b"/);
