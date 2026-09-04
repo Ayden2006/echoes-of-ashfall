@@ -45,6 +45,8 @@ const CAM_EDGE_PAD = 180;
 const CARD_FLOOR_INSET = 22;
 const CARD_WALL_CLEAR = 28;
 const SCENERY_PROP_XS = [380,760,1110,1490,1810,2190,2570,2940,3310,3710,4100,4510,4780,4980,5150,5420,5580,5860,6040,6280,6460,6640,6820,6980] as const;
+const MAP5_EAST_SCENERY_XS = [5720,5935] as const;
+const MAP6_EAST_SCENERY_XS = [6220,6395] as const;
 const MAP4_MOONWELL_X = 2360;
 const MAP1_PLAQUE_X = 2680;
 const MAP2_SHELL_X = 1515;
@@ -885,6 +887,19 @@ const map6Platforms: Platform[] = [
   {x:6160,y:490,w:150,h:18},{x:6300,y:430,w:160,h:18}
 ];
 const clamp = (n:number,a:number,b:number) => Math.max(a,Math.min(b,n));
+const cameraXFor=(playerX:number,worldW:number,viewW:number)=>clamp(playerX-viewW*.38,-CAM_EDGE_PAD,Math.max(0,worldW-viewW)+CAM_EDGE_PAD);
+const finishInCameraAt=(landmarkX:number,playerX:number,worldW:number,viewW:number,inset=36)=>{const cam=cameraXFor(playerX,worldW,viewW);return landmarkX>=cam+inset&&landmarkX<=cam+viewW-inset;};
+const nextUsableLoadout=(equipped:(string|null)[],itemId:string,selected:number)=>{
+  const next=equipped.slice() as (string|null)[];
+  const already=next.indexOf(itemId);
+  if(already>=0)return {equipped:next,selected,replaced:null as string|null};
+  const open=next.indexOf(null);
+  if(open>=0){next[open]=itemId;return {equipped:next,selected:open,replaced:null as string|null};}
+  const slot=clamp(selected,0,ACTIVE_SLOT_COUNT-1);
+  const replaced=next[slot];
+  next[slot]=itemId;
+  return {equipped:next,selected:slot,replaced};
+};
 const easeInOut = (t:number) => t*t*(3-2*t);
 const MODE_BLEND_MS = 260;
 const DRAGON_FLAP_MS = 320;
@@ -1079,18 +1094,21 @@ export default function AshfallGame() {
   const toggleEquippedItem = useCallback((itemId:string)=>{
     const current=equippedRef.current;
     const equippedIndex=current.indexOf(itemId);
-    const next=[...current];
     if(equippedIndex>=0){
+      const next=[...current];
       next[equippedIndex]=null;
       const ally=companionRef.current;
       if(ally.active&&ally.itemId===itemId&&ally.recallStarted===0){const now=performance.now(),direction:1|-1=ally.x>=player.current.x?1:-1;ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;companionCastRef.current={started:now,kind:"recall",direction};player.current.facing=direction;}
+      equippedRef.current=next;setEquipped(next);
+      return;
     }
-    else{
-      const openIndex=next.indexOf(null);
-      if(openIndex<0)return;
-      next[openIndex]=itemId;
+    const loadout=nextUsableLoadout(current,itemId,selectedSlotRef.current);
+    if(loadout.replaced){
+      const ally=companionRef.current;
+      if(ally.active&&ally.itemId===loadout.replaced&&ally.recallStarted===0){const now=performance.now(),direction:1|-1=ally.x>=player.current.x?1:-1;ally.recallStarted=now;ally.attackUntil=0;ally.vx=0;companionCastRef.current={started:now,kind:"recall",direction};player.current.facing=direction;}
     }
-    equippedRef.current=next;setEquipped(next);
+    equippedRef.current=loadout.equipped;setEquipped(loadout.equipped);
+    selectedSlotRef.current=loadout.selected;setSelectedSlot(loadout.selected);
   },[]);
 
   const tone = useCallback((freq:number,duration=.12,volume=.024) => {
@@ -1217,9 +1235,13 @@ export default function AshfallGame() {
       if (["arrowleft","arrowright","arrowup","arrowdown"," ","tab"].includes(k)) e.preventDefault();
       if(k==="tab"&&!e.repeat){toggleInventory();return;}
       if(k==="m"&&!e.repeat){toggleWorldMap();return;}
-      if(inventoryOpenRef.current||worldMapOpenRef.current){keys.current[k]=false;return;}
       if(startedRef.current&&/^[1-5]$/.test(k)&&!e.repeat){selectUsableSlot(Number(k)-1);return;}
-      if(startedRef.current&&k==="q"&&!e.repeat){deployQueued.current=true;return;}
+      if(startedRef.current&&k==="q"&&!e.repeat){
+        if(inventoryOpenRef.current){inventoryOpenRef.current=false;setInventoryOpen(false);}
+        if(!worldMapOpenRef.current)deployQueued.current=true;
+        return;
+      }
+      if(inventoryOpenRef.current||worldMapOpenRef.current){keys.current[k]=false;return;}
       if (!startedRef.current && (k==="enter"||k===" ")) startGame();
       else if (dialogueRef.current && (k==="enter"||k===" "||k==="e")&&!e.repeat) advanceDialogue();
       else {
@@ -2834,7 +2856,7 @@ export default function AshfallGame() {
         ctx.fillStyle=healthGradient;ctx.fillRect(barX,barY,barW*healthRatio,barH);
         ctx.strokeStyle="rgba(255,210,140,.7)";ctx.lineWidth=1;ctx.strokeRect(barX-.5,barY-.5,barW+1,barH+1);
         if(hurtActive)drawHurtNumber(beast.x+recoilX,barY-16-hurtProgress*18,beast.lastDamage,hurtProgress,"#ffe7a8");
-        drawHuntMark(beast.x+recoilX,barY-26,now,currentHuntTarget()===beast);
+        drawHuntMark(beast.x+recoilX,barY-26,now,currentHuntTarget()===beast); // fox/stag/lynx keep HUNT + stroked hurt
         ctx.restore();
       }
     };
@@ -3050,6 +3072,25 @@ export default function AshfallGame() {
         else if(map===5){ctx.fillStyle="#2b130d";ctx.fillRect(-29,-52,58,52);ctx.fillStyle="#4b2416";ctx.fillRect(-34,-60,68,12);ctx.fillStyle="rgba(255,130,62,"+(.25+Math.max(0,Math.sin(now*.003+i))*.2)+")";ctx.beginPath();ctx.ellipse(0,-25,10,15,0,0,Math.PI*2);ctx.fill();}
         else{ctx.strokeStyle="#321426";ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(-30,0);ctx.quadraticCurveTo(-5,-75,0,-92);ctx.quadraticCurveTo(9,-62,32,0);ctx.stroke();ctx.strokeStyle="rgba(224,110,150,.28)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-26,-2);ctx.quadraticCurveTo(-3,-68,0,-85);ctx.stroke();}
         ctx.restore();
+      }
+      const eastProps=map===5?MAP5_EAST_SCENERY_XS:map===6?MAP6_EAST_SCENERY_XS:null;
+      if(eastProps){
+        for(let i=0;i<eastProps.length;i++){
+          const x=eastProps[i];
+          if(x<cameraX-120||x>cameraX+viewW+120)continue;
+          const ground=surfaceYAt(map,x,590);if(ground===null)continue;
+          ctx.save();ctx.translate(x,ground);
+          if(map===5){
+            ctx.fillStyle="#2b130d";ctx.fillRect(-18,-40,36,40);
+            ctx.fillStyle="#4b2416";ctx.fillRect(-22,-46,44,10);
+            ctx.fillStyle="rgba(255,130,62,"+(.22+Math.max(0,Math.sin(now*.003+x))*.18)+")";
+            ctx.beginPath();ctx.ellipse(0,-18,8,12,0,0,Math.PI*2);ctx.fill();
+          }else{
+            ctx.fillStyle="#2a1420";ctx.beginPath();ctx.moveTo(-16,0);ctx.lineTo(-8,-36);ctx.lineTo(2,-48);ctx.lineTo(14,-28);ctx.lineTo(16,0);ctx.closePath();ctx.fill();
+            ctx.fillStyle="rgba(224,120,150,"+(.22+Math.max(0,Math.sin(now*.0028+x))*.16)+")";ctx.fillRect(-2,-32,4,22);
+          }
+          ctx.restore();
+        }
       }
     };
     const drawPortal=(x:number,groundY:number,now:number,map:MapId,colorOverride?:string,label?:string)=>{
@@ -3382,7 +3423,7 @@ export default function AshfallGame() {
         pickupQueued.current=false;
       }
       const viewW=w/scale;
-      const cameraTarget=clamp(pl.x-viewW*.38,-CAM_EDGE_PAD,Math.max(0,activeWorldW-viewW)+CAM_EDGE_PAD);
+      const cameraTarget=cameraXFor(pl.x,activeWorldW,viewW);
       if(cameraReset.current){cameraX=cameraTarget;cameraReset.current=false;}else cameraX+=(cameraTarget-cameraX)*Math.min(1,dt*3.8);
       cameraXRef.current=cameraX;renderScaleRef.current=scale;
       if(pointerAim.current.active){
@@ -3502,7 +3543,7 @@ export default function AshfallGame() {
             </button>;
           })}
         </div>
-        <p className="inventory-help">Press <b>1–5</b> to select a usable slot, then <b>Q</b> to deploy or recall it. Defeated animals become cards; press <b>E</b> nearby to collect them.</p>
+        <p className="inventory-help">Press <b>1–5</b> to select a usable slot, then <b>Q</b> to deploy or recall it. A late bind swaps onto the selected slot if all five are full. Defeated animals become cards; press <b>E</b> nearby to collect them.</p>
       </div>
     </section>}
     {dialogue&&<div className="dialogue-wrap"><div className="dialogue-box" onClick={advanceDialogue}><p className="speaker">{dialogue[dialogueIndex]?.speaker}</p><p className="dialogue-text">{dialogue[dialogueIndex]?.text}</p><p className="continue-hint">Click or press E to continue</p></div></div>}
