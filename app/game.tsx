@@ -239,9 +239,9 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Reed",text:"Still walking, Moon Night. The quiet kiln is east. Press E there if the coals feel thin."},{speaker:"Reed",text:"Bind a lynx if you still need the heat. The east gate heals you."},{speaker:"Reed",text:"Press E at the heart altar. That ends the campaign."}],
     afterCaptureTalk:[
       {speaker:"Reed",text:"That lynx was the last heat the echo could keep without going out."},
-      {speaker:"Reed",text:"You are not keeping a pet. You are carrying kiln heat so the heart stays warm."},
+      {speaker:"Reed",text:"You are carrying kiln heat. The heart can take that warmth."},
       {speaker:"Reed",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
-      {speaker:"Reed",text:"If you reach the wyrm, tell Kest I didn't quit the fire."},
+      {speaker:"Reed",text:"If you reach the wyrm, tell Kest I didn't quit the kiln."},
       {speaker:"Moon Night",text:"I will."}
     ],
     palette:{skin:"#d9a878",cloak:"#5a2c1e",trim:"#e07030",accent:"#ffb060"}
@@ -256,7 +256,7 @@ const NPCS:Npc[] = [
     ],
     againTalk:[{speaker:"Kest",text:"Still here, Moon Night. Rain to this heart. The wyrm hunts farther in."},{speaker:"Kest",text:"Bind the wyrm if you still need the pulse. The gate behind you still heals."},{speaker:"Kest",text:"Press E at the heart altar. That ends the campaign."}],
     afterCaptureTalk:[
-      {speaker:"Kest",text:"The wyrm is the last pulse. Rest it at the altar and the whole road can go quiet."},
+      {speaker:"Kest",text:"The wyrm is the last pulse. Rest it at the altar so Reed's kiln can rest."},
       {speaker:"Kest",text:"The cards you carry are the echo's memory. Lay them down as a road, not a cage."},
       {speaker:"Kest",text:"You named the whole road in shards. The pulse is the last name."},
       {speaker:"Kest",text:"Walk east. The gate behind you still heals. Press E at the heart altar. That ends the campaign."},
@@ -815,9 +815,9 @@ const NPCS:Npc[] = [
     ],
     againTalk:[{speaker:"Hale",text:"We meet again. Cliff quiet, then this kiln."},{speaker:"Hale",text:"The kiln can forget the cliff, Moon Night. I still keep this stretch."}],
     afterCaptureTalk:[
-      {speaker:"Hale",text:"You bound the coal shard. That's why this kiln heat can hold."},
+      {speaker:"Hale",text:"You bound the coal shard. That's kiln heat the heart can take."},
       {speaker:"Hale",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
-      {speaker:"Hale",text:"The wind can forget the cliff now. The heat remembers."}
+      {speaker:"Hale",text:"The wind can forget the cliff now. The kiln heat remembers."}
     ],
     palette:{skin:"#d2a890",cloak:"#3a2432",trim:"#c87888",accent:"#f0c8d0"}
   }

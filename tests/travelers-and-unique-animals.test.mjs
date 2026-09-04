@@ -541,6 +541,10 @@ test("E-talk radii stay clear of high secrets and each other", () => {
     { map: 3, id: "cairn", x: 2140, r: 130 },
     { map: 4, id: "notch", x: 980, r: 130 },
     { map: 4, id: "moonwell", x: 2360, r: 140 },
+    { map: 5, id: "kiln", x: 2080, r: 140 },
+    { map: 5, id: "bellows", x: 2680, r: 130 },
+    { map: 6, id: "vein", x: 5620, r: 140 },
+    { map: 6, id: "step", x: 1980, r: 130 },
   ];
   for (const npc of npcs) {
     for (const secret of floorSecrets.filter((mark) => mark.map === npc.map)) {
@@ -826,5 +830,51 @@ test("afterCaptureTalk gives each map bind a distinct echo-shard flavor", () => 
         assert.doesNotMatch(after, endingDump, `${id}:${map} afterCapture should not dump the heart-altar ending`);
       }
     }
+  }
+});
+
+test("Reed, Kest, and Hale afterCapture keep kiln heat and heart pulse on one road", () => {
+  const afterOf = (id, map) => {
+    const block = npcBlock(id, map);
+    return block.slice(block.indexOf("afterCaptureTalk:["), block.indexOf("palette:"));
+  };
+  const talkLinesFrom = (src) => [...src.matchAll(/\{speaker:"([^"]+)",text:"((?:\\.|[^"\\])*)"\}/g)].map((m) => ({
+    speaker: m[1],
+    text: m[2],
+  }));
+
+  const reed = afterOf("reed", 5);
+  const kest = afterOf("kest", 6);
+  const haleKiln = afterOf("hale", 5);
+  const haleCliff = afterOf("hale", 4);
+
+  assert.match(reed, /That lynx was the last heat the echo could keep without going out/);
+  assert.match(reed, /You are carrying kiln heat\. The heart can take that warmth/);
+  assert.match(reed, /tell Kest I didn't quit the kiln/);
+  assert.match(reed, /The east gate heals you\. Talk to Kest/);
+  assert.doesNotMatch(reed, /pet|quit the fire|last pulse/);
+
+  assert.match(kest, /The wyrm is the last pulse\. Rest it at the altar so Reed's kiln can rest/);
+  assert.match(kest, /You named the whole road in shards\. The pulse is the last name/);
+  assert.match(kest, /The road remembers us now, Moon Night/);
+  assert.match(kest, /Then we walk it together/);
+  assert.doesNotMatch(kest, /coal shard|kiln heat so the heart stays warm/);
+
+  assert.match(haleKiln, /You bound the coal shard\. That's kiln heat the heart can take/);
+  assert.match(haleKiln, /The wind can forget the cliff now\. The kiln heat remembers/);
+  assert.match(haleKiln, /The east gate heals you\. Talk to Kest\. Press E at the heart altar/);
+  assert.doesNotMatch(haleKiln, /last pulse|quit the fire/);
+
+  assert.match(haleCliff, /You bound the pool shard/);
+  assert.match(haleCliff, /Reed's kiln is through it/);
+  assert.doesNotMatch(haleCliff, /ends the campaign|Press E at the \(heart \)?altar|last pulse|coal shard/);
+
+  for (const [id, map, block] of [["reed", 5, reed], ["kest", 6, kest], ["hale", 5, haleKiln], ["hale", 4, haleCliff]]) {
+    const lines = talkLinesFrom(block);
+    assert.ok(lines.length >= 3, `${id}:${map} afterCapture should still have a short road`);
+    const overlong = lines.filter((line) => line.text.length > 110);
+    assert.deepEqual(overlong, [], `${id}:${map} afterCapture lines should stay at or under 110 characters`);
+    assert.ok(lines.every((line) => line.speaker === "Moon Night" || line.speaker === id[0].toUpperCase() + id.slice(1)));
+    assert.doesNotMatch(block, /bondMeter|dating|affection|romance|love you|stay with me|walk out together/);
   }
 });
