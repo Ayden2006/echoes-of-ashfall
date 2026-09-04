@@ -129,7 +129,8 @@ test("card floors plant onto solid ground and stay inside the map for E pickup",
   const perchPlant = plantedFloorAt(maps[6].plats, maps[6].w, 2680, 6);
   assert.notEqual(surfaceAt(maps[6].plats, perchPlant.x), null, "perch deaths still plant on the road");
   assert.ok(perchPlant.groundY > 80, "perch deaths do not stay on the thin ledge");
-  assert.match(game, /strokeText\("PRESS E",x,riseY\+cardH\/2\*scale\+6\)/);
+  assert.match(game, /drawCardPressE\(x,riseY\+cardH\/2\*scale\+6\)/);
+  assert.match(game, /strokeText\("PRESS E",x,y\)/);
   assert.match(game, /promptAt=\{x:dragonFloor\.x,y:dragonFloor\.groundY\}/);
   assert.match(game, /className=\{"interaction"\+\(promptAnchor\?" near-card":""\)\}/);
 
@@ -205,7 +206,7 @@ test("late HUD copy clarifies the finish without adding systems", () => {
   assert.match(game, /if\(ended\) return "The echo is still\. Ashfall keeps its heart\."/);
   assert.match(game, /if\(map===6&&held\.includes\(HEART_WYRM_CARD\.id\)\) return "Press E at the heart altar to end the campaign\."/);
   assert.match(game, /if\(map===5&&held\.includes\(EMBER_LYNX_CARD\.id\)\) return "Take the healing east gate to Ashfall's Heart\."/);
-  assert.match(game, /setObjective\(lateObjectiveFor\(map,inventoryRef\.current\.map\(item=>item\.id\),campaignEndedRef\.current\)\)/);
+  assert.match(game, /setObjective\(hudLockFor\(map,inventoryRef\.current\.map\(item=>item\.id\),campaignEndedRef\.current\)\.objective\)/);
   assert.match(campaign, /press E at the altar to end the campaign/);
 });
 
