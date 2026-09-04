@@ -41,18 +41,18 @@ npm run build
 
 Moon Night follows a fading signal through Ashfall. The road runs castle → beach → hollow → cliffs → quiet ember → heart. Mid-road, a split cairn in Ash Hollow tells the twist: the animals are the echo, not just quarry on the way east.
 
-- Map 1 — The Signal in the Rain (moonlit castle): Baby Dragon and an eastern roostling; Calen, Orrin, and Tamsin talk if you press `E`; a high rain-worn plaque and a rain-cut groove can be studied with `E`
-- Map 2 — Sunset Shore (sunset beach): Sunset Jackals (including a road scout); Sera and Nia talk if you press `E`; a dusk-shell on a mid-beach ledge and a drowned signal-post can be studied with `E`
-- Map 3 — Ash Hollow (ember wood): Cinder Foxes; Bram talks near the west ash, Vess near the east gate; a foxfire hollow on a stepped ledge and the split cairn can be studied with `E`
-- Map 4 — Moonwell Cliffs: Pale Stag; Calen can be met again; Orrin stands west of the well; a cliff notch and the moonwell can be studied with `E`; far gate opens into The Quiet Ember
-- Map 5 — The Quiet Ember (kiln terrace): Ember Lynx; Reed talks if you press `E`; Vess can be met again by the kiln road; Tamsin can be met again on the later coals; Sera can be met again near the east gate; the quiet kiln, a banked coal-bed, and quiet bellows can be studied with `E`
-- Map 6 — Ashfall's Heart (inner chamber): Heart Wyrm; Kest talks if you press `E`; Bram can be met again; Nia can be met again east of the wyrm; a first-step stone, a cooled vein, an echo-stone, and the Ashfall Heart Altar all use `E` (the altar ends the campaign)
+- Map 1 — The Signal in the Rain (moonlit castle): Baby Dragon and an eastern roostling; Calen, Orrin, Tamsin, and Maer talk if you press `E`; a high rain-worn plaque and a rain-cut groove can be studied with `E`
+- Map 2 — Sunset Shore (sunset beach): Sunset Jackals (including a road scout); Sera, Nia, Lira, and Perrin talk if you press `E`; a dusk-shell on a mid-beach ledge and a drowned signal-post can be studied with `E`
+- Map 3 — Ash Hollow (ember wood): Cinder Foxes; Bram talks near the west ash, Holt on the cairn road, Vess near the east gate; a foxfire hollow on a stepped ledge and the split cairn can be studied with `E`
+- Map 4 — Moonwell Cliffs: Pale Stag; Calen can be met again; Orrin stands west of the well; Lira can be met again on the later cliff; a cliff notch and the moonwell can be studied with `E`; far gate opens into The Quiet Ember
+- Map 5 — The Quiet Ember (kiln terrace): Ember Lynx; Reed talks if you press `E`; Vess can be met again by the kiln road; Perrin and Maer can be met again on the mid coals; Tamsin can be met again on the later coals; Sera can be met again near the east gate; the quiet kiln, a banked coal-bed, and quiet bellows can be studied with `E`
+- Map 6 — Ashfall's Heart (inner chamber): Heart Wyrm; Kest talks if you press `E`; Bram can be met again; Holt can be met again on the cairn road's last stretch; Nia can be met again east of the wyrm; a first-step stone, a cooled vein, an echo-stone, and the Ashfall Heart Altar all use `E` (the altar ends the campaign)
 
 Maps 1–6 use a longer east-west road with extra roam space between hunts and gates. Maps 2 and 3 use multi-height terrain instead of a single flat strip, ground animals track the terrain surface they stand on, later maps use layered regional backdrops, and the world map only reveals regions the player has unlocked.
 
 Moon Night has 100 health and 15 sword damage. Defeat an animal to form its magical card, press `E` to collect it, equip it, then press `Q` to deploy or recall the companion. A deployed companion hunts nearby hostile animals on the current map and keeps attacking until they fall or leave sight, without picking idle extra fights. Extra combat-only animals (scout, roostling, third fox, second stag, fourth lynx) stay in their stretch of the road instead of stacking into every nearby bind, and they do not drop cards. Portals restore health so a new map starts playable. Every unique animal uses that same card + Q pattern.
 
-Named travelers and knights stand on the road and talk if you press `E` — the same talk used by Reed and Kest. First words, a later talk, and talk after you bind that map's animal all change. After-capture lines name each bound creature as a shard of the fading signal. Meet Calen, Sera, Bram, Orrin, Nia, Vess, or Tamsin again farther east and they remember the last crossing. This is not a dating sim: there are no bond meters, romance choices, or extra relationship systems.
+Named travelers and knights stand on the road and talk if you press `E` — the same talk used by Reed and Kest. First words, a later talk, and talk after you bind that map's animal all change. After-capture and reunion lines name shared history across the road (castle rain → shore → cairn twist → kiln → heart) and treat bound animals as signal shards. Meet Calen, Sera, Bram, Orrin, Nia, Vess, Tamsin, Lira, Holt, Maer, or Perrin again farther east and they remember the last crossing. This is not a dating sim: there are no bond meters, romance choices, or extra relationship systems.
 
 ## Main project files
 
