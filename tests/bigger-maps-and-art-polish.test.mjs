@@ -27,9 +27,9 @@ function parseCampaignWidth(id) {
 }
 
 function parseCampaignExit(id) {
-  const block = campaign.match(new RegExp(`id: ${id},[\\s\\S]*?exitPortalX: ([^\\n]+)`));
+  const block = campaign.match(new RegExp(`id: ${id},[\\s\\S]*?exitPortalX: (\\d+|null)`));
   assert.ok(block, `campaign map ${id} exit`);
-  return block[1].trim() === "null" ? null : Number(block[1]);
+  return block[1] === "null" ? null : Number(block[1]);
 }
 
 function parsePlatformBlock(name) {
