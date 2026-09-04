@@ -10,6 +10,7 @@ test("animals keep a continuous gait clock and blend modes instead of snapping Y
   assert.match(game, /const tickAnimalGait = \(animal:\{gait:number\}, dt:number\)=>\{animal\.gait=\(animal\.gait\|\|0\)\+dt\*1000;\}/);
   assert.match(game, /const rememberModeChange = \(animal:\{mode:DragonMode;prevMode:DragonMode;modeBlendAt:number\}, mode:DragonMode, now:number\)=>\{/);
   assert.match(game, /const MODE_BLEND_MS = 260/);
+  assert.match(game, /const gaitBlendAmt = \(blendAt:number, now:number\)=>easeInOut\(clamp\(\(now-blendAt\)\/MODE_BLEND_MS,0,1\)\)/);
   assert.match(game, /tickAnimalGait\(dragon,dt\)/);
   assert.match(game, /tickAnimalGait\(jackal,dt\)/);
   assert.match(game, /tickAnimalGait\(ally,dt\)/);
