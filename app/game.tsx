@@ -236,12 +236,13 @@ const NPCS:Npc[] = [
       {speaker:"Reed",text:"The animals are the echo. Bind a lynx if you still need the heat."},
       {speaker:"Reed",text:"The east gate heals you. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Reed",text:"Still walking, Moon Night. The quiet kiln is east. Press E there if the coals feel thin."},{speaker:"Reed",text:"Bind a lynx if you still need the heat. The east gate heals you."},{speaker:"Reed",text:"Press E at the heart altar. That ends the campaign."}],
+    againTalk:[{speaker:"Reed",text:"Still walking, Moon Night. The quiet kiln is east. Press E there if the coals feel thin."},{speaker:"Reed",text:"Bind a lynx if you still need the heat. The east gate heals you."},{speaker:"Reed",text:"Press E at the heart altar. That ends the campaign."},{speaker:"Reed",text:"When the kiln can rest, we walk out as people. I'll keep the coals till then."}],
     afterCaptureTalk:[
       {speaker:"Reed",text:"That lynx was the last heat the echo could keep without going out."},
       {speaker:"Reed",text:"You are carrying kiln heat. The heart can take that warmth."},
       {speaker:"Reed",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
       {speaker:"Reed",text:"If you reach the wyrm, tell Kest I didn't quit the kiln."},
+      {speaker:"Reed",text:"When that kiln can rest, we walk out as people."},
       {speaker:"Moon Night",text:"I will."}
     ],
     palette:{skin:"#d9a878",cloak:"#5a2c1e",trim:"#e07030",accent:"#ffb060"}
@@ -254,13 +255,14 @@ const NPCS:Npc[] = [
       {speaker:"Kest",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
       {speaker:"Kest",text:"The gate behind you still heals. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Kest",text:"Still here, Moon Night. Rain to this heart. The wyrm hunts farther in."},{speaker:"Kest",text:"A first-step stone sits east. Press E there if the pulse feels thin."},{speaker:"Kest",text:"Bind the wyrm if you still need the pulse. The gate behind you still heals."},{speaker:"Kest",text:"Press E at the heart altar. That ends the campaign."}],
+    againTalk:[{speaker:"Kest",text:"Still here, Moon Night. Rain to this heart. The wyrm hunts farther in."},{speaker:"Kest",text:"A first-step stone sits east. Press E there if the pulse feels thin."},{speaker:"Kest",text:"Bind the wyrm if you still need the pulse. The gate behind you still heals."},{speaker:"Kest",text:"Press E at the heart altar. That ends the campaign."},{speaker:"Kest",text:"After that, we walk out as people. Reed will want the kiln to rest."}],
     afterCaptureTalk:[
       {speaker:"Kest",text:"The wyrm is the last pulse. Rest it at the altar so Reed's kiln can rest."},
       {speaker:"Kest",text:"The cards you carry are the echo's memory. Lay them down as a road, not a cage."},
       {speaker:"Kest",text:"You named the whole road in shards. The pulse is the last name."},
       {speaker:"Kest",text:"Walk east. The gate behind you still heals. Press E at the heart altar. That ends the campaign."},
       {speaker:"Kest",text:"The road remembers us now, Moon Night."},
+      {speaker:"Kest",text:"Come on. We walk out as people."},
       {speaker:"Moon Night",text:"Then we walk it together."}
     ],
     palette:{skin:"#c99a80",cloak:"#3a2048",trim:"#d45a6a",accent:"#ffc8a0"}
@@ -781,10 +783,11 @@ const NPCS:Npc[] = [
       {speaker:"Edan",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
       {speaker:"Edan",text:"The gate behind you still heals. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Edan",text:"Still by the last stone, Moon Night. Bind the wyrm if you still need the pulse. Walk east."},{speaker:"Edan",text:"Press E at the altar. The campaign ends when the signal rests."},{speaker:"Edan",text:"Press E at the cooled vein. An echo-stone sits past it. Press E there if the pulse feels loud."}],
+    againTalk:[{speaker:"Edan",text:"Still by the last stone, Moon Night. Bind the wyrm if you still need the pulse. Walk east."},{speaker:"Edan",text:"Press E at the altar. The campaign ends when the signal rests."},{speaker:"Edan",text:"Press E at the cooled vein. An echo-stone sits past it. Press E there if the pulse feels loud."},{speaker:"Edan",text:"When the signal rests, we walk out as people. This last stone can stay."}],
     afterCaptureTalk:[
       {speaker:"Edan",text:"You bound the last pulse. That's every shard, still in one place."},
-      {speaker:"Edan",text:"Walk east. Press E at the heart altar. That ends the campaign."}
+      {speaker:"Edan",text:"Walk east. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Edan",text:"Then we walk out as people. The last stone can stay empty."}
     ],
     palette:{skin:"#c09080",cloak:"#2c1828",trim:"#c86878",accent:"#f0c0b0"}
   },

@@ -315,6 +315,61 @@ test("talk clearance stays 300px apart and clear of altar 200px, portals, and ca
   }
 });
 
+test("Reed, Kest, and Edan again/afterCapture walk out as people without dating or dump", () => {
+  const reed = npcs.find((npc) => npc.id === "reed" && npc.map === 5);
+  const kest = npcs.find((npc) => npc.id === "kest" && npc.map === 6);
+  const edan = npcs.find((npc) => npc.id === "edan" && npc.map === 6);
+  assert.ok(reed && kest && edan, "Reed/Kest/Edan walk-out roster should stay present");
+
+  const dating = /bondMeter|dating|affection|romance|love you|stay with me|walk out together/;
+  const campaignDump = /spark, dusk|Castle rain, shore dusk, cairn/;
+  const WALK_OUT = /we walk out as people/i;
+
+  assert.match(reed.againTalk, WALK_OUT);
+  assert.match(reed.againTalk, /When the kiln can rest, we walk out as people/);
+  assert.match(reed.againTalk, /Bind a lynx if you still need the heat/);
+  assert.match(reed.againTalk, /quiet kiln/);
+  assert.match(reed.againTalk, /[Pp]ress E/);
+  assert.match(reed.afterCaptureTalk, /When that kiln can rest, we walk out as people/);
+  assert.match(reed.afterCaptureTalk, /tell Kest I didn't quit the kiln/);
+  assert.match(reed.afterCaptureTalk, /The east gate heals you\. Talk to Kest/);
+  assert.doesNotMatch(reed.afterCaptureTalk, /pet|quit the fire|last pulse/);
+
+  assert.match(kest.againTalk, WALK_OUT);
+  assert.match(kest.againTalk, /After that, we walk out as people/);
+  assert.match(kest.againTalk, /Bind the wyrm if you still need the pulse/);
+  assert.match(kest.againTalk, /first-step stone/);
+  assert.match(kest.againTalk, /Press E there if the pulse feels thin/);
+  assert.match(kest.againTalk, /Press E at the heart altar\. That ends the campaign/);
+  assert.match(kest.afterCaptureTalk, /Come on\. We walk out as people/);
+  assert.match(kest.afterCaptureTalk, /The road remembers us now, Moon Night/);
+  assert.match(kest.afterCaptureTalk, /Then we walk it together/);
+  assert.match(kest.afterCaptureTalk, /Rest it at the altar so Reed's kiln can rest/);
+  assert.doesNotMatch(kest.afterCaptureTalk, /coal shard|kiln heat so the heart stays warm/);
+
+  assert.match(edan.againTalk, WALK_OUT);
+  assert.match(edan.againTalk, /When the signal rests, we walk out as people/);
+  assert.match(edan.againTalk, /last stone/);
+  assert.match(edan.againTalk, /Press E at the altar\. The campaign ends when the signal rests/);
+  assert.match(edan.againTalk, /Press E at the cooled vein/);
+  assert.match(edan.againTalk, /echo-stone/);
+  assert.match(edan.againTalk, /Bind the wyrm if you still need the pulse/);
+  assert.match(edan.afterCaptureTalk, /Then we walk out as people/);
+  assert.match(edan.afterCaptureTalk, /You bound the last pulse/);
+  assert.match(edan.afterCaptureTalk, /Press E at the heart altar\. That ends the campaign/);
+
+  for (const npc of [reed, kest, edan]) {
+    for (const [label, talk] of [["again", npc.againTalk], ["after", npc.afterCaptureTalk]]) {
+      const lines = talkLinesFrom(talk);
+      assert.deepEqual(lines.filter((line) => line.text.length > 110), [], `${npc.id}:${npc.map} ${label}Talk lines should stay at or under 110 characters`);
+      assert.doesNotMatch(talk, dating, `${npc.id}:${npc.map} ${label}Talk should stay off dating/bond`);
+      assert.doesNotMatch(talk, SOFTLOCK, `${npc.id}:${npc.map} ${label}Talk should not softlock a skipped bind`);
+      assert.doesNotMatch(talk, campaignDump, `${npc.id}:${npc.map} ${label}Talk should not dump the whole road`);
+      assert.ok(lines.every((line) => line.speaker === "Moon Night" || line.speaker === npc.name));
+    }
+  }
+});
+
 test("Map 1 buildings/radio stay cut and no new travelers or dating engine appear", () => {
   assert.match(game, /1:\{name:"The Signal in the Rain"/);
   assert.doesNotMatch(game, /radio encounter|The radio |tune the radio|listen to the radio/i);
