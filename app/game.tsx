@@ -1283,7 +1283,7 @@ export default function AshfallGame() {
     else if(map===5&&nearPortalAt(x,MAP5_ENTRY_X)) enterMap(4,5);
     else if(map===5&&nearPortalAt(x,MAP5_EXIT_X)) enterMap(6,5);
     else if(map===6&&nearPortalAt(x,MAP6_ENTRY_X)) enterMap(5,6);
-    else if(map===6&&atHeartAltar(x)){
+    else if(map===6&&atHeartAltar(x)){ // altar E still wins after #56 Dell/Rowan walk-out; no nearby talk radius covers this window
       if(!campaignEndedRef.current){campaignEndedRef.current=true;setCampaignEnded(true);}
       setObjective(hudLockFor(6,inventoryRef.current.map(item=>item.id),true).objective);
       showDialogue(ENDING_LINES);
@@ -1633,8 +1633,9 @@ export default function AshfallGame() {
       const anchorLocalX=-fullWidth/2+(ATTACK_WEAPON.anchorX-actionFrame.x)*weaponScale;
       const actionDrawY=PH-(actionFrame.h-spriteBottomPadding(actionFrame))*weaponScale;
       const anchorLocalY=actionDrawY+(ATTACK_WEAPON.anchorY-actionFrame.y)*weaponScale;
+      const late=lateMapContactShade(mapRef.current);
       ctx.save();ctx.translate(pl.x+pl.facing*anchorLocalX,pl.y+anchorLocalY);ctx.rotate(swordAngle);ctx.scale(1,pl.facing);
-      ctx.imageSmoothingEnabled=false;ctx.shadowColor="rgba(135,62,198,.3)";ctx.shadowBlur=7;
+      ctx.imageSmoothingEnabled=false;ctx.shadowColor=late?"rgba(255,246,210,.88)":"rgba(135,62,198,.3)";ctx.shadowBlur=late?12:7; // LMB sword rim stays readable on maps 5–6 after #48/#50 late stroke
       ctx.drawImage(attackWeaponLayer,ATTACK_WEAPON.x,ATTACK_WEAPON.y,ATTACK_WEAPON.w,ATTACK_WEAPON.h,-(ATTACK_WEAPON.anchorX-ATTACK_WEAPON.x)*weaponScale,-(ATTACK_WEAPON.anchorY-ATTACK_WEAPON.y)*weaponScale,ATTACK_WEAPON.w*weaponScale,ATTACK_WEAPON.h*weaponScale);
       ctx.shadowBlur=0;ctx.imageSmoothingEnabled=true;ctx.restore();
     };
@@ -2885,8 +2886,9 @@ export default function AshfallGame() {
       const barW=132,barH=11,barX=wyrm.x+recoilX-barW/2,barY=wyrm.y-92;
       const healthRatio=clamp(wyrm.health/wyrm.maxHealth,0,1);
       const healthLabel=(wyrm.angry?"ANGRY  ":"")+"HEART WYRM  "+wyrm.health+" / "+wyrm.maxHealth;
+      const late=lateMapContactShade(mapRef.current);
       ctx.save();ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="700 10px ui-monospace, SFMono-Regular, Menlo, monospace";
-      ctx.lineWidth=3;ctx.strokeStyle="rgba(10,2,10,.9)";ctx.strokeText(healthLabel,wyrm.x+recoilX,barY-3);
+      ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(10,2,10,.9)";ctx.strokeText(healthLabel,wyrm.x+recoilX,barY-3); // heart wyrm health keeps late stroke with HUNT
       ctx.fillStyle=wyrm.angry?"#ffb3c4":"#ffd8e4";ctx.fillText(healthLabel,wyrm.x+recoilX,barY-3);
       ctx.fillStyle="rgba(10,2,10,.9)";ctx.fillRect(barX-2,barY-2,barW+4,barH+4);
       ctx.fillStyle="#3a1424";ctx.fillRect(barX,barY,barW,barH);
@@ -2997,9 +2999,10 @@ export default function AshfallGame() {
         const barW=78,barH=8,barX=beast.x+recoilX-barW/2,barY=beast.groundY-renderSize*.94;
         const healthRatio=clamp(beast.health/beast.maxHealth,0,1);
         const healthLabel=(beast.angry?"ANGRY  ":"")+card.name.toUpperCase()+"  "+beast.health+" / "+beast.maxHealth;
+        const late=lateMapContactShade(map);
         ctx.save();
         ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="700 8px ui-monospace, SFMono-Regular, Menlo, monospace";
-        ctx.lineWidth=3;ctx.strokeStyle="rgba(20,8,4,.9)";ctx.strokeText(healthLabel,beast.x+recoilX,barY-3);
+        ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(20,8,4,.9)";ctx.strokeText(healthLabel,beast.x+recoilX,barY-3); // kiln lynx health keeps late stroke with HUNT
         ctx.fillStyle=beast.angry?"#ffb19d":"#ffe7c2";ctx.fillText(healthLabel,beast.x+recoilX,barY-3);
         ctx.fillStyle="rgba(20,8,4,.9)";ctx.fillRect(barX-2,barY-2,barW+4,barH+4);
         ctx.fillStyle="#4a1c14";ctx.fillRect(barX,barY,barW,barH);
@@ -3613,7 +3616,7 @@ export default function AshfallGame() {
         else if(map===5&&nearPortalAt(pl.x,MAP5_ENTRY_X))action="Return to Moonwell Cliffs";
         else if(map===5&&nearPortalAt(pl.x,MAP5_EXIT_X))action="Enter Ashfall's Heart";
         else if(map===6&&nearPortalAt(pl.x,MAP6_ENTRY_X))action="Return to The Quiet Ember";
-        else if(map===6&&atHeartAltar(pl.x))action=campaignEndedRef.current?"Rest at Ashfall's Heart":"Press E at Ashfall's Heart";
+        else if(map===6&&atHeartAltar(pl.x))action=campaignEndedRef.current?"Rest at Ashfall's Heart":"Press E at Ashfall's Heart"; // altar prompt still wins after #56 Dell/Rowan walk-out
       }
       if(action!==lastAction){lastAction=action;setNearAction(action||null);}
       const nextAnchor=promptAt?{left:Math.round(clamp((promptAt.x-cameraX)*scale,78,w-78)),bottom:Math.round(clamp(h-(promptAt.y-88)*scale,96,h*.58))}:null;
