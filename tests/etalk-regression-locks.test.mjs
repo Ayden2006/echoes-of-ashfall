@@ -238,6 +238,21 @@ test("reunion againTalk remembers the last crossing without the finish dump", ()
     assert.match(npc.againTalk, cue, `${id}:5 againTalk should point to a same-map studyable with Press E`);
     assert.match(npc.againTalk, /[Pp]ress E/);
   }
+  const heartPress = {
+    bram: /An echo-stone sits farther east\. Press E there if the leftover fire feels thin/,
+    nia: /An echo-stone still sits east\. Press E there if the last light feels thin/,
+    holt: /An echo-stone sits east\. Press E there if the last stones feel thin/,
+    dell: /An echo-stone sits east\. Press E there if the gold feels thin/,
+    rowan: /An echo-stone still sits east\. Press E there if the leftover road feels thin/,
+  };
+  for (const [id, cue] of Object.entries(heartPress)) {
+    const npc = reunions.find((person) => person.id === id && person.map === 6);
+    assert.ok(npc, `${id}:6 reunion should stay on the heart road`);
+    assert.match(npc.againTalk, cue, `${id}:6 againTalk should point to a same-map studyable with Press E`);
+    assert.match(npc.againTalk, /[Pp]ress E/);
+    assert.match(npc.againTalk, /echo-stone/);
+    assert.doesNotMatch(npc.againTalk, FINISH_DUMP);
+  }
 });
 
 test("Hale stays on the map 4–5 roster with first/again/afterCapture", () => {

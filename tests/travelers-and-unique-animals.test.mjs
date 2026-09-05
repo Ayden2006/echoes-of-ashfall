@@ -619,6 +619,11 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
     ["kest", 6, /first-step stone/, /Press E there if the pulse feels thin/],
     ["kest", 6, /heart altar/, /Press E at the heart altar/],
     ["edan", 6, /cooled vein/, /Press E at the cooled vein/],
+    ["bram", 6, /echo-stone/, /Press E there if the leftover fire feels thin/],
+    ["nia", 6, /echo-stone/, /Press E there if the last light feels thin/],
+    ["holt", 6, /echo-stone/, /Press E there if the last stones feel thin/],
+    ["dell", 6, /echo-stone/, /Press E there if the gold feels thin/],
+    ["rowan", 6, /echo-stone/, /Press E there if the leftover road feels thin/],
   ];
   for (const [id, map, secret, press] of cues) {
     const again = againOf(id, map);
@@ -643,6 +648,11 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
   assert.match(againOf("tamsin", 5), /The quiet kiln sits west\. Press E there if the fire feels thin/);
   assert.match(againOf("maer", 5), /Quiet bellows sit west\. Press E there if the leftover fire feels thin/);
   assert.match(againOf("perrin", 5), /Quiet bellows sit west\. Press E there if the heat feels thin/);
+  assert.match(againOf("bram", 6), /An echo-stone sits farther east\. Press E there if the leftover fire feels thin/);
+  assert.match(againOf("nia", 6), /An echo-stone still sits east\. Press E there if the last light feels thin/);
+  assert.match(againOf("holt", 6), /An echo-stone sits east\. Press E there if the last stones feel thin/);
+  assert.match(againOf("dell", 6), /An echo-stone sits east\. Press E there if the gold feels thin/);
+  assert.match(againOf("rowan", 6), /An echo-stone still sits east\. Press E there if the leftover road feels thin/);
   assert.match(againOf("calen", 1), /Press E there if the road feels thin/);
   assert.match(againOf("wren", 1), /Press E there if the signal feels thin/);
   assert.match(againOf("tamsin", 1), /Press E there if the rain feels thin/);
@@ -663,6 +673,11 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
   assert.doesNotMatch(againOf("tamsin", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
   assert.doesNotMatch(againOf("maer", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
   assert.doesNotMatch(againOf("perrin", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
+  assert.doesNotMatch(againOf("bram", 6), /ends the campaign|Press E at the (heart )?altar|The east gate heals you|The gate behind you still heals/);
+  assert.doesNotMatch(againOf("nia", 6), /ends the campaign|Press E at the (heart )?altar|The east gate heals you|The gate behind you still heals/);
+  assert.doesNotMatch(againOf("holt", 6), /ends the campaign|Press E at the (heart )?altar|The east gate heals you|The gate behind you still heals/);
+  assert.doesNotMatch(againOf("dell", 6), /ends the campaign|Press E at the (heart )?altar|The east gate heals you|The gate behind you still heals/);
+  assert.doesNotMatch(againOf("rowan", 6), /ends the campaign|Press E at the (heart )?altar|The east gate heals you|The gate behind you still heals/);
 });
 
 test("full-road studyable-pointing againTalk on maps 1–6 still says Press E", () => {
