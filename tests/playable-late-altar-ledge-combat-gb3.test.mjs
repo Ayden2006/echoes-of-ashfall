@@ -4,6 +4,7 @@ import test from "node:test";
 
 const game = await readFile(new URL("../app/game.tsx", import.meta.url), "utf8");
 const campaign = await readFile(new URL("../lib/campaign.ts", import.meta.url), "utf8");
+const art = await readFile(new URL("../ART_DIRECTION.md", import.meta.url), "utf8");
 
 const extractPlatforms = (name) => {
   const block = game.match(new RegExp(`const ${name}: Platform\\[\\] = \\[([\\s\\S]*?)\\];`));
@@ -96,7 +97,16 @@ const npcs = [...game.matchAll(/\{id:"([^"]+)",name:"([^"]+)",map:(\d+),x:(\d+),
   id: m[1], name: m[2], map: Number(m[3]), x: Number(m[4]), r: Number(m[5]),
 }));
 
-test("altar-E marker: heart altar still wins after #56 Dell/Rowan walk-out, geometry/camera only", () => {
+const afterCaptureTalk = (id, map) => {
+  const start = game.indexOf(`{id:"${id}",name:`);
+  assert.ok(start >= 0, `${id} should exist`);
+  const slice = game.slice(start, game.indexOf("\n  {id:", start + 1) === -1 ? game.indexOf("];\nconst talkTargetAt=", start) : game.indexOf("\n  {id:", start + 1));
+  const talk = slice.slice(slice.indexOf("afterCaptureTalk:["), slice.indexOf("palette:"));
+  assert.ok(talk.includes("afterCaptureTalk:["), `${id}:${map} afterCapture should stay`);
+  return talk;
+};
+
+test("altar-E leftover after #64: heart / Press E / camera still clear; afterCapture no longer dumps it", () => {
   const heartX = num(/const MAP6_HEART_X = (\d+)/, "MAP6_HEART_X");
   const altarX = heartX + 40;
   const range = num(/const ALTAR_INTERACT_RANGE = (\d+)/, "ALTAR_INTERACT_RANGE");
@@ -107,23 +117,15 @@ test("altar-E marker: heart altar still wins after #56 Dell/Rowan walk-out, geom
   const stepX = num(/const MAP6_STEP_X = (\d+)/, "MAP6_STEP_X");
   assert.equal(heartX, 6470);
   assert.equal(range, 200);
+  assert.match(art, /so the altar edge stays readable/);
   assert.match(game, /const atHeartAltar=\(x:number\)=>Math\.abs\(x-MAP6_HEART_X\)<ALTAR_INTERACT_RANGE/);
   assert.match(game, /else if\(map===6&&atHeartAltar\(x\)\)\{ \/\/ altar E still wins after #56 Dell\/Rowan walk-out and #64 afterCapture trim; no nearby talk radius covers this window/);
   assert.match(game, /else if\(map===6&&atHeartAltar\(pl\.x\)\)action=campaignEndedRef\.current\?"Rest at Ashfall's Heart":"Press E at Ashfall's Heart"; \/\/ altar prompt still wins after #56 Dell\/Rowan walk-out and #64 afterCapture trim/);
-  assert.match(game, /const target=talkTargetAt\(map,x,player\.current\.y\+PH\);/);
-  assert.match(game, /if\(target\.npc\)\{/);
-  assert.match(game, /if\(target\.landmark\)\{showDialogue\(target\.landmark\.lines\);return;\}/);
-
-  const dell = npcs.find((n) => n.id === "dell" && n.map === 6);
-  const rowan = npcs.find((n) => n.id === "rowan" && n.map === 6);
-  const edan = npcs.find((n) => n.id === "edan" && n.map === 6);
-  assert.ok(dell && rowan && edan, "Dell, Rowan, and Edan stay on map 6");
-  assert.equal(dell.x, 4180);
-  assert.equal(rowan.x, 3880);
-  assert.equal(edan.x, 4900);
-  assert.equal(dell.r, 150);
-  assert.equal(rowan.r, 150);
-  assert.equal(edan.r, 150);
+  assert.match(game, /if\(map===6&&Math\.abs\(x-MAP6_HEART_X\)<40\)continue; \/\/ leftover 6460 vein no longer sits on the heart after #64 afterCapture trim/);
+  assert.match(game, /ctx\.fillStyle="#fff6d2";ctx\.fillText\("ALTAR",x,groundY-88\); \/\/ altar cream leftover after #64 afterCapture trim; HUD Press E still wins, no invented study PRESS E/);
+  assert.match(game, /const drawAshfallHeartAltar=\(now:number\)=>\{/);
+  assert.match(game, /drawAshfallHeartAltar\(now\)/);
+  assert.doesNotMatch(game.slice(game.indexOf("const drawAshfallHeartAltar="), game.indexOf("const drawPixelPlatform=")), /drawLateStudyableTag|drawCardPressE/);
 
   const altarLo = heartX - range, altarHi = heartX + range;
   const atHeartAltar = (x) => Math.abs(x - heartX) < range;
@@ -169,9 +171,64 @@ test("altar-E marker: heart altar still wins after #56 Dell/Rowan walk-out, geom
       assert.equal(finishInCameraAt(altarX, x, maps[6].w, viewW), true, `altar readable at x=${x}, view ${viewW}`);
     }
   }
+
+  const skipNearHeart = (x) => Math.abs(x - heartX) < 40;
+  assert.equal(skipNearHeart(6460), true, "shared 6460 vein sits on the heart and must stay undrawn");
+  assert.equal(skipNearHeart(6280), false, "6280 vein stays west of the altar-clear window");
+  assert.equal(skipNearHeart(6395), false, "east-approach rock at 6395 stays west of the heart");
+  assert.ok(Math.abs(6460 - heartX) < CARD_WALL_CLEAR, "6460 is the leftover vein that sat on the heart");
+
+  const altarDump = /ends the campaign|Press E at the (heart )?altar/;
+  const reedAfter = afterCaptureTalk("reed", 5);
+  const kestAfter = afterCaptureTalk("kest", 6);
+  const edanAfter = afterCaptureTalk("edan", 6);
+  assert.doesNotMatch(reedAfter, altarDump);
+  assert.doesNotMatch(kestAfter, /ends the campaign|Press E at the (heart )?altar/);
+  assert.doesNotMatch(edanAfter, altarDump);
+  assert.match(game, /Press E at the heart altar\. That ends the campaign/);
+  assert.match(game, /The wyrm is the last pulse\. Rest it at the altar so Reed's kiln can rest/);
 });
 
-test("combat-read marker: LMB sword + companion hunt stay readable on maps 5–6 after late strokes", () => {
+test("map 5–6 leftover ledges still recover onto the road and stay walkable", () => {
+  assert.match(game, /if\(pl\.y>WORLD_H\+80\)\{const floor=plantedFloorAt\(map,Math\.max\(120,pl\.x-180\)\);pl\.x=floor\.x;pl\.y=plantedYAt\(map,floor\.x\);pl\.vy=0;pl\.grounded=true/);
+  assert.match(game, /const plantedYAt=\(map:MapId,x:number\)=>\(surfaceYAt\(map,x,590\)\?\?590\)-PH/);
+  assert.match(game, /const plantedFloorAt=\(map:MapId,x:number\)=>\{/);
+  assert.doesNotMatch(game, /if\(pl\.y>WORLD_H\+80\)\{pl\.x=Math\.max\(120,pl\.x-180\);pl\.y=240/);
+  assert.match(game, /\{x:1480,y:440,w:170,h:18\}/);
+  assert.match(game, /\{x:5780,y:422,w:160,h:18\}/);
+  assert.match(game, /\{x:2680,y:415,w:190,h:18\}/);
+  assert.match(game, /\{x:5920,y:430,w:180,h:18\}/);
+
+  const voids = [
+    { map: 5, x: 1660, label: "coal ledge", roadMin: 550 },
+    { map: 5, x: 5960, label: "east gate perch", roadMin: 545 },
+    { map: 5, x: 6200, label: "map 5 east rim", roadMin: 545 },
+    { map: 6, x: 2860, label: "wyrm perch", roadMin: 545 },
+    { map: 6, x: 6100, label: "echo stone", roadMin: 545 },
+    { map: 6, x: 6470, label: "heart altar", roadMin: 545 },
+    { map: 6, x: 8000, label: "past-east void", roadMin: 545 },
+  ];
+  for (const id of [5, 6]) {
+    assert.deepEqual(walkableGaps(maps[id].plats, maps[id].w), [], `map ${id} stays gapless for leftover ledge recover`);
+  }
+  for (const fall of voids) {
+    const map = maps[fall.map];
+    const recovered = recoverFromVoid(map.plats, map.w, fall.x, fall.map);
+    assert.ok(recovered.x >= 48 && recovered.x <= map.w - 48, `map ${fall.map} ${fall.label} recover stays on-map`);
+    assert.notEqual(surfaceAt(map.plats, recovered.x), null, `map ${fall.map} ${fall.label} recover needs road`);
+    assert.equal(recovered.y + PH, recovered.groundY, `map ${fall.map} ${fall.label} recover stands on the planted floor`);
+    assert.equal(standingInsideStone(map.plats, recovered.x, recovered.groundY), false, `map ${fall.map} ${fall.label} recover is not inside a stone`);
+    assert.equal(cardBlockedAt(map.plats, fall.map, recovered.x), false, `map ${fall.map} ${fall.label} recover stays off walls`);
+    assert.ok(recovered.groundY >= fall.roadMin, `map ${fall.map} ${fall.label} recover sits on the road, not a perch`);
+  }
+
+  for (const [id, secret] of [[5, { x: 1480, w: 170 }], [5, { x: 5780, w: 160 }], [6, { x: 2680, w: 190 }], [6, { x: 5920, w: 180 }]]) {
+    const mid = secret.x + secret.w / 2;
+    assert.notEqual(surfaceAt(maps[id].plats, mid), null, `map ${id} leftover perch at ${secret.x} stays over road`);
+  }
+});
+
+test("combat-read leftover: late sword rim + HUNT / ALLY HUNT / health strokes from #58 still hold", () => {
   assert.match(game, /const drawActualAttackArm=\(pl:Player,now:number\)=>\{/);
   assert.match(game, /const late=lateMapContactShade\(mapRef\.current\);\n {6}ctx\.save\(\);ctx\.translate\(pl\.x\+pl\.facing\*anchorLocalX,pl\.y\+anchorLocalY\);ctx\.rotate\(swordAngle\);ctx\.scale\(1,pl\.facing\);\n {6}ctx\.imageSmoothingEnabled=false;ctx\.shadowColor=late\?"rgba\(255,246,210,\.88\)":"rgba\(135,62,198,\.3\)";ctx\.shadowBlur=late\?12:7; \/\/ LMB sword rim stays readable on maps 5–6 after #48\/#50 late stroke/);
   assert.match(game, /onPointerDown=\{\(e\)=>\{if\(e\.button===0\)\{e\.preventDefault\(\);updateAim\(e\.clientX,e\.clientY\);attack\(\);\}\}\}/);
@@ -180,6 +237,7 @@ test("combat-read marker: LMB sword + companion hunt stay readable on maps 5–6
   assert.match(game, /const lateMapContactShade = \(map:MapId\) => map===5/);
   assert.match(game, /const huntTag=currentHuntTarget\(\)\?" · HUNT":""/);
   assert.match(game, /ctx\.lineWidth=late\?4:3;ctx\.strokeStyle=late\?"rgba\(6,2,4,\.96\)":"rgba\(2,6,8,\.92\)";ctx\.strokeText\(`ALLY · \$\{companionName\}\$\{huntTag\}  \$\{Math\.ceil\(ally\.health\)\} \/ \$\{ally\.maxHealth\}`/);
+  assert.match(game, /ctx\.fillText\(`ALLY · \$\{companionName\}\$\{huntTag\}  \$\{Math\.ceil\(ally\.health\)\} \/ \$\{ally\.maxHealth\}`,ally\.x,barY-5\); \/\/ ALLY · HUNT leftover still keeps #58 late stroke with sword rim \/ lynx \/ wyrm health/);
   assert.match(game, /ctx\.lineWidth=late\?4:3;ctx\.strokeStyle=late\?"rgba\(6,2,4,\.96\)":"rgba\(4,10,6,\.9\)";ctx\.strokeText\("HUNT",0,-10\)/);
   assert.match(game, /ctx\.fillStyle=\(late\?"rgba\(220,255,140,":"rgba\(185,255,99,"\)\+pulse\+"\)"/);
   assert.match(game, /ctx\.lineWidth=late\?5:4;ctx\.strokeStyle=late\?"rgba\(4,2,6,\.96\)":"rgba\(8,4,8,\.92\)";ctx\.strokeText\("-"\+dmg,x,y\)/);
@@ -197,50 +255,6 @@ test("combat-read marker: LMB sword + companion hunt stay readable on maps 5–6
   assert.equal(num(/const COMBAT_ONLY_AGGRO_RANGE = (\d+)/, "COMBAT_ONLY_AGGRO_RANGE"), 220);
   assert.equal(num(/const EXTRA_CHASE_LEEWAY = (\d+)/, "EXTRA_CHASE_LEEWAY"), 360);
   assert.doesNotMatch(game, /SWORD_DAMAGE = 1[0-46-9]|SWORD_DAMAGE = [02-9]\d/);
-});
-
-test("softlock marker: maps 5–6 planted void recover + portal heal/flash still fire", () => {
-  assert.match(game, /if\(pl\.y>WORLD_H\+80\)\{const floor=plantedFloorAt\(map,Math\.max\(120,pl\.x-180\)\);pl\.x=floor\.x;pl\.y=plantedYAt\(map,floor\.x\);pl\.vy=0;pl\.grounded=true/);
-  assert.match(game, /const plantedYAt=\(map:MapId,x:number\)=>\(surfaceYAt\(map,x,590\)\?\?590\)-PH/);
-  assert.match(game, /const plantedFloorAt=\(map:MapId,x:number\)=>\{/);
-  assert.doesNotMatch(game, /if\(pl\.y>WORLD_H\+80\)\{pl\.x=Math\.max\(120,pl\.x-180\);pl\.y=240/);
-
-  const enterMap = game.match(/const enterMap = useCallback\(\(map:MapId, from:MapId\|null=mapRef\.current\) => \{[\s\S]*?\},\[showDialogue,tone\]\);/);
-  assert.ok(enterMap, "enterMap callback should stay intact");
-  assert.match(enterMap[0], /pl\.health=pl\.maxHealth;staminaRef\.current=MAX_STAMINA/);
-  assert.match(enterMap[0], /setHealth\(pl\.maxHealth\);setStamina\(MAX_STAMINA\); \/\/ portal heal still fires after companion reseat/);
-  assert.match(enterMap[0], /portalFlashUntil\.current=performance\.now\(\)\+430; \/\/ portal flash still fires after companion reseat/);
-  assert.match(enterMap[0], /tone\(610,\.25,\.028\);window\.setTimeout\(\(\)=>tone\(360,\.2,\.02\),100\); \/\/ portal enter tone still fires after companion reseat/);
-  assert.match(enterMap[0], /const seat=plantedFloorAt\(map,pl\.x-pl\.facing\*96\)/);
-  assert.match(game, /else if\(map===5&&nearPortalAt\(x,MAP5_EXIT_X\)\) enterMap\(6,5\)/);
-  assert.match(game, /else if\(map===6&&nearPortalAt\(x,MAP6_ENTRY_X\)\) enterMap\(5,6\)/);
-  assert.match(game, /if\(portalFlashUntil\.current>now\)\{ctx\.fillStyle="rgba\(255,244,214,"\+\(\(portalFlashUntil\.current-now\)\/430\*\.18\)\+"\)";ctx\.fillRect\(cameraX,0,viewW,WORLD_H\);\}/);
-  const healIdx = enterMap[0].indexOf("pl.health=pl.maxHealth");
-  const reseatIdx = enterMap[0].indexOf("const seat=plantedFloorAt(map,pl.x-pl.facing*96)");
-  const flashIdx = enterMap[0].indexOf("portalFlashUntil.current=performance.now()+430");
-  assert.ok(healIdx >= 0 && reseatIdx > healIdx && flashIdx > reseatIdx, "heal, planted reseat, then flash still run in that order");
-
-  const voids = [
-    { map: 5, x: 1660, label: "coal ledge" },
-    { map: 5, x: 5960, label: "east gate perch" },
-    { map: 5, x: 6200, label: "map 5 east rim" },
-    { map: 6, x: 2860, label: "wyrm perch" },
-    { map: 6, x: 6100, label: "echo stone" },
-    { map: 6, x: 6470, label: "heart altar" },
-    { map: 6, x: 8000, label: "past-east void" },
-  ];
-  for (const id of [5, 6]) {
-    assert.deepEqual(walkableGaps(maps[id].plats, maps[id].w), [], `map ${id} stays gapless for void recover`);
-  }
-  for (const fall of voids) {
-    const map = maps[fall.map];
-    const recovered = recoverFromVoid(map.plats, map.w, fall.x, fall.map);
-    assert.ok(recovered.x >= 48 && recovered.x <= map.w - 48, `map ${fall.map} ${fall.label} recover stays on-map`);
-    assert.notEqual(surfaceAt(map.plats, recovered.x), null, `map ${fall.map} ${fall.label} recover needs road`);
-    assert.equal(recovered.y + PH, recovered.groundY, `map ${fall.map} ${fall.label} recover stands on the planted floor`);
-    assert.equal(standingInsideStone(map.plats, recovered.x, recovered.groundY), false, `map ${fall.map} ${fall.label} recover is not inside a stone`);
-    assert.equal(cardBlockedAt(map.plats, fall.map, recovered.x), false, `map ${fall.map} ${fall.label} recover stays off walls`);
-  }
 });
 
 test("locks hold: Moon Night, planted helpers, PR #10 numbers, Dell/Rowan talk tables, no dating, no maps 7+", () => {
