@@ -1296,7 +1296,7 @@ export default function AshfallGame() {
     else if(map===5&&nearPortalAt(x,MAP5_ENTRY_X)) enterMap(4,5);
     else if(map===5&&nearPortalAt(x,MAP5_EXIT_X)) enterMap(6,5);
     else if(map===6&&nearPortalAt(x,MAP6_ENTRY_X)) enterMap(5,6);
-    else if(map===6&&atHeartAltar(x)){ // altar E still wins after #56 Dell/Rowan walk-out; no nearby talk radius covers this window
+    else if(map===6&&atHeartAltar(x)){ // altar E still wins after #56 Dell/Rowan walk-out and #64 afterCapture trim; no nearby talk radius covers this window
       if(!campaignEndedRef.current){campaignEndedRef.current=true;setCampaignEnded(true);}
       setObjective(hudLockFor(6,inventoryRef.current.map(item=>item.id),true).objective);
       showDialogue(ENDING_LINES);
@@ -2627,7 +2627,7 @@ export default function AshfallGame() {
         const healthRatio=clamp(ally.health/ally.maxHealth,0,1),barY=ally.y-112;
         const huntTag=currentHuntTarget()?" · HUNT":"";
         const late=lateMapContactShade(mapRef.current);
-        ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(2,6,8,.92)";ctx.strokeText(`ALLY · ${companionName}${huntTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle=isJackal?"#ffe1b0":wyrmTint?"#ffc8d8":"#d9ffb0";ctx.fillText(`ALLY · ${companionName}${huntTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);
+        ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(2,6,8,.92)";ctx.strokeText(`ALLY · ${companionName}${huntTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle=isJackal?"#ffe1b0":wyrmTint?"#ffc8d8":"#d9ffb0";ctx.fillText(`ALLY · ${companionName}${huntTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5); // ALLY · HUNT leftover still keeps #58 late stroke with sword rim / lynx / wyrm health
         ctx.fillStyle="rgba(2,7,8,.84)";ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.fill();
         const healthGradient=ctx.createLinearGradient(ally.x-46,0,ally.x+46,0);healthGradient.addColorStop(0,"#5ed52d");healthGradient.addColorStop(1,"#b7ff57");ctx.fillStyle=healthGradient;ctx.beginPath();ctx.roundRect(ally.x-46,barY+2,92*healthRatio,3,1.5);ctx.fill();ctx.strokeStyle="rgba(190,255,132,.72)";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.stroke();ctx.restore();
       }
@@ -3185,6 +3185,10 @@ export default function AshfallGame() {
       ctx.fillStyle="rgba(255,150,170,"+(.55+pulse*.35)+")";ctx.shadowColor="#ffb0c0";ctx.shadowBlur=22;
       ctx.beginPath();ctx.moveTo(0,-13);ctx.bezierCurveTo(9,-24,20,-6,0,10);ctx.bezierCurveTo(-20,-6,-9,-24,0,-13);ctx.fill();
       ctx.restore();
+      const late=lateMapContactShade(mapRef.current);
+      ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="bottom";
+      ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(7,3,16,.9)";ctx.strokeText("ALTAR",x,groundY-88);
+      ctx.fillStyle="#fff6d2";ctx.fillText("ALTAR",x,groundY-88); // altar cream leftover after #64 afterCapture trim; HUD Press E still wins, no invented study PRESS E
       ctx.restore();
     };
     const drawPixelPlatform=(p:Platform,now:number,map:MapId)=>{
@@ -3231,7 +3235,8 @@ export default function AshfallGame() {
     };
     const drawRegionalScenery=(now:number,viewW:number,map:MapId)=>{
       const props=SCENERY_PROP_XS;
-      for(let i=0;i<props.length;i++){const x=props[i];if(x>worldWidthFor(map)-90||x<cameraX-120||x>cameraX+viewW+120)continue;const ground=surfaceYAt(map,x,590);if(ground===null)continue;ctx.save();ctx.translate(x,ground);
+      for(let i=0;i<props.length;i++){const x=props[i];if(x>worldWidthFor(map)-90||x<cameraX-120||x>cameraX+viewW+120)continue;if(map===6&&Math.abs(x-MAP6_HEART_X)<40)continue; // leftover 6460 vein no longer sits on the heart after #64 afterCapture trim
+        const ground=surfaceYAt(map,x,590);if(ground===null)continue;ctx.save();ctx.translate(x,ground);
         if(map===1){if(i%3===0){ctx.strokeStyle="rgba(61,82,96,.82)";ctx.lineWidth=3;for(let b=-3;b<=3;b++){const sway=Math.sin(now*.0025+x*.04+b)*5;ctx.beginPath();ctx.moveTo(b*5,0);ctx.quadraticCurveTo(b*5+sway*.2,-12,b*5+sway,-20-Math.abs(b)*2);ctx.stroke();}}else{const rock=ctx.createLinearGradient(-25,-48,22,0);rock.addColorStop(0,"#71869e");rock.addColorStop(.45,"#3c485a");rock.addColorStop(1,"#151d2a");ctx.fillStyle=rock;ctx.beginPath();ctx.moveTo(-28,0);ctx.lineTo(-20,-26);ctx.lineTo(-6,-40);ctx.lineTo(14,-34);ctx.lineTo(26,-12);ctx.lineTo(22,0);ctx.closePath();ctx.fill();ctx.fillStyle="rgba(156,202,199,.22)";ctx.fillRect(-10,-20,12,3);}}
         else if(map===2){if(i%3===0){ctx.strokeStyle="rgba(94,76,48,.85)";ctx.lineWidth=3;for(let b=-3;b<=3;b++){const sway=Math.sin(now*.0028+x*.01+b)*4;ctx.beginPath();ctx.moveTo(b*5,0);ctx.quadraticCurveTo(b*5+sway*.3,-18,b*5+sway,-36-Math.abs(b)*2);ctx.stroke();}}else{const rock=ctx.createLinearGradient(-25,-48,22,0);rock.addColorStop(0,"#d49a68");rock.addColorStop(.45,"#85584d");rock.addColorStop(1,"#403236");ctx.fillStyle=rock;ctx.beginPath();ctx.moveTo(-30,0);ctx.lineTo(-23,-28);ctx.lineTo(-7,-45);ctx.lineTo(17,-37);ctx.lineTo(29,-13);ctx.lineTo(24,0);ctx.closePath();ctx.fill();}}
         else if(map===3){ctx.fillStyle="#1b0d08";ctx.fillRect(-7,-68,14,68);ctx.strokeStyle="#2d160d";ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(0,-48);ctx.lineTo(-25,-78);ctx.moveTo(1,-40);ctx.lineTo(28,-66);ctx.stroke();ctx.fillStyle="rgba(255,104,40,.22)";ctx.fillRect(-9,-3,18,3);}
@@ -3633,7 +3638,7 @@ export default function AshfallGame() {
         else if(map===5&&nearPortalAt(pl.x,MAP5_ENTRY_X))action="Return to Moonwell Cliffs";
         else if(map===5&&nearPortalAt(pl.x,MAP5_EXIT_X))action="Enter Ashfall's Heart";
         else if(map===6&&nearPortalAt(pl.x,MAP6_ENTRY_X))action="Return to The Quiet Ember";
-        else if(map===6&&atHeartAltar(pl.x))action=campaignEndedRef.current?"Rest at Ashfall's Heart":"Press E at Ashfall's Heart"; // altar prompt still wins after #56 Dell/Rowan walk-out
+        else if(map===6&&atHeartAltar(pl.x))action=campaignEndedRef.current?"Rest at Ashfall's Heart":"Press E at Ashfall's Heart"; // altar prompt still wins after #56 Dell/Rowan walk-out and #64 afterCapture trim
       }
       if(action!==lastAction){lastAction=action;setNearAction(action||null);}
       const nextAnchor=promptAt?{left:Math.round(clamp((promptAt.x-cameraX)*scale,78,w-78)),bottom:Math.round(clamp(h-(promptAt.y-88)*scale,96,h*.58))}:null;
