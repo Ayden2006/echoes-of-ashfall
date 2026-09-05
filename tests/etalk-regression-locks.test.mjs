@@ -176,7 +176,8 @@ test("Reed, Kest, and Hale keep kiln heat talking to the heart pulse", () => {
 
   assert.match(haleKiln.afterCaptureTalk, /You bound the coal shard\. That's kiln heat the heart can take/);
   assert.match(haleKiln.afterCaptureTalk, /The wind can forget the cliff now\. The kiln heat remembers/);
-  assert.match(haleKiln.afterCaptureTalk, /The east gate heals you\. Talk to Kest\. Press E at the heart altar/);
+  assert.match(haleKiln.afterCaptureTalk, /The east gate heals you\. Talk to Kest/);
+  assert.doesNotMatch(haleKiln.afterCaptureTalk, /ends the campaign|Press E at the (heart )?altar/);
   assert.doesNotMatch(haleKiln.afterCaptureTalk, /last pulse|quit the fire/);
 
   assert.match(haleCliff.afterCaptureTalk, /You bound the pool shard/);
@@ -404,7 +405,8 @@ test("Reed, Kest, Edan, Hale, Ryn, Dell, and Rowan again/afterCapture walk out a
   assert.match(edan.againTalk, /Bind the wyrm if you still need the pulse/);
   assert.match(edan.afterCaptureTalk, /Then we walk out as people/);
   assert.match(edan.afterCaptureTalk, /You bound the last pulse/);
-  assert.match(edan.afterCaptureTalk, /Press E at the heart altar\. That ends the campaign/);
+  assert.match(edan.afterCaptureTalk, /Walk east\. The gate behind you still heals/);
+  assert.doesNotMatch(edan.afterCaptureTalk, /ends the campaign|Press E at the (heart )?altar/);
 
   assert.match(haleKiln.againTalk, WALK_OUT);
   assert.match(haleKiln.againTalk, /When this kiln can rest, we walk out as people/);
@@ -415,20 +417,23 @@ test("Reed, Kest, Edan, Hale, Ryn, Dell, and Rowan again/afterCapture walk out a
   assert.match(haleKiln.afterCaptureTalk, /Then we walk out as people\. This stretch can stay quiet/);
   assert.match(haleKiln.afterCaptureTalk, /You bound the coal shard\. That's kiln heat the heart can take/);
   assert.match(haleKiln.afterCaptureTalk, /The wind can forget the cliff now\. The kiln heat remembers/);
-  assert.match(haleKiln.afterCaptureTalk, /The east gate heals you\. Talk to Kest\. Press E at the heart altar/);
+  assert.match(haleKiln.afterCaptureTalk, /The east gate heals you\. Talk to Kest/);
+  assert.doesNotMatch(haleKiln.afterCaptureTalk, /ends the campaign|Press E at the (heart )?altar/);
   assert.doesNotMatch(haleKiln.afterCaptureTalk, /last pulse|quit the fire/);
 
   assert.match(rynKiln.afterCaptureTalk, WALK_OUT);
   assert.match(rynKiln.afterCaptureTalk, /Then we walk out as people\. I'll keep this last gate/);
   assert.match(rynKiln.afterCaptureTalk, /You bound the coal shard/);
-  assert.match(rynKiln.afterCaptureTalk, /The east gate heals you\. Press E at the heart altar/);
+  assert.match(rynKiln.afterCaptureTalk, /The east gate heals you/);
+  assert.doesNotMatch(rynKiln.afterCaptureTalk, /ends the campaign|Press E at the (heart )?altar/);
   assert.doesNotMatch(rynKiln.againTalk, WALK_OUT);
   assert.doesNotMatch(rynKiln.againTalk, FINISH_DUMP);
 
   assert.match(dellHeart.afterCaptureTalk, WALK_OUT);
   assert.match(dellHeart.afterCaptureTalk, /Then we walk out as people\. The shore can go dark without taking us/);
   assert.match(dellHeart.afterCaptureTalk, /You bound the last pulse/);
-  assert.match(dellHeart.afterCaptureTalk, /The gate behind you still heals\. Press E at the heart altar/);
+  assert.match(dellHeart.afterCaptureTalk, /The gate behind you still heals/);
+  assert.doesNotMatch(dellHeart.afterCaptureTalk, /ends the campaign|Press E at the (heart )?altar/);
   assert.doesNotMatch(dellHeart.againTalk, WALK_OUT);
   assert.doesNotMatch(dellHeart.againTalk, FINISH_DUMP);
   assert.match(dellHeart.againTalk, /Shore dusk, then heart/);
@@ -436,7 +441,8 @@ test("Reed, Kest, Edan, Hale, Ryn, Dell, and Rowan again/afterCapture walk out a
   assert.match(rowanHeart.afterCaptureTalk, WALK_OUT);
   assert.match(rowanHeart.afterCaptureTalk, /Then we walk out as people\. The leftover road can go quiet/);
   assert.match(rowanHeart.afterCaptureTalk, /You bound the last pulse/);
-  assert.match(rowanHeart.afterCaptureTalk, /The gate behind you still heals\. Press E at the heart altar/);
+  assert.match(rowanHeart.afterCaptureTalk, /The gate behind you still heals/);
+  assert.doesNotMatch(rowanHeart.afterCaptureTalk, /ends the campaign|Press E at the (heart )?altar/);
   assert.doesNotMatch(rowanHeart.againTalk, WALK_OUT);
   assert.doesNotMatch(rowanHeart.againTalk, FINISH_DUMP);
   assert.match(rowanHeart.againTalk, /Castle rain, then heart/);
@@ -578,6 +584,40 @@ test("every map 5–6 afterCaptureTalk walks out as people", () => {
       assert.doesNotMatch(npc.againTalk, WALK_OUT, `${key} againTalk should stay last-crossing without walk-out`);
     }
   }
+});
+
+test("map 5–6 afterCapture keeps shard, heals, and walk-out without repeating the altar dump", () => {
+  const late = npcs.filter((npc) => npc.map === 5 || npc.map === 6);
+  const altarDump = /ends the campaign|Press E at the (heart )?altar/;
+  const dating = /bondMeter|dating|affection|romance|love you|stay with me|walk out together/;
+  assert.equal(late.length, 16, "maps 5–6 should stay the present kiln/heart roster");
+
+  for (const npc of late) {
+    const key = `${npc.id}:${npc.map}`;
+    assert.match(npc.firstTalk, /if you still need/, `${key} firstTalk should keep the soft landing`);
+    assert.match(npc.firstTalk, /heart altar/, `${key} firstTalk should keep altar clarity`);
+    assert.match(npc.firstTalk, /ends the campaign/, `${key} firstTalk should keep the campaign-end cue`);
+    if (npc.map === 5) {
+      assert.match(npc.firstTalk, /The east gate heals you/, `${key} firstTalk should say the east gate heals`);
+      assert.match(npc.afterCaptureTalk, /The east gate heals you/, `${key} afterCapture should keep the east-gate heal`);
+    } else {
+      assert.match(npc.firstTalk, /The gate behind you still heals/, `${key} firstTalk should say the west gate still heals`);
+      assert.match(npc.afterCaptureTalk, /The gate behind you still heals/, `${key} afterCapture should keep the west-gate heal`);
+    }
+    assert.match(npc.afterCaptureTalk, /we walk out as people/i, `${key} afterCapture should walk out as people`);
+    assert.doesNotMatch(npc.afterCaptureTalk, altarDump, `${key} afterCapture should not repeat the campaign-end altar dump`);
+    assert.doesNotMatch(npc.afterCaptureTalk, dating, `${key} afterCapture should stay off dating/bond`);
+    assert.doesNotMatch(npc.afterCaptureTalk, SOFTLOCK, `${key} afterCapture should not softlock a skipped bind`);
+  }
+
+  const reed = late.find((npc) => npc.id === "reed" && npc.map === 5);
+  const kest = late.find((npc) => npc.id === "kest" && npc.map === 6);
+  const edan = late.find((npc) => npc.id === "edan" && npc.map === 6);
+  assert.match(reed.againTalk, /Press E at the heart altar\. That ends the campaign/);
+  assert.match(kest.againTalk, /Press E at the heart altar\. That ends the campaign/);
+  assert.match(edan.againTalk, /Press E at the altar\. The campaign ends when the signal rests/);
+  assert.match(reed.afterCaptureTalk, /That lynx was the last heat the echo could keep without going out/);
+  assert.match(kest.afterCaptureTalk, /The wyrm is the last pulse\. Rest it at the altar so Reed's kiln can rest/);
 });
 
 test("Map 1 buildings/radio stay cut and no new travelers or dating engine appear", () => {
