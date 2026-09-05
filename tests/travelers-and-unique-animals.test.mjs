@@ -597,6 +597,7 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
     ["wren", 1, /rain-cut groove/, /Press E there/],
     ["tamsin", 1, /merlon/, /Press E there/],
     ["maer", 1, /merlon/, /Press E there/],
+    ["rowan", 1, /merlon/, /Press E there if the rain feels thin/],
     ["orrin", 1, /plaque higher up/, /Press E there/],
     ["sera", 2, /dusk-shell/, /Press E there/],
     ["lira", 2, /drowned post/, /Press E there/],
@@ -659,6 +660,7 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
   assert.match(againOf("wren", 1), /Press E there if the signal feels thin/);
   assert.match(againOf("tamsin", 1), /Press E there if the rain feels thin/);
   assert.match(againOf("maer", 1), /Press E there if the rain feels thin/);
+  assert.match(againOf("rowan", 1), /Press E there if the rain feels thin/);
   assert.match(againOf("orrin", 1), /Press E there if the rain feels thin/);
   assert.match(againOf("sera", 2), /Press E there if the gold feels thin/);
   assert.match(againOf("lira", 2), /Press E there if the light feels thin/);

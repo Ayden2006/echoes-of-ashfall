@@ -273,6 +273,33 @@ test("reunion againTalk remembers the last crossing without the finish dump", ()
   }
 });
 
+test("map 1 castle againTalk keeps exactly one same-map Press E cue", () => {
+  const castle = npcs.filter((npc) => npc.map === 1);
+  const laterOnMap1 = castle.filter((npc) => npcs.some((other) => other.id === npc.id && other.map < npc.map));
+  assert.deepEqual(laterOnMap1.map((npc) => npc.id), [], "map 1 should stay first-meet castle, not a later reunion");
+  const castlePress = {
+    calen: /There is a rain-cut groove farther along the floor\. Press E there if the road feels thin/,
+    wren: /There is a rain-cut groove farther along the floor\. Press E there if the signal feels thin/,
+    orrin: /The plaque higher up says the same thing in older stone\. Press E there if the rain feels thin/,
+    tamsin: /The merlon is farther east\. Press E there if the rain feels thin/,
+    rowan: /The merlon still watches this leftover stretch\. Press E there if the rain feels thin/,
+    maer: /The merlon is west\. Press E there if the rain feels thin/,
+  };
+  assert.deepEqual(castle.map((npc) => npc.id).sort(), Object.keys(castlePress).sort(), "map 1 should stay the Calen/Wren/Orrin/Tamsin/Rowan/Maer castle Press E set");
+  for (const [id, cue] of Object.entries(castlePress)) {
+    const npc = castle.find((person) => person.id === id);
+    assert.ok(npc, `${id}:1 should stay on the castle`);
+    assert.match(npc.againTalk, cue, `${id}:1 againTalk should point to a same-map studyable with Press E`);
+    assert.equal([...npc.againTalk.matchAll(/[Pp]ress E/g)].length, 1, `${id}:1 againTalk should have exactly one Press E cue`);
+    assert.equal(STUDYABLES[1].filter(([re]) => re.test(npc.againTalk)).length, 1, `${id}:1 againTalk should name exactly one same-map studyable`);
+    assert.doesNotMatch(npc.againTalk, FINISH_DUMP, `${id}:1 againTalk should not repeat the finish dump`);
+    assert.doesNotMatch(npc.againTalk, /we walk out as people/i, `${id}:1 againTalk should stay off walk-out`);
+    const lines = talkLinesFrom(npc.againTalk);
+    assert.deepEqual(lines.filter((line) => line.text.length > 110), [], `${id}:1 againTalk lines should stay at or under 110 characters`);
+    assert.ok(lines.every((line) => line.speaker === "Moon Night" || line.speaker === npc.name));
+  }
+});
+
 test("map 2 shore againTalk keeps exactly one same-map Press E cue", () => {
   const shore = npcs.filter((npc) => npc.map === 2);
   const laterOnMap2 = shore.filter((npc) => npcs.some((other) => other.id === npc.id && other.map < npc.map));
