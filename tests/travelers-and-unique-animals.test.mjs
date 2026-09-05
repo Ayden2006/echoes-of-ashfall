@@ -851,6 +851,67 @@ test("Reed, Kest, Edan, Hale, Ryn, Dell, and Rowan again/afterCapture walk out a
   }
 });
 
+test("Sera, Vess, Tamsin, Maer, Perrin, and Isk kiln afterCapture walk out as people without dating or dump", () => {
+  const againOf = (id, map) => {
+    const block = npcBlock(id, map);
+    return block.slice(block.indexOf("againTalk:["), block.indexOf("afterCaptureTalk:["));
+  };
+  const afterOf = (id, map) => {
+    const block = npcBlock(id, map);
+    return block.slice(block.indexOf("afterCaptureTalk:["), block.indexOf("palette:"));
+  };
+  const talkLinesFrom = (src) => [...src.matchAll(/\{speaker:"([^"]+)",text:"((?:\\.|[^"\\])*)"\}/g)].map((m) => ({
+    speaker: m[1],
+    text: m[2],
+  }));
+  const dating = /bondMeter|dating|affection|romance|love you|stay with me|walk out together/;
+  const campaignDump = /spark, dusk|Castle rain, shore dusk, cairn/;
+  const softlock = /road goes dark|must capture|have to bind|Don't go in cold|Don't go into the heart cold|the echo dies|\bstuck\b/;
+  const finishDump = /ends the campaign|Press E at the (heart )?altar|Bind the (stag|wyrm)|The east gate heals you|The gate behind you still heals/;
+
+  assert.match(afterOf("sera", 5), /Then we walk out as people\. I'll keep counting till this kiln can rest/);
+  assert.match(afterOf("sera", 5), /You bound the last heat the shore could not keep/);
+  assert.doesNotMatch(againOf("sera", 5), /we walk out as people/i);
+  assert.doesNotMatch(againOf("sera", 5), finishDump);
+  assert.match(afterOf("vess", 5), /Then we walk out as people\. The ash I read can stay banked/);
+  assert.match(afterOf("vess", 5), /You bound the last heat the cairn promised/);
+  assert.doesNotMatch(againOf("vess", 5), /we walk out as people/i);
+  assert.doesNotMatch(againOf("vess", 5), finishDump);
+  assert.match(afterOf("tamsin", 5), /Then we walk out as people\. The merlon I left can stay quiet/);
+  assert.match(afterOf("tamsin", 5), /You bound the last heat/);
+  assert.doesNotMatch(againOf("tamsin", 5), /we walk out as people/i);
+  assert.doesNotMatch(againOf("tamsin", 5), finishDump);
+  assert.match(afterOf("maer", 5), /Then we walk out as people\. The leftover rain can stay quiet/);
+  assert.match(afterOf("maer", 5), /You bound the last heat/);
+  assert.doesNotMatch(againOf("maer", 5), /we walk out as people/i);
+  assert.doesNotMatch(againOf("maer", 5), finishDump);
+  assert.match(afterOf("perrin", 5), /Then we walk out as people\. The late coals can go dark/);
+  assert.match(afterOf("perrin", 5), /You bound the coal shard/);
+  assert.doesNotMatch(againOf("perrin", 5), /we walk out as people/i);
+  assert.doesNotMatch(againOf("perrin", 5), finishDump);
+  assert.match(afterOf("isk", 5), /Then we walk out as people\. This kiln heat can stay honest/);
+  assert.match(afterOf("isk", 5), /You bound the coal shard/);
+  assert.doesNotMatch(againOf("isk", 5), /we walk out as people/i);
+  assert.doesNotMatch(againOf("isk", 5), finishDump);
+
+  for (const [id, map, talk] of [
+    ["sera", 5, afterOf("sera", 5)],
+    ["vess", 5, afterOf("vess", 5)],
+    ["tamsin", 5, afterOf("tamsin", 5)],
+    ["maer", 5, afterOf("maer", 5)],
+    ["perrin", 5, afterOf("perrin", 5)],
+    ["isk", 5, afterOf("isk", 5)],
+  ]) {
+    assert.match(talk, /we walk out as people/i, `${id}:${map} afterTalk should walk out as people`);
+    assert.doesNotMatch(talk, dating, `${id}:${map} afterTalk should stay off dating/bond`);
+    assert.doesNotMatch(talk, campaignDump, `${id}:${map} afterTalk should not dump the whole road`);
+    assert.doesNotMatch(talk, softlock, `${id}:${map} afterTalk should not softlock a skipped bind`);
+    assert.doesNotMatch(talk, /walk out together/);
+    assert.deepEqual(talkLinesFrom(talk).filter((line) => line.text.length > 110), [], `${id}:${map} afterTalk lines should stay at or under 110 characters`);
+    assert.ok(talkLinesFrom(talk).every((line) => line.speaker === "Moon Night" || line.speaker === id[0].toUpperCase() + id.slice(1)));
+  }
+});
+
 test("firstTalk openings keep one distinct tell per traveler", () => {
   const openingOf = (id, map) => {
     const block = npcBlock(id, map);

@@ -338,7 +338,8 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Sera",text:"Coal pelt, not dusk fur. You bound the last heat the shore could not keep."},
       {speaker:"Sera",text:"The east gate heals you. Talk to Kest. Press E at the altar to end the campaign."},
-      {speaker:"Sera",text:"If Bram is still walking, tell him the signal isn't quarry. We're carrying it."}
+      {speaker:"Sera",text:"If Bram is still walking, tell him the signal isn't quarry. We're carrying it."},
+      {speaker:"Sera",text:"Then we walk out as people. I'll keep counting till this kiln can rest."}
     ],
     palette:{skin:"#d4a07a",cloak:"#6a3418",trim:"#f08a3a",accent:"#ffd27a"}
   },
@@ -463,7 +464,8 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Vess",text:"Coal pelt, not foxfire. You bound the last heat the cairn promised."},
       {speaker:"Vess",text:"The east gate heals you. Talk to Kest. Press E at the altar to end the campaign."},
-      {speaker:"Vess",text:"If Nia is still walking dusk, tell her the light didn't fail. It banked."}
+      {speaker:"Vess",text:"If Nia is still walking dusk, tell her the light didn't fail. It banked."},
+      {speaker:"Vess",text:"Then we walk out as people. The ash I read can stay banked."}
     ],
     palette:{skin:"#c4a888",cloak:"#2a2824",trim:"#8a7060",accent:"#e8c8a0"}
   },
@@ -494,7 +496,8 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Tamsin",text:"You bound the last heat. The merlon I left behind can finally stop watching."},
       {speaker:"Tamsin",text:"The east gate heals you. Talk to Kest. Press E at the altar. That ends the campaign."},
-      {speaker:"Tamsin",text:"If Orrin is still copying rain, tell him the wall already knew the line."}
+      {speaker:"Tamsin",text:"If Orrin is still copying rain, tell him the wall already knew the line."},
+      {speaker:"Tamsin",text:"Then we walk out as people. The merlon I left can stay quiet."}
     ],
     palette:{skin:"#c8b49a",cloak:"#243040",trim:"#7a9ab0",accent:"#d0e8f0"}
   },
@@ -586,7 +589,8 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Maer",text:"You bound the last heat. The leftover rain I followed can finally rest."},
       {speaker:"Maer",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
-      {speaker:"Maer",text:"If Lira is still counting light, tell her the gold banked here."}
+      {speaker:"Maer",text:"If Lira is still counting light, tell her the gold banked here."},
+      {speaker:"Maer",text:"Then we walk out as people. The leftover rain can stay quiet."}
     ],
     palette:{skin:"#c4a888",cloak:"#1c2834",trim:"#6a88a0",accent:"#c0d8e8"}
   },
@@ -617,7 +621,8 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Perrin",text:"You bound the coal shard. The dusk I watched on the late sand is finished here."},
       {speaker:"Perrin",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
-      {speaker:"Perrin",text:"If Holt is still on the cairn road, tell him the ash banked."}
+      {speaker:"Perrin",text:"If Holt is still on the cairn road, tell him the ash banked."},
+      {speaker:"Perrin",text:"Then we walk out as people. The late coals can go dark."}
     ],
     palette:{skin:"#d4a878",cloak:"#3a2418",trim:"#e88840",accent:"#ffd090"}
   },
@@ -710,7 +715,8 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Isk",text:"You bound the coal shard. The leftover fire I walked in the hollow banked here."},
       {speaker:"Isk",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
-      {speaker:"Isk",text:"If Wren is still listening on the cliffs, tell her the rain banked."}
+      {speaker:"Isk",text:"If Wren is still listening on the cliffs, tell her the rain banked."},
+      {speaker:"Isk",text:"Then we walk out as people. This kiln heat can stay honest."}
     ],
     palette:{skin:"#c08868",cloak:"#2a1810",trim:"#c05028",accent:"#e8a070"}
   },

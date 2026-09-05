@@ -439,6 +439,79 @@ test("Reed, Kest, Edan, Hale, Ryn, Dell, and Rowan again/afterCapture walk out a
   }
 });
 
+test("Sera, Vess, Tamsin, Maer, Perrin, and Isk kiln afterCapture walk out as people without dating or dump", () => {
+  const seraKiln = npcs.find((npc) => npc.id === "sera" && npc.map === 5);
+  const vessKiln = npcs.find((npc) => npc.id === "vess" && npc.map === 5);
+  const tamsinKiln = npcs.find((npc) => npc.id === "tamsin" && npc.map === 5);
+  const maerKiln = npcs.find((npc) => npc.id === "maer" && npc.map === 5);
+  const perrinKiln = npcs.find((npc) => npc.id === "perrin" && npc.map === 5);
+  const iskKiln = npcs.find((npc) => npc.id === "isk" && npc.map === 5);
+  assert.ok(seraKiln && vessKiln && tamsinKiln && maerKiln && perrinKiln && iskKiln, "Sera/Vess/Tamsin/Maer/Perrin/Isk kiln reunion roster should stay present");
+
+  const dating = /bondMeter|dating|affection|romance|love you|stay with me|walk out together/;
+  const campaignDump = /spark, dusk|Castle rain, shore dusk, cairn/;
+  const WALK_OUT = /we walk out as people/i;
+
+  assert.match(seraKiln.afterCaptureTalk, WALK_OUT);
+  assert.match(seraKiln.afterCaptureTalk, /Then we walk out as people\. I'll keep counting till this kiln can rest/);
+  assert.match(seraKiln.afterCaptureTalk, /You bound the last heat the shore could not keep/);
+  assert.match(seraKiln.afterCaptureTalk, /The east gate heals you\. Talk to Kest/);
+  assert.doesNotMatch(seraKiln.againTalk, WALK_OUT);
+  assert.doesNotMatch(seraKiln.againTalk, FINISH_DUMP);
+  assert.match(seraKiln.againTalk, /Shore dusk, then this kiln/);
+
+  assert.match(vessKiln.afterCaptureTalk, WALK_OUT);
+  assert.match(vessKiln.afterCaptureTalk, /Then we walk out as people\. The ash I read can stay banked/);
+  assert.match(vessKiln.afterCaptureTalk, /You bound the last heat the cairn promised/);
+  assert.match(vessKiln.afterCaptureTalk, /The east gate heals you\. Talk to Kest/);
+  assert.doesNotMatch(vessKiln.againTalk, WALK_OUT);
+  assert.doesNotMatch(vessKiln.againTalk, FINISH_DUMP);
+  assert.match(vessKiln.againTalk, /Cairn twist, then kiln/);
+
+  assert.match(tamsinKiln.afterCaptureTalk, WALK_OUT);
+  assert.match(tamsinKiln.afterCaptureTalk, /Then we walk out as people\. The merlon I left can stay quiet/);
+  assert.match(tamsinKiln.afterCaptureTalk, /You bound the last heat/);
+  assert.match(tamsinKiln.afterCaptureTalk, /The east gate heals you\. Talk to Kest/);
+  assert.doesNotMatch(tamsinKiln.againTalk, WALK_OUT);
+  assert.doesNotMatch(tamsinKiln.againTalk, FINISH_DUMP);
+  assert.match(tamsinKiln.againTalk, /Castle merlon, then kiln road/);
+
+  assert.match(maerKiln.afterCaptureTalk, WALK_OUT);
+  assert.match(maerKiln.afterCaptureTalk, /Then we walk out as people\. The leftover rain can stay quiet/);
+  assert.match(maerKiln.afterCaptureTalk, /You bound the last heat/);
+  assert.match(maerKiln.afterCaptureTalk, /The east gate heals you\. Talk to Kest/);
+  assert.doesNotMatch(maerKiln.againTalk, WALK_OUT);
+  assert.doesNotMatch(maerKiln.againTalk, FINISH_DUMP);
+  assert.match(maerKiln.againTalk, /Castle rain, then kiln road/);
+
+  assert.match(perrinKiln.afterCaptureTalk, WALK_OUT);
+  assert.match(perrinKiln.afterCaptureTalk, /Then we walk out as people\. The late coals can go dark/);
+  assert.match(perrinKiln.afterCaptureTalk, /You bound the coal shard/);
+  assert.match(perrinKiln.afterCaptureTalk, /The east gate heals you\. Talk to Kest/);
+  assert.doesNotMatch(perrinKiln.againTalk, WALK_OUT);
+  assert.doesNotMatch(perrinKiln.againTalk, FINISH_DUMP);
+  assert.match(perrinKiln.againTalk, /Late shore, then kiln road/);
+
+  assert.match(iskKiln.afterCaptureTalk, WALK_OUT);
+  assert.match(iskKiln.afterCaptureTalk, /Then we walk out as people\. This kiln heat can stay honest/);
+  assert.match(iskKiln.afterCaptureTalk, /You bound the coal shard/);
+  assert.match(iskKiln.afterCaptureTalk, /The east gate heals you\. Talk to Kest/);
+  assert.doesNotMatch(iskKiln.againTalk, WALK_OUT);
+  assert.doesNotMatch(iskKiln.againTalk, FINISH_DUMP);
+  assert.match(iskKiln.againTalk, /Cairn twist, then kiln heat/);
+
+  for (const npc of [seraKiln, vessKiln, tamsinKiln, maerKiln, perrinKiln, iskKiln]) {
+    const lines = talkLinesFrom(npc.afterCaptureTalk);
+    assert.deepEqual(lines.filter((line) => line.text.length > 110), [], `${npc.id}:${npc.map} afterTalk lines should stay at or under 110 characters`);
+    assert.doesNotMatch(npc.afterCaptureTalk, dating, `${npc.id}:${npc.map} afterTalk should stay off dating/bond`);
+    assert.doesNotMatch(npc.afterCaptureTalk, SOFTLOCK, `${npc.id}:${npc.map} afterTalk should not softlock a skipped bind`);
+    assert.doesNotMatch(npc.afterCaptureTalk, campaignDump, `${npc.id}:${npc.map} afterTalk should not dump the whole road`);
+    assert.doesNotMatch(npc.afterCaptureTalk, /walk out together/);
+    assert.ok(lines.every((line) => line.speaker === "Moon Night" || line.speaker === npc.name));
+    assert.doesNotMatch(npc.againTalk, WALK_OUT, `${npc.id}:${npc.map} againTalk should stay last-crossing without walk-out`);
+  }
+});
+
 test("Map 1 buildings/radio stay cut and no new travelers or dating engine appear", () => {
   assert.match(game, /1:\{name:"The Signal in the Rain"/);
   assert.doesNotMatch(game, /radio encounter|The radio |tune the radio|listen to the radio/i);
