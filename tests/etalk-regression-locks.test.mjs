@@ -226,6 +226,18 @@ test("reunion againTalk remembers the last crossing without the finish dump", ()
     assert.match(npc.againTalk, crossing, `${npc.id}:${npc.map} againTalk should remember the last crossing`);
     assert.doesNotMatch(npc.againTalk, FINISH_DUMP, `${npc.id}:${npc.map} againTalk should not repeat the finish dump`);
   }
+  const kilnPress = {
+    sera: /The quiet kiln still sits west\. Press E there if the heat feels thin/,
+    tamsin: /The quiet kiln sits west\. Press E there if the fire feels thin/,
+    maer: /Quiet bellows sit west\. Press E there if the leftover fire feels thin/,
+    perrin: /Quiet bellows sit west\. Press E there if the heat feels thin/,
+  };
+  for (const [id, cue] of Object.entries(kilnPress)) {
+    const npc = reunions.find((person) => person.id === id && person.map === 5);
+    assert.ok(npc, `${id}:5 reunion should stay on the kiln road`);
+    assert.match(npc.againTalk, cue, `${id}:5 againTalk should point to a same-map studyable with Press E`);
+    assert.match(npc.againTalk, /[Pp]ress E/);
+  }
 });
 
 test("Hale stays on the map 4–5 roster with first/again/afterCapture", () => {
@@ -315,13 +327,15 @@ test("talk clearance stays 300px apart and clear of altar 200px, portals, and ca
   }
 });
 
-test("Reed, Kest, Edan, Hale, and Ryn again/afterCapture walk out as people without dating or dump", () => {
+test("Reed, Kest, Edan, Hale, Ryn, Dell, and Rowan again/afterCapture walk out as people without dating or dump", () => {
   const reed = npcs.find((npc) => npc.id === "reed" && npc.map === 5);
   const kest = npcs.find((npc) => npc.id === "kest" && npc.map === 6);
   const edan = npcs.find((npc) => npc.id === "edan" && npc.map === 6);
   const haleKiln = npcs.find((npc) => npc.id === "hale" && npc.map === 5);
   const rynKiln = npcs.find((npc) => npc.id === "ryn" && npc.map === 5);
-  assert.ok(reed && kest && edan && haleKiln && rynKiln, "Reed/Kest/Edan/Hale/Ryn walk-out roster should stay present");
+  const dellHeart = npcs.find((npc) => npc.id === "dell" && npc.map === 6);
+  const rowanHeart = npcs.find((npc) => npc.id === "rowan" && npc.map === 6);
+  assert.ok(reed && kest && edan && haleKiln && rynKiln && dellHeart && rowanHeart, "Reed/Kest/Edan/Hale/Ryn/Dell/Rowan walk-out roster should stay present");
 
   const dating = /bondMeter|dating|affection|romance|love you|stay with me|walk out together/;
   const campaignDump = /spark, dusk|Castle rain, shore dusk, cairn/;
@@ -379,8 +393,24 @@ test("Reed, Kest, Edan, Hale, and Ryn again/afterCapture walk out as people with
   assert.doesNotMatch(rynKiln.againTalk, WALK_OUT);
   assert.doesNotMatch(rynKiln.againTalk, FINISH_DUMP);
 
-  for (const npc of [reed, kest, edan, haleKiln, rynKiln]) {
-    const talks = npc.id === "ryn"
+  assert.match(dellHeart.afterCaptureTalk, WALK_OUT);
+  assert.match(dellHeart.afterCaptureTalk, /Then we walk out as people\. The shore can go dark without taking us/);
+  assert.match(dellHeart.afterCaptureTalk, /You bound the last pulse/);
+  assert.match(dellHeart.afterCaptureTalk, /The gate behind you still heals\. Press E at the heart altar/);
+  assert.doesNotMatch(dellHeart.againTalk, WALK_OUT);
+  assert.doesNotMatch(dellHeart.againTalk, FINISH_DUMP);
+  assert.match(dellHeart.againTalk, /Shore dusk, then heart/);
+
+  assert.match(rowanHeart.afterCaptureTalk, WALK_OUT);
+  assert.match(rowanHeart.afterCaptureTalk, /Then we walk out as people\. The leftover road can go quiet/);
+  assert.match(rowanHeart.afterCaptureTalk, /You bound the last pulse/);
+  assert.match(rowanHeart.afterCaptureTalk, /The gate behind you still heals\. Press E at the heart altar/);
+  assert.doesNotMatch(rowanHeart.againTalk, WALK_OUT);
+  assert.doesNotMatch(rowanHeart.againTalk, FINISH_DUMP);
+  assert.match(rowanHeart.againTalk, /Castle rain, then heart/);
+
+  for (const npc of [reed, kest, edan, haleKiln, rynKiln, dellHeart, rowanHeart]) {
+    const talks = (npc.id === "ryn" || npc.id === "dell" || npc.id === "rowan")
       ? [["after", npc.afterCaptureTalk]]
       : [["again", npc.againTalk], ["after", npc.afterCaptureTalk]];
     for (const [label, talk] of talks) {

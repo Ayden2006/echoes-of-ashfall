@@ -332,7 +332,8 @@ const NPCS:Npc[] = [
     ],
     againTalk:[
       {speaker:"Sera",text:"We keep crossing roads. Shore dusk, then this kiln."},
-      {speaker:"Sera",text:"Same dusk, later heat."}
+      {speaker:"Sera",text:"Same dusk, later heat."},
+      {speaker:"Sera",text:"The quiet kiln still sits west. Press E there if the heat feels thin."}
     ],
     afterCaptureTalk:[
       {speaker:"Sera",text:"Coal pelt, not dusk fur. You bound the last heat the shore could not keep."},
@@ -489,7 +490,7 @@ const NPCS:Npc[] = [
       {speaker:"Tamsin",text:"The animals are the echo. Bind a lynx if you still need the heat."},
       {speaker:"Tamsin",text:"The east gate heals you. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Tamsin",text:"We meet again. Castle merlon, then kiln road. Same watch, later fire."}],
+    againTalk:[{speaker:"Tamsin",text:"We meet again. Castle merlon, then kiln road. Same watch, later fire."},{speaker:"Tamsin",text:"The quiet kiln sits west. Press E there if the fire feels thin."}],
     afterCaptureTalk:[
       {speaker:"Tamsin",text:"You bound the last heat. The merlon I left behind can finally stop watching."},
       {speaker:"Tamsin",text:"The east gate heals you. Talk to Kest. Press E at the altar. That ends the campaign."},
@@ -581,7 +582,7 @@ const NPCS:Npc[] = [
       {speaker:"Maer",text:"The animals are the echo. Bind a lynx if you still need the heat."},
       {speaker:"Maer",text:"The east gate heals you. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Maer",text:"We meet again. Castle rain, then kiln road. Same leftover walk, later fire."}],
+    againTalk:[{speaker:"Maer",text:"We meet again. Castle rain, then kiln road. Same leftover walk, later fire."},{speaker:"Maer",text:"Quiet bellows sit west. Press E there if the leftover fire feels thin."}],
     afterCaptureTalk:[
       {speaker:"Maer",text:"You bound the last heat. The leftover rain I followed can finally rest."},
       {speaker:"Maer",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
@@ -612,7 +613,7 @@ const NPCS:Npc[] = [
       {speaker:"Perrin",text:"The animals are the echo. Bind a lynx if you still need the heat."},
       {speaker:"Perrin",text:"The east gate heals you. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Perrin",text:"We meet again. Late shore, then kiln road. Same watch, later heat."}],
+    againTalk:[{speaker:"Perrin",text:"We meet again. Late shore, then kiln road. Same watch, later heat."},{speaker:"Perrin",text:"Quiet bellows sit west. Press E there if the heat feels thin."}],
     afterCaptureTalk:[
       {speaker:"Perrin",text:"You bound the coal shard. The dusk I watched on the late sand is finished here."},
       {speaker:"Perrin",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
@@ -678,7 +679,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Dell",text:"You bound the last pulse. That's the dusk I followed, finished at the heart altar."},
       {speaker:"Dell",text:"Walk east. The gate behind you still heals. Press E at the heart altar. That ends the campaign."},
-      {speaker:"Dell",text:"The shore can go dark without taking us."}
+      {speaker:"Dell",text:"Then we walk out as people. The shore can go dark without taking us."}
     ],
     palette:{skin:"#d8a870",cloak:"#4a2018",trim:"#e07030",accent:"#ffc070"}
   },
@@ -741,7 +742,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Rowan",text:"You bound the last pulse. That's every leftover step I walked, still in one place."},
       {speaker:"Rowan",text:"Walk east. The gate behind you still heals. Press E at the heart altar. That ends the campaign."},
-      {speaker:"Rowan",text:"Then the leftover road can go quiet."}
+      {speaker:"Rowan",text:"Then we walk out as people. The leftover road can go quiet."}
     ],
     palette:{skin:"#c8b080",cloak:"#1a2830",trim:"#5a8898",accent:"#a8d0d8"}
   },
