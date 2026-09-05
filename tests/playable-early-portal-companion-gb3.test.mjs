@@ -158,7 +158,7 @@ test("maps 2–4 early portal cream leftover still matches #52/#61/#66 late port
   assert.match(game, /const lateMapContactShade = \(map:MapId\) => map===5/);
   assert.match(game, /const drawPortal=\(x:number,groundY:number,now:number,map:MapId,colorOverride\?:string,label\?:string\)=>\{/);
   assert.match(game, /ctx\.lineWidth=late\?5:4;ctx\.strokeStyle=late\?"rgba\(6,2,4,\.96\)":"rgba\(6,8,10,\.88\)";ctx\.strokeText\(label,cx,groundY-188\)/);
-  assert.match(game, /ctx\.fillStyle="#fff6d2";ctx\.fillText\(label,cx,groundY-188\); \/\/ early-map west\/east tags keep cream fill after #48\/#50 late stroke; maps 2–4 leftover cream still matches #52\/#61\/#66 late portal tags/);
+  assert.match(game, /ctx\.fillStyle="#fff6d2";ctx\.fillText\(label,cx,groundY-188\); \/\/ early-map west\/east tags keep cream fill after #48\/#50 late stroke; maps 2–4 leftover cream still matches #52\/#61\/#66 late portal tags; leftover still matches #52\/#61\/#68 after followHold/);
   assert.match(game, /ctx\.strokeText\("PRESS E",cx,groundY-174\); \/\/ maps 5–6 entry\/exit keep #52 cream fill \+ late stroke with nearPortalAt; maps 2–4 leftover PRESS E keeps the same cream/);
   assert.match(game, /ctx\.fillStyle="#fff6d2";ctx\.fillText\("PRESS E",cx,groundY-174\)/);
   assert.doesNotMatch(game, /ctx\.fillStyle=late\?"#fff6d2":"rgba\("\+portalColor\+","\+tagPulse\+"\)"/);
