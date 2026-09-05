@@ -431,6 +431,79 @@ test("full-road againTalk keeps exactly one same-map Press E cue", () => {
   }
 });
 
+test("full-road firstTalk keeps exactly one same-map Press E cue", () => {
+  const FIRST_ALTAR = new Set(npcs.filter((npc) => npc.map >= 5).map((npc) => `${npc.id}:${npc.map}`));
+  const ALTAR_DUMP = /ends the campaign|Press E at the (heart )?altar/;
+  const WALK_OUT = /we walk out as people/i;
+  const roadPress = {
+    "calen:1": /A rain-worn plaque sits east\. Press E there if the rain feels thin/,
+    "wren:1": /The plaque higher up still writes\. Press E there if the signal feels thin/,
+    "orrin:1": /The plaque higher up copies the same rain\. Press E there if the line feels thin/,
+    "tamsin:1": /The merlon still watches east\. Press E there if the rain feels thin/,
+    "rowan:1": /The merlon still watches this leftover road\. Press E there if the rain feels thin/,
+    "maer:1": /The merlon still sits east\. Press E there if the rain feels thin/,
+    "sera:2": /A dusk-shell sits east on a ledge\. Press E there if the gold feels thin/,
+    "lira:2": /The drowned post mid-beach keeps count\. Press E there if the light feels thin/,
+    "dell:2": /A tide-cut step sits east of this gold\. Press E there if the gold feels thin/,
+    "perrin:2": /A tide-cut step sits east of this late sand\. Press E there if the shore feels thin/,
+    "nia:2": /A tide-cut step sits east on this last stretch\. Press E there if the gold feels thin/,
+    "bram:3": /Read the split cairn mid-hollow\. Press E there if the stones feel thin/,
+    "isk:3": /The cairn still sits east\. Press E there if the ash feels thin/,
+    "holt:3": /The cairn still sits west\. Press E there if the stones feel thin/,
+    "vess:3": /The cairn I read still sits west\. Press E there if the stones feel thin/,
+    "calen:4": /Pale lichen sits west of this watch\. Press E there if the wind feels thin/,
+    "orrin:4": /A cliff notch sits east of this copy\. Press E there if the wind feels thin/,
+    "lira:4": /Pale lichen sits west of this count\. Press E there if the light feels thin/,
+    "wren:4": /Pale lichen sits west of this listen\. Press E there if the pool feels thin/,
+    "hale:4": /Pale lichen sits west of this first watch\. Press E there if the wind feels thin/,
+    "ryn:4": /Pale lichen sits west of this first gate\. Press E there if the pool feels thin/,
+    "reed:5": /A banked coal-bed sits east\. Press E there if the coals feel thin/,
+    "sera:5": /Quiet bellows sit west of this later heat\. Press E there if the heat feels thin/,
+    "tamsin:5": /Quiet bellows sit west of this wall-road\. Press E there if the fire feels thin/,
+    "maer:5": /Quiet bellows sit west of this leftover rain\. Press E there if the fire feels thin/,
+    "perrin:5": /Quiet bellows sit west of these late coals\. Press E there if the heat feels thin/,
+    "vess:5": /Quiet bellows sit west of this kiln road\. Press E there if the breath feels thin/,
+    "isk:5": /A banked coal-bed sits west of this breath\. Press E there if the heat feels thin/,
+    "hale:5": /Quiet bellows sit west of this kiln stretch\. Press E there if the coals feel thin/,
+    "ryn:5": /Quiet bellows sit west of this first kiln gate\. Press E there if the coals feel thin/,
+    "kest:6": /A first-step stone sits east of this heart\. Press E there if the pulse feels thin/,
+    "bram:6": /A first-step stone sits east\. Press E there if the leftover fire feels thin/,
+    "nia:6": /A first-step stone sits west\. Press E there if the last light feels thin/,
+    "holt:6": /A first-step stone sits west\. Press E there if the last stones feel thin/,
+    "dell:6": /A cooled vein sits east\. Press E there if the gold feels thin/,
+    "rowan:6": /A cooled vein sits east\. Press E there if the leftover road feels thin/,
+    "edan:6": /The cooled vein is east\. Press E there if the pulse feels thin/,
+  };
+  assert.deepEqual(npcs.map((npc) => `${npc.id}:${npc.map}`).sort(), Object.keys(roadPress).sort(), "maps 1–6 should stay the present 37-talk firstTalk Press E roster and no new travelers");
+
+  for (const npc of npcs) {
+    const key = `${npc.id}:${npc.map}`;
+    const cue = roadPress[key];
+    assert.ok(cue, `${key} should stay on the full-road firstTalk Press E roster`);
+    assert.match(npc.firstTalk, cue, `${key} firstTalk should point to a same-map studyable with Press E`);
+    const named = STUDYABLES[npc.map].filter(([re, name]) => name !== "altar" && re.test(npc.firstTalk));
+    const pressCount = [...npc.firstTalk.matchAll(/[Pp]ress E/g)].length;
+    assert.equal(named.length, 1, `${key} firstTalk should name exactly one same-map studyable besides any allowed altar dump`);
+    if (key === "calen:1") {
+      assert.equal(pressCount, 2, `${key} firstTalk should keep press E, then Q plus one studyable Press E`);
+    } else if (FIRST_ALTAR.has(key)) {
+      assert.equal(pressCount, 2, `${key} firstTalk should keep the existing altar dump plus one studyable Press E`);
+    } else {
+      assert.equal(pressCount, 1, `${key} firstTalk should have exactly one Press E cue`);
+    }
+    if (FIRST_ALTAR.has(key)) {
+      assert.match(npc.firstTalk, ALTAR_DUMP, `${key} firstTalk already keeps the late-map altar closing`);
+    } else {
+      assert.doesNotMatch(npc.firstTalk, ALTAR_DUMP, `${key} firstTalk should not add the finish dump`);
+    }
+    assert.doesNotMatch(npc.firstTalk, WALK_OUT, `${key} firstTalk should stay off walk-out`);
+    const lines = talkLinesFrom(npc.firstTalk);
+    assert.deepEqual(lines.filter((line) => line.text.length > 110), [], `${key} firstTalk lines should stay at or under 110 characters`);
+    assert.ok(lines.every((line) => line.speaker === "Moon Night" || line.speaker === npc.name));
+    assert.doesNotMatch(npc.firstTalk, /bondMeter|dating|affection|romance|love you|stay with me|walk out together/);
+  }
+});
+
 test("Hale stays on the map 4–5 roster with first/again/afterCapture", () => {
   const haleCliffs = npcs.find((npc) => npc.id === "hale" && npc.map === 4);
   const haleKiln = npcs.find((npc) => npc.id === "hale" && npc.map === 5);
