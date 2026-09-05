@@ -366,7 +366,7 @@ const NPCS:Npc[] = [
       {speaker:"Bram",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
       {speaker:"Bram",text:"The gate behind you still heals. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Bram",text:"We meet at the last echo. Cairn twist, then this heart."},{speaker:"Bram",text:"I'm not leaving until the leftover fire can rest."}],
+    againTalk:[{speaker:"Bram",text:"We meet at the last echo. Cairn twist, then this heart."},{speaker:"Bram",text:"I'm not leaving until the leftover fire can rest."},{speaker:"Bram",text:"An echo-stone sits farther east. Press E there if the leftover fire feels thin."}],
     afterCaptureTalk:[
       {speaker:"Bram",text:"You bound the last pulse. That's the leftover fire I tracked, still at last."},
       {speaker:"Bram",text:"Walk east. The gate behind you still heals. Press E at the heart altar. That ends the campaign."},
@@ -429,7 +429,7 @@ const NPCS:Npc[] = [
       {speaker:"Nia",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
       {speaker:"Nia",text:"The gate behind you still heals. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Nia",text:"We keep meeting at the edge of the light. Shore dusk, then this heart."},{speaker:"Nia",text:"The last gold I followed ends here."}],
+    againTalk:[{speaker:"Nia",text:"We keep meeting at the edge of the light. Shore dusk, then this heart."},{speaker:"Nia",text:"The last gold I followed ends here."},{speaker:"Nia",text:"An echo-stone still sits east. Press E there if the last light feels thin."}],
     afterCaptureTalk:[
       {speaker:"Nia",text:"You bound the last pulse. That's the dusk I followed, finished."},
       {speaker:"Nia",text:"Walk east. The gate behind you still heals. Press E at the heart altar. That ends the campaign."},
@@ -550,7 +550,7 @@ const NPCS:Npc[] = [
       {speaker:"Holt",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
       {speaker:"Holt",text:"The gate behind you still heals. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Holt",text:"We meet again. Cairn twist, then heart. Same road, last page."}],
+    againTalk:[{speaker:"Holt",text:"We meet again. Cairn twist, then heart. Same road, last page."},{speaker:"Holt",text:"An echo-stone sits east. Press E there if the last stones feel thin."}],
     afterCaptureTalk:[
       {speaker:"Holt",text:"You bound the last pulse. That's the cairn road, honest at last."},
       {speaker:"Holt",text:"Walk east. The gate behind you still heals. Press E at the heart altar. That ends the campaign."},
@@ -675,7 +675,7 @@ const NPCS:Npc[] = [
       {speaker:"Dell",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
       {speaker:"Dell",text:"The gate behind you still heals. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Dell",text:"We meet again. Shore dusk, then heart. Same road, last gold."}],
+    againTalk:[{speaker:"Dell",text:"We meet again. Shore dusk, then heart. Same road, last gold."},{speaker:"Dell",text:"An echo-stone sits east. Press E there if the gold feels thin."}],
     afterCaptureTalk:[
       {speaker:"Dell",text:"You bound the last pulse. That's the dusk I followed, finished at the heart altar."},
       {speaker:"Dell",text:"Walk east. The gate behind you still heals. Press E at the heart altar. That ends the campaign."},
@@ -738,7 +738,7 @@ const NPCS:Npc[] = [
       {speaker:"Rowan",text:"The animals are the echo. Bind the wyrm if you still need the pulse."},
       {speaker:"Rowan",text:"The gate behind you still heals. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Rowan",text:"We meet again. Castle rain, then heart. Same leftover walk, last pulse."}],
+    againTalk:[{speaker:"Rowan",text:"We meet again. Castle rain, then heart. Same leftover walk, last pulse."},{speaker:"Rowan",text:"An echo-stone still sits east. Press E there if the leftover road feels thin."}],
     afterCaptureTalk:[
       {speaker:"Rowan",text:"You bound the last pulse. That's every leftover step I walked, still in one place."},
       {speaker:"Rowan",text:"Walk east. The gate behind you still heals. Press E at the heart altar. That ends the campaign."},
