@@ -151,7 +151,7 @@ test("same-map studyable-pointing againTalk still says Press E", () => {
     for (const [, name] of pointers) found.add(`${npc.map}:${name}`);
   }
   assert.deepEqual(misses, [], "every same-map studyable pointer should say Press E");
-  for (const needed of ["1:groove", "1:plaque", "1:merlon", "2:shell", "2:post", "2:tide", "3:cairn", "3:foxfire", "4:notch", "4:moonwell", "5:kiln", "5:coal", "5:bellows", "6:step", "6:vein", "6:echo", "6:altar"]) {
+  for (const needed of ["1:groove", "1:plaque", "1:merlon", "2:shell", "2:post", "2:tide", "3:cairn", "3:foxfire", "4:notch", "4:moonwell", "4:lichen", "5:kiln", "5:coal", "5:bellows", "6:step", "6:vein", "6:echo", "6:altar"]) {
     assert.ok(found.has(needed), `maps 1–6 againTalk should still cover ${needed}`);
   }
 });
@@ -348,6 +348,86 @@ test("map 3 cairn-road againTalk keeps exactly one same-map Press E cue", () => 
     const lines = talkLinesFrom(npc.againTalk);
     assert.deepEqual(lines.filter((line) => line.text.length > 110), [], `${id}:3 againTalk lines should stay at or under 110 characters`);
     assert.ok(lines.every((line) => line.speaker === "Moon Night" || line.speaker === npc.name));
+  }
+});
+
+test("full-road againTalk keeps exactly one same-map Press E cue", () => {
+  const AGAIN_WALK = new Set(["reed:5", "kest:6", "edan:6", "hale:5"]);
+  const AGAIN_ALTAR = new Set(["reed:5", "kest:6", "edan:6"]);
+  const ALTAR_DUMP = /ends the campaign|Press E at the (heart )?altar/;
+  const WALK_OUT = /we walk out as people/i;
+  const roadPress = {
+    "calen:1": /There is a rain-cut groove farther along the floor\. Press E there if the road feels thin/,
+    "wren:1": /There is a rain-cut groove farther along the floor\. Press E there if the signal feels thin/,
+    "orrin:1": /The plaque higher up says the same thing in older stone\. Press E there if the rain feels thin/,
+    "tamsin:1": /The merlon is farther east\. Press E there if the rain feels thin/,
+    "rowan:1": /The merlon still watches this leftover stretch\. Press E there if the rain feels thin/,
+    "maer:1": /The merlon is west\. Press E there if the rain feels thin/,
+    "sera:2": /A dusk-shell sits on a mid-beach ledge\. Press E there if the gold feels thin/,
+    "lira:2": /The drowned post mid-beach keeps the same count\. Press E there if the light feels thin/,
+    "dell:2": /A tide-cut step sits east of this later gold\. Press E there if the gold feels thin/,
+    "perrin:2": /A tide-cut step sits farther east\. Press E there if the shore feels thin/,
+    "nia:2": /A tide-cut step sits on this last stretch\. Press E there if the gold feels thin/,
+    "bram:3": /The cairn is the part nobody wants to hear\. Press E there if the stones feel thin/,
+    "isk:3": /A foxfire hollow sits on a stepped ledge west\. Press E there if the ash feels thin/,
+    "holt:3": /If you skipped the split cairn, walk west\. Press E there if the stones feel thin/,
+    "vess:3": /If you skipped the cairn, walk back\. Press E there if the stones feel thin/,
+    "calen:4": /The moonwell still bottles what we carry\. Press E there if the pool feels thin/,
+    "orrin:4": /A cliff notch sits east, cut to listen\. Press E there if the wind feels thin/,
+    "lira:4": /The gold I counted on the sand is pooled in this moonwell\. Press E there if the light feels thin/,
+    "wren:4": /The rain I listened to is still in this moonwell\. Press E there if the pool feels thin/,
+    "hale:4": /Pale lichen sits west of this quiet stretch\. Press E there if the wind feels thin/,
+    "ryn:4": /Pale lichen sits west of this last gate\. Press E there if the pool feels thin/,
+    "reed:5": /The quiet kiln is east\. Press E there if the coals feel thin/,
+    "sera:5": /The quiet kiln still sits west\. Press E there if the heat feels thin/,
+    "tamsin:5": /The quiet kiln sits west\. Press E there if the fire feels thin/,
+    "maer:5": /Quiet bellows sit west\. Press E there if the leftover fire feels thin/,
+    "perrin:5": /Quiet bellows sit west\. Press E there if the heat feels thin/,
+    "vess:5": /Quiet bellows sit west of the kiln road\. Press E there if the breath feels thin/,
+    "isk:5": /A banked coal-bed sits west\. Press E there if the heat feels thin/,
+    "hale:5": /The quiet kiln still sits west\. Press E there if the coals feel thin/,
+    "ryn:5": /Quiet bellows sit west of this last gate\. Press E there if the coals feel thin/,
+    "kest:6": /A first-step stone sits east\. Press E there if the pulse feels thin/,
+    "bram:6": /An echo-stone sits farther east\. Press E there if the leftover fire feels thin/,
+    "nia:6": /An echo-stone still sits east\. Press E there if the last light feels thin/,
+    "holt:6": /An echo-stone sits east\. Press E there if the last stones feel thin/,
+    "dell:6": /An echo-stone sits east\. Press E there if the gold feels thin/,
+    "rowan:6": /An echo-stone still sits east\. Press E there if the leftover road feels thin/,
+    "edan:6": /Press E at the cooled vein\. An echo-stone sits past it\. Press E there if the pulse feels loud/,
+  };
+  assert.deepEqual(npcs.map((npc) => `${npc.id}:${npc.map}`).sort(), Object.keys(roadPress).sort(), "maps 1–6 should stay the present 37-talk Press E roster and no new travelers");
+
+  for (const npc of npcs) {
+    const key = `${npc.id}:${npc.map}`;
+    const cue = roadPress[key];
+    assert.ok(cue, `${key} should stay on the full-road Press E roster`);
+    assert.match(npc.againTalk, cue, `${key} againTalk should point to a same-map studyable with Press E`);
+    const named = STUDYABLES[npc.map].filter(([re, name]) => name !== "altar" && re.test(npc.againTalk));
+    const pressCount = [...npc.againTalk.matchAll(/[Pp]ress E/g)].length;
+    if (key === "edan:6") {
+      assert.ok(named.length >= 1 && named.length <= 2, `${key} againTalk may keep the locked vein and echo-stone cues`);
+      assert.ok(pressCount >= 1, `${key} againTalk should keep Press E`);
+    } else if (AGAIN_ALTAR.has(key)) {
+      assert.equal(named.length, 1, `${key} againTalk should name exactly one same-map studyable besides the allowed altar dump`);
+      assert.ok(pressCount >= 1, `${key} againTalk should keep Press E`);
+    } else {
+      assert.equal(named.length, 1, `${key} againTalk should name exactly one same-map studyable`);
+      assert.equal(pressCount, 1, `${key} againTalk should have exactly one Press E cue`);
+    }
+    if (AGAIN_ALTAR.has(key)) {
+      assert.match(npc.againTalk, ALTAR_DUMP, `${key} againTalk already keeps the allowed altar closing`);
+    } else {
+      assert.doesNotMatch(npc.againTalk, ALTAR_DUMP, `${key} againTalk should not repeat the finish dump`);
+    }
+    if (AGAIN_WALK.has(key)) {
+      assert.match(npc.againTalk, WALK_OUT, `${key} againTalk already walks out as people`);
+    } else {
+      assert.doesNotMatch(npc.againTalk, WALK_OUT, `${key} againTalk should stay off walk-out`);
+    }
+    const lines = talkLinesFrom(npc.againTalk);
+    assert.deepEqual(lines.filter((line) => line.text.length > 110), [], `${key} againTalk lines should stay at or under 110 characters`);
+    assert.ok(lines.every((line) => line.speaker === "Moon Night" || line.speaker === npc.name));
+    assert.doesNotMatch(npc.againTalk, /bondMeter|dating|affection|romance|love you|stay with me|walk out together/);
   }
 });
 
