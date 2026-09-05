@@ -727,7 +727,7 @@ const NPCS:Npc[] = [
       {speaker:"Rowan",text:"Then you heard Calen and Tamsin. I keep the stretch after the merlon watch. The animals are the echo."},
       {speaker:"Rowan",text:"Bind the first spark, then go east. The east portal heals you. Shore dusk is longer than this rain looks."}
     ],
-    againTalk:[{speaker:"Rowan",text:"Still on the leftover wall-road, Moon Night. Bind the spark if you haven't, then go east."},{speaker:"Rowan",text:"The east portal heals you."},{speaker:"Rowan",text:"Tamsin is west. Maer is farther east. The dragon still keeps the ruins."}],
+    againTalk:[{speaker:"Rowan",text:"Still on the leftover wall-road, Moon Night. Bind the spark if you haven't, then go east."},{speaker:"Rowan",text:"The east portal heals you."},{speaker:"Rowan",text:"Tamsin is west. Maer is farther east. The dragon still keeps the ruins."},{speaker:"Rowan",text:"The merlon still watches this leftover stretch. Press E there if the rain feels thin."}],
     afterCaptureTalk:[
       {speaker:"Rowan",text:"You took the first spark. The leftover road I walk is quieter now."},
       {speaker:"Rowan",text:"Shards, not quarry. This one is rain-spark, not the whole road."},
