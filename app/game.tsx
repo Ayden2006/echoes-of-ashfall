@@ -999,6 +999,13 @@ const sleepPoseAmt = (mode:DragonMode, prevMode:DragonMode, blendAt:number, now:
   return 0;
 };
 const gaitBlendAmt = (blendAt:number, now:number)=>easeInOut(clamp((now-blendAt)/MODE_BLEND_MS,0,1));
+const companionIdleLeftover = (ally:{mode:DragonMode;prevMode:DragonMode;modeBlendAt:number;gait:number;groundY:number;y:number}, groundAlly:boolean, now:number) => {
+  const land=flyLandAmt(ally,now);
+  if(!groundAlly) return land;
+  const leftoverAir=Math.max(0,ally.groundY-ally.y);
+  const hopPrev=(ally.prevMode==="run"||ally.mode==="run")?Math.min(leftoverAir,Math.abs(Math.sin((ally.gait||0)*.008))*38):0;
+  return hopPrev*(1-gaitBlendAmt(ally.modeBlendAt,now));
+};
 const locoCadence = (mode:DragonMode, walk=180, run=110)=>mode==="run"?run:walk;
 const locoPoseMode = (animal:{mode:DragonMode;prevMode:DragonMode;modeBlendAt:number}, now:number):DragonMode => {
   const blend=gaitBlendAmt(animal.modeBlendAt,now);
@@ -2272,7 +2279,8 @@ export default function AshfallGame() {
         if(idleSeat){ally.x=creatureEdgeAt(map,idleSeat.x);ally.groundY=idleSeat.groundY;}
         const idleGround=idleSeat?idleSeat.groundY:(companionSurfaceAt(ally.x,ally.groundY,map)??surfaceYAt(map,ally.x,590));
         if(idleGround!==null)ally.groundY=idleGround;
-        ally.y+=(ally.groundY-ally.y)*(1-Math.exp(-12*dt));
+        const leftover=companionIdleLeftover(ally,groundAlly,now);
+        ally.y+=(ally.groundY-leftover-ally.y)*(1-Math.exp(-12*dt)); // hop/roost leftover still eases through idle after sleep→wake and portal reseat
         if(ally.y>ally.groundY+28)ally.y=ally.groundY;
         ally.facing=hunting&&hunted?(hunted.x>=ally.x?1:-1):(pl.x>=ally.x?1:-1);
       }
@@ -3270,7 +3278,8 @@ export default function AshfallGame() {
         ctx.lineWidth=late?5:4;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(6,8,10,.88)";ctx.strokeText(label,cx,groundY-188);
         ctx.fillStyle="#fff6d2";ctx.fillText(label,cx,groundY-188); // early-map west/east tags keep cream fill after #48/#50 late stroke
         ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";
-        ctx.strokeText("PRESS E",cx,groundY-174);
+        ctx.lineWidth=late?5:4;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(6,8,10,.88)";
+        ctx.strokeText("PRESS E",cx,groundY-174); // maps 5–6 entry/exit keep #52 cream fill + late stroke with nearPortalAt
         ctx.fillStyle="#fff6d2";ctx.fillText("PRESS E",cx,groundY-174);
         ctx.restore();
       }
