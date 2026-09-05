@@ -600,7 +600,9 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
     ["orrin", 1, /plaque higher up/, /Press E there/],
     ["sera", 2, /dusk-shell/, /Press E there/],
     ["lira", 2, /drowned post/, /Press E there/],
+    ["dell", 2, /tide-cut step/, /Press E there if the gold feels thin/],
     ["perrin", 2, /tide-cut step/, /Press E there if the shore feels thin/],
+    ["nia", 2, /tide-cut step/, /Press E there if the gold feels thin/],
     ["bram", 3, /cairn/, /Press E there if the stones feel thin/],
     ["vess", 3, /cairn/, /Press E there if the stones feel thin/],
     ["holt", 3, /split cairn/, /Press E there if the stones feel thin/],
@@ -660,7 +662,9 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
   assert.match(againOf("orrin", 1), /Press E there if the rain feels thin/);
   assert.match(againOf("sera", 2), /Press E there if the gold feels thin/);
   assert.match(againOf("lira", 2), /Press E there if the light feels thin/);
+  assert.match(againOf("dell", 2), /Press E there if the gold feels thin/);
   assert.match(againOf("perrin", 2), /Press E there if the shore feels thin/);
+  assert.match(againOf("nia", 2), /Press E there if the gold feels thin/);
   assert.match(againOf("isk", 3), /Press E there if the ash feels thin/);
   assert.match(againOf("orrin", 4), /Press E there if the wind feels thin/);
   assert.doesNotMatch(againOf("bram", 3), /Press E on it/);

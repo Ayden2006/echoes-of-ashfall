@@ -415,7 +415,7 @@ const NPCS:Npc[] = [
       {speaker:"Nia",text:"Bind one shard, then go east. The east portal heals you."},
       {speaker:"Nia",text:"Leave the rest to the sand. The hollow waits when the light fails."}
     ],
-    againTalk:[{speaker:"Nia",text:"Still here, Moon Night. Bind a dusk shard if you haven't, then go east. The east portal heals you."},{speaker:"Nia",text:"The hollow waits when the light fails. The gold is already thinning on this last stretch."}],
+    againTalk:[{speaker:"Nia",text:"Still here, Moon Night. Bind a dusk shard if you haven't, then go east. The east portal heals you."},{speaker:"Nia",text:"The hollow waits when the light fails. The gold is already thinning on this last stretch."},{speaker:"Nia",text:"A tide-cut step sits on this last stretch. Press E there if the gold feels thin."}],
     afterCaptureTalk:[
       {speaker:"Nia",text:"You took the dusk. That's why the shore looks thinner."},
       {speaker:"Nia",text:"The east portal heals you. I walk when the light dies."}
@@ -664,7 +664,7 @@ const NPCS:Npc[] = [
       {speaker:"Dell",text:"Bind one dusk shard, then go east. The east portal heals you."},
       {speaker:"Dell",text:"Leave the extra scout. The hollow is through that gate."}
     ],
-    againTalk:[{speaker:"Dell",text:"Still on the later gold, Moon Night. Bind a dusk shard if you haven't, then go east."},{speaker:"Dell",text:"The east portal heals you."},{speaker:"Dell",text:"One dusk shard is enough to carry. The extra scout can keep the sand."}],
+    againTalk:[{speaker:"Dell",text:"Still on the later gold, Moon Night. Bind a dusk shard if you haven't, then go east."},{speaker:"Dell",text:"The east portal heals you."},{speaker:"Dell",text:"One dusk shard is enough to carry. The extra scout can keep the sand."},{speaker:"Dell",text:"A tide-cut step sits east of this later gold. Press E there if the gold feels thin."}],
     afterCaptureTalk:[
       {speaker:"Dell",text:"You took the dusk shard. That's why this gold looks thinner."},
       {speaker:"Dell",text:"The east portal heals you. The hollow is through that gate."},
