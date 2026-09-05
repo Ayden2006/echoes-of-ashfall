@@ -2644,7 +2644,7 @@ export default function AshfallGame() {
       ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="bottom";
       ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(7,3,16,.9)";ctx.strokeText(label,x,y);
       ctx.fillStyle="#fff6d2";ctx.fillText(label,x,y);
-      drawCardPressE(x,y+3);
+      drawCardPressE(x,y+3); // late studyable PRESS E still uses #48/#50/#58 cream stroke for kiln/coal/bellows/echo/vein/step
       ctx.restore();
     };
     const drawMagicalAnimalCard=(name:string,x:number,groundY:number,now:number,formedAt:number,image:HTMLImageElement|null,portrait:{x:number;y:number;w:number;h:number}|null,palette:CardPalette)=>{
@@ -2718,9 +2718,10 @@ export default function AshfallGame() {
       }
       if(elapsed<1700){
         ctx.globalAlpha*=clamp(1-elapsed/1700,0,1);
+        const late=lateMapContactShade(mapRef.current);
         ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="bottom";
-        ctx.lineWidth=3;ctx.strokeStyle="rgba(7,3,16,.9)";ctx.strokeText("MAGICAL CARD FORMED",x,riseY-cardH/2*scale-13);
-        ctx.fillStyle="#eaff9f";ctx.fillText("MAGICAL CARD FORMED",x,riseY-cardH/2*scale-13);
+        ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(7,3,16,.9)";ctx.strokeText("MAGICAL CARD FORMED",x,riseY-cardH/2*scale-13);
+        ctx.fillStyle=late?"#fff6d2":"#eaff9f";ctx.fillText("MAGICAL CARD FORMED",x,riseY-cardH/2*scale-13); // late-map card banner keeps #48/#50/#58 cream stroke
       }
       drawCardPressE(x,riseY+cardH/2*scale+6);
       ctx.restore();
@@ -3117,7 +3118,7 @@ export default function AshfallGame() {
       ctx.fillStyle="rgba(255,180,196,"+(.4+pulse*.32)+")";ctx.beginPath();ctx.moveTo(x-2,groundY-9);ctx.lineTo(x+16,groundY-15);ctx.lineTo(x,groundY-11);ctx.closePath();ctx.fill();
       ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.textAlign="center";ctx.textBaseline="bottom";
       ctx.lineWidth=4;ctx.strokeStyle="rgba(6,2,4,.96)";ctx.strokeText(bound?"ALTAR EAST":"PULSE",x,groundY-28);
-      ctx.fillStyle="#fff6d2";ctx.fillText(bound?"ALTAR EAST":"PULSE",x,groundY-28);
+      ctx.fillStyle="#fff6d2";ctx.fillText(bound?"ALTAR EAST":"PULSE",x,groundY-28); // echo/vein/step/pulse keep #48/#50/#58 cream + late stroke; pulse stays scenery, no invented PRESS E
       ctx.restore();
     };
     const drawCooledVein=(now:number)=>{
@@ -3533,7 +3534,8 @@ export default function AshfallGame() {
         pl.vy+=1180*dt;const oldBottom=pl.y+PH;const nextX=clamp(pl.x+pl.vx*dt,PLAYER_EDGE_MARGIN,activeWorldW-PLAYER_EDGE_MARGIN);if(!pl.grounded||groundAt(nextX,oldBottom)<Infinity)pl.x=nextX;pl.y+=pl.vy*dt;const newBottom=pl.y+PH,ground=groundAt(pl.x,oldBottom);
         if(pl.vy>=0&&ground<Infinity&&oldBottom<=ground+STEP_HEIGHT&&newBottom>=ground){pl.y=ground-PH;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;}else{pl.grounded=false;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
         if(wasGrounded&&!didJump&&!pl.grounded)pl.jumpsLeft=Math.min(pl.jumpsLeft,1);
-        if(pl.y>WORLD_H+80){const floor=plantedFloorAt(map,Math.max(120,pl.x-180));pl.x=floor.x;pl.y=plantedYAt(map,floor.x);pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}pl.step+=Math.abs(pl.vx)*dt*.048;
+        if(pl.y>WORLD_H+80){const floor=plantedFloorAt(map,Math.max(120,pl.x-180));pl.x=floor.x;pl.y=plantedYAt(map,floor.x);pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;} // void recover still plants after #60/#61 companionIdleLeftover
+        pl.step+=Math.abs(pl.vx)*dt*.048;
       }else{pl.vx*=.82;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
       const castState=companionCastRef.current;
       const castDuration=castState.kind==="recall"?COMPANION_RECALL_DURATION:COMPANION_SUMMON_DURATION;
@@ -3549,7 +3551,7 @@ export default function AshfallGame() {
             else{
               ally.recallStarted=0;
               const summonX=creatureEdgeAt(map,pl.x+pl.facing*COMPANION_DEPLOY_DISTANCE);
-              const summonFloor=plantedFloorAt(map,summonX);
+              const summonFloor=plantedFloorAt(map,summonX); // Tab/1–5/Q deploy still plants off leftover stones after portal reseat
               const summonGround=companionSurfaceAt(summonFloor.x,pl.y+PH,map)??surfaceYAt(map,summonFloor.x,pl.y+PH)??summonFloor.groundY;
               ally.x=creatureEdgeAt(map,summonFloor.x);ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;
               keepCreatureOnRoad(ally,map);
@@ -3558,7 +3560,7 @@ export default function AshfallGame() {
             }
           }else{
             const summonX=creatureEdgeAt(map,pl.x+pl.facing*COMPANION_DEPLOY_DISTANCE);
-            const summonFloor=plantedFloorAt(map,summonX);
+            const summonFloor=plantedFloorAt(map,summonX); // Tab/1–5/Q deploy still plants off leftover stones after portal reseat
             const summonGround=companionSurfaceAt(summonFloor.x,pl.y+PH,map)??surfaceYAt(map,summonFloor.x,pl.y+PH)??summonFloor.groundY;
             ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=creatureEdgeAt(map,summonFloor.x);ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.prevMode="idle";ally.modeBlendAt=now;ally.gait=0;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.recallStarted=0;ally.teleportAt=0;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;
             keepCreatureOnRoad(ally,map);
