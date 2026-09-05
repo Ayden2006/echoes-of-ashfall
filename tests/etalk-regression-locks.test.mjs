@@ -226,6 +226,23 @@ test("reunion againTalk remembers the last crossing without the finish dump", ()
     assert.match(npc.againTalk, crossing, `${npc.id}:${npc.map} againTalk should remember the last crossing`);
     assert.doesNotMatch(npc.againTalk, FINISH_DUMP, `${npc.id}:${npc.map} againTalk should not repeat the finish dump`);
   }
+  const midRoadPress = {
+    calen: /The moonwell still bottles what we carry\. Press E there if the pool feels thin/,
+    orrin: /A cliff notch sits east, cut to listen\. Press E there if the wind feels thin/,
+    lira: /The gold I counted on the sand is pooled in this moonwell\. Press E there if the light feels thin/,
+    wren: /The rain I listened to is still in this moonwell\. Press E there if the pool feels thin/,
+  };
+  const midRoad = reunions.filter((npc) => npc.map >= 2 && npc.map <= 4);
+  assert.equal(midRoad.length, Object.keys(midRoadPress).length, "maps 2–4 reunions should stay the mid-road Press E set");
+  for (const [id, cue] of Object.entries(midRoadPress)) {
+    const npc = midRoad.find((person) => person.id === id);
+    assert.ok(npc, `${id} reunion should stay on maps 2–4`);
+    assert.match(npc.againTalk, cue, `${id}:${npc.map} againTalk should point to a same-map studyable with Press E`);
+    assert.equal([...npc.againTalk.matchAll(/[Pp]ress E/g)].length, 1, `${id}:${npc.map} againTalk should have exactly one Press E cue`);
+    assert.equal(STUDYABLES[npc.map].filter(([re]) => re.test(npc.againTalk)).length, 1, `${id}:${npc.map} againTalk should name exactly one same-map studyable`);
+    assert.doesNotMatch(npc.againTalk, FINISH_DUMP);
+    assert.doesNotMatch(npc.againTalk, /we walk out as people/i);
+  }
   const kilnPress = {
     sera: /The quiet kiln still sits west\. Press E there if the heat feels thin/,
     tamsin: /The quiet kiln sits west\. Press E there if the fire feels thin/,
