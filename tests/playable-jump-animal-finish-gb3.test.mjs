@@ -247,10 +247,10 @@ test("Space jump/double jump + S crouch/slide stay; leftover maps 1/3 road seams
 
 test("fox/stag/lynx/wyrm keepCreatureOnRoad + hop/gait still hold after #61/#66", () => {
   assert.match(game, /const keepCreatureOnRoad=\(creature:\{x:number;y:number;groundY:number\},map:MapId\)=>\{/);
-  assert.match(game, /if\(creature\.y>ground\)creature\.y=ground; \/\/ hop\/gait leftover still holds after #61\/#66; do not flatten fox\/stag\/lynx air/);
-  assert.match(game, /if\(creature\.y>floor\.groundY\)creature\.y=floor\.groundY; \/\/ hop\/gait leftover still holds after #61\/#66; do not flatten fox\/stag\/lynx air/);
+  assert.match(game, /if\(creature\.y>ground\)creature\.y=ground; \/\/ hop\/gait leftover still holds after #61\/#66; do not flatten fox\/stag\/lynx air; leftover still holds after followHold/);
+  assert.match(game, /if\(creature\.y>floor\.groundY\)creature\.y=floor\.groundY; \/\/ hop\/gait leftover still holds after #61\/#66; do not flatten fox\/stag\/lynx air; leftover still holds after followHold/);
   assert.match(game, /const groundBeastHop = \(beast:\{id:string;mode:DragonMode;leapStarted:number;leapUntil:number\}, now:number\)=>\{/);
-  assert.match(game, /return hopArc\(hopT,52\); \/\/ fox\/stag\/lynx hop leftover still holds after #61\/#66; wyrm keeps roost\/fly/);
+  assert.match(game, /return hopArc\(hopT,52\); \/\/ fox\/stag\/lynx hop leftover still holds after #61\/#66; wyrm keeps roost\/fly; leftover still holds after followHold/);
   assert.match(game, /if\(beast\.mode!=="walk"&&beast\.mode!=="run"&&beast\.mode!=="idle"\)return 0/);
   assert.match(game, /const hop=groundBeastHop\(jackal,now\)/);
   assert.match(game, /keepCreatureOnRoad\(jackal,mapRef\.current\)/);

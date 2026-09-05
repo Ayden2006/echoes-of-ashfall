@@ -142,9 +142,9 @@ test("maps 1–6 stay gapless and portal/spawn/respawn plant off void and out of
 test("when not hunting, companion reseats with plantedFloorAt / keepCreatureOnRoad / teleport", () => {
   assert.match(game, /const stayForHunt=hunted&&Math\.abs\(pl\.x-hunted\.x\)<COMPANION_HUNT_RANGE\+140&&Math\.abs\(ally\.x-hunted\.x\)<COMPANION_TELEPORT_DISTANCE/);
   assert.match(game, /if\(Math\.abs\(pl\.x-ally\.x\)>COMPANION_TELEPORT_DISTANCE&&!stayForHunt\)/);
-  assert.match(game, /const seat=!hunting\?plantedFloorAt\(map,followX\):null/);
-  assert.match(game, /const arrivalX=seat\?creatureEdgeAt\(map,seat\.x\):followX/);
-  assert.match(game, /const arrivalGround=seat\?seat\.groundY:\(companionSurfaceAt\(followX,playerGround,map\)\?\?surfaceYAt\(map,followX,590\)\?\?playerGround\)/);
+  assert.match(game, /const seat=followHold\?\?plantedFloorAt\(map,followX\); \/\/ leftover teleport still plants after followHold; hunt path still uses hunted\.x/);
+  assert.match(game, /const arrivalX=creatureEdgeAt\(map,seat\.x\)/);
+  assert.match(game, /const arrivalGround=seat\.groundY/);
   assert.match(game, /const idleSeat=!hunting\?plantedFloorAt\(map,ally\.x\):null/);
   assert.match(game, /if\(idleSeat\)\{ally\.x=creatureEdgeAt\(map,idleSeat\.x\);ally\.groundY=idleSeat\.groundY;\}/);
   assert.match(game, /keepCreatureOnRoad\(ally,map\)/);

@@ -184,7 +184,7 @@ test("late studyable PRESS E leftover still reads echo/vein/step/pulse with #48/
   assert.match(art, /Keep the heart's glow local; do not wash the whole chamber in magenta/);
   assert.match(game, /const lateMapContactShade = \(map:MapId\) => map===5/);
   assert.match(game, /const drawLateStudyableTag=\(x:number,y:number,label:string\)=>\{/);
-  assert.match(game, /drawCardPressE\(x,y\+3\); \/\/ late studyable PRESS E still uses #48\/#50\/#58 cream stroke for kiln\/coal\/bellows\/echo\/vein\/step/);
+  assert.match(game, /drawCardPressE\(x,y\+3\); \/\/ late studyable PRESS E still uses #48\/#50\/#58 cream stroke for kiln\/coal\/bellows\/echo\/vein\/step; leftover still matches #52\/#61\/#68 after followHold/);
   assert.match(game, /ctx\.lineWidth=late\?4:3;ctx\.strokeStyle=late\?"rgba\(6,2,4,\.96\)":"rgba\(7,3,16,\.9\)";ctx\.strokeText\("PRESS E",x,y\)/);
   assert.match(game, /ctx\.fillStyle="#fff6d2";ctx\.fillText\("PRESS E",x,y\)/);
   assert.match(game, /if\(labeled\)drawLateStudyableTag\(x,groundY-78\*scale,"KILN"\)/);

@@ -207,7 +207,9 @@ test("companionIdleLeftover + idleSeat + followHold still plant after #72 road-s
   assert.match(game, /const followHold=!hunting\?plantedFloorAt\(map,followX\):null; \/\/ leftover follow still plants after #72 road-step; close leftover stones stay off allies/);
   assert.match(game, /const holdFollowX=followHold\?creatureEdgeAt\(map,followHold\.x\):followX/);
   assert.match(game, /const targetX=hunting\?hunted!\.x:holdFollowX/);
-  assert.match(game, /const seat=!hunting\?plantedFloorAt\(map,followX\):null/);
+  assert.match(game, /const seat=followHold\?\?plantedFloorAt\(map,followX\); \/\/ leftover teleport still plants after followHold; hunt path still uses hunted\.x/);
+  assert.match(game, /const arrivalX=creatureEdgeAt\(map,seat\.x\)/);
+  assert.match(game, /const arrivalGround=seat\.groundY/);
   assert.match(game, /keepCreatureOnRoad\(ally,map\)/);
   assert.match(art, /Keep the heat local to coals, kiln mouths, and lynx-eye accents/);
   assert.match(art, /Keep the heart's glow local; do not wash the whole chamber in magenta/);
