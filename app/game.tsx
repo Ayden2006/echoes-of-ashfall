@@ -1244,7 +1244,7 @@ export default function AshfallGame() {
       dialogueRef.current=null;setDialogue(null);
     }
     pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
-    pl.health=pl.maxHealth;staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;setHealth(pl.maxHealth);setStamina(MAX_STAMINA); // portal heal still fires after companion reseat; leftover still fires after #70 groundAt signature
+    pl.health=pl.maxHealth;staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;setHealth(pl.maxHealth);setStamina(MAX_STAMINA); // portal heal still fires after companion reseat; leftover still fires after #70 groundAt signature; leftover still fires after #72 road-step
     const ally=companionRef.current;
     if(ally.active&&ally.itemId){
       const now=performance.now();
@@ -1252,7 +1252,7 @@ export default function AshfallGame() {
       ally.map=map;
       const seat=plantedFloorAt(map,pl.x-pl.facing*96);
       ally.x=creatureEdgeAt(map,seat.x);
-      const arrivalGround=seat.groundY; // companion portal reseat still plants after #38 floors; leftover still plants after #70 groundAt signature
+      const arrivalGround=seat.groundY; // companion portal reseat still plants after #38 floors; leftover still plants after #70 groundAt signature; leftover still plants after #72 road-step
       rememberModeChange(ally,groundAlly?"run":"fly",now);
       ally.groundY=arrivalGround;
       ally.y=groundAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.facing=pl.facing;
@@ -1261,8 +1261,8 @@ export default function AshfallGame() {
       keepCreatureOnRoad(ally,map);
     }
     slideUntil.current=0;actionUntil.current=0;cameraReset.current=true;
-    portalFlashUntil.current=performance.now()+430; // portal flash still fires after companion reseat; leftover still fires after #70 groundAt signature
-    tone(610,.25,.028);window.setTimeout(()=>tone(360,.2,.02),100); // portal enter tone still fires after companion reseat; leftover still fires after #70 groundAt signature
+    portalFlashUntil.current=performance.now()+430; // portal flash still fires after companion reseat; leftover still fires after #70 groundAt signature; leftover still fires after #72 road-step
+    tone(610,.25,.028);window.setTimeout(()=>tone(360,.2,.02),100); // portal enter tone still fires after companion reseat; leftover still fires after #70 groundAt signature; leftover still fires after #72 road-step
   },[showDialogue,tone]);
 
   const startGame = useCallback(() => {
@@ -2199,7 +2199,7 @@ export default function AshfallGame() {
         ally.map=map;
         const seat=plantedFloorAt(map,pl.x-pl.facing*96);
         ally.x=creatureEdgeAt(map,seat.x);
-        const reseatGround=seat.groundY; // companion portal reseat still plants after #38 floors; leftover still plants after #70 groundAt signature
+        const reseatGround=seat.groundY; // companion portal reseat still plants after #38 floors; leftover still plants after #70 groundAt signature; leftover still plants after #72 road-step
         ally.groundY=reseatGround;ally.y=groundAlly?reseatGround:reseatGround-52;ally.vx=0;
         setCompanionMode(groundAlly?"run":"fly",now);ally.teleportAt=now;
       }
@@ -2210,6 +2210,8 @@ export default function AshfallGame() {
       const hunting=Boolean(hunted);
       if(hunting&&hunted){ally.targetX=hunted.x;ally.attackUntil=now+1600;}
       const followX=creatureEdgeAt(map,pl.x-pl.facing*104);
+      const followHold=!hunting?plantedFloorAt(map,followX):null; // leftover follow still plants after #72 road-step; close leftover stones stay off allies
+      const holdFollowX=followHold?creatureEdgeAt(map,followHold.x):followX;
       const playerGround=pl.y+PH;
       const stayForHunt=hunted&&Math.abs(pl.x-hunted.x)<COMPANION_HUNT_RANGE+140&&Math.abs(ally.x-hunted.x)<COMPANION_TELEPORT_DISTANCE;
       if(Math.abs(pl.x-ally.x)>COMPANION_TELEPORT_DISTANCE&&!stayForHunt){
@@ -2219,7 +2221,7 @@ export default function AshfallGame() {
         ally.x=arrivalX;ally.groundY=arrivalGround;ally.y=groundAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.attackUntil=0;ally.teleportAt=now;ally.facing=pl.facing;setCompanionMode(groundAlly?"run":"fly",now);
         keepCreatureOnRoad(ally,map);
       }
-      const targetX=hunting?hunted!.x:followX;
+      const targetX=hunting?hunted!.x:holdFollowX;
       const holdX=hunting?targetX-(targetX>=ally.x?1:-1)*96:targetX;
       const delta=holdX-ally.x,distance=Math.abs(delta);
       const strikeDistance=hunted?Math.abs(hunted.x-ally.x):distance;
@@ -2279,12 +2281,12 @@ export default function AshfallGame() {
         ally.y+=(targetY-ally.y)*(1-Math.exp(-(followMode==="fly"?5:12)*dt));
       }else{
         setCompanionMode("idle",now);ally.vx+=(0-ally.vx)*(1-Math.exp(-9*dt));ally.x+=ally.vx*dt;
-        const idleSeat=!hunting?plantedFloorAt(map,ally.x):null;
+        const idleSeat=!hunting?plantedFloorAt(map,ally.x):null; // leftover idle still plants after #72 road-step; close leftover stones stay STEP-only
         if(idleSeat){ally.x=creatureEdgeAt(map,idleSeat.x);ally.groundY=idleSeat.groundY;}
         const idleGround=idleSeat?idleSeat.groundY:(companionSurfaceAt(ally.x,ally.groundY,map)??surfaceYAt(map,ally.x,590));
         if(idleGround!==null)ally.groundY=idleGround;
         const leftover=companionIdleLeftover(ally,groundAlly,now);
-        ally.y+=(ally.groundY-leftover-ally.y)*(1-Math.exp(-12*dt)); // hop/roost leftover still eases through idle after sleep→wake and portal reseat
+        ally.y+=(ally.groundY-leftover-ally.y)*(1-Math.exp(-12*dt)); // hop/roost leftover still eases through idle after sleep→wake and portal reseat; leftover still plants after #72 road-step
         if(ally.y>ally.groundY+28)ally.y=ally.groundY;
         ally.facing=hunting&&hunted?(hunted.x>=ally.x?1:-1):(pl.x>=ally.x?1:-1);
       }
@@ -3543,7 +3545,7 @@ export default function AshfallGame() {
         pl.vy+=1180*dt;const oldBottom=pl.y+PH;const nextX=clamp(pl.x+pl.vx*dt,PLAYER_EDGE_MARGIN,activeWorldW-PLAYER_EDGE_MARGIN);if(!pl.grounded||groundAt(nextX,oldBottom,pl.grounded)<Infinity)pl.x=nextX;pl.y+=pl.vy*dt;const newBottom=pl.y+PH,ground=groundAt(pl.x,oldBottom,wasGrounded);
         if(pl.vy>=0&&ground<Infinity&&(oldBottom<=ground+STEP_HEIGHT&&newBottom>=ground||roadStepHold(wasGrounded&&!didJump,oldBottom,ground))){pl.y=ground-PH;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;}else{pl.grounded=false;pl.crouched=false;pl.sliding=false;slideUntil.current=0;} // leftover maps 1/3 road seams still hold walk/slide; Space jump/double jump + S crouch/slide stay; leftover maps 2/4/5/6 walk/slide still hold after #70 road-step
         if(wasGrounded&&!didJump&&!pl.grounded)pl.jumpsLeft=Math.min(pl.jumpsLeft,1);
-        if(pl.y>WORLD_H+80){const floor=plantedFloorAt(map,Math.max(120,pl.x-180));pl.x=floor.x;pl.y=plantedYAt(map,floor.x);pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;} // void recover still plants after #60/#61 companionIdleLeftover; maps 1–6 leftover still fire after #66 6460 vein skip
+        if(pl.y>WORLD_H+80){const floor=plantedFloorAt(map,Math.max(120,pl.x-180));pl.x=floor.x;pl.y=plantedYAt(map,floor.x);pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;} // void recover still plants after #60/#61 companionIdleLeftover; maps 1–6 leftover still fire after #66 6460 vein skip; leftover still fires after #72 road-step
         pl.step+=Math.abs(pl.vx)*dt*.048;
       }else{pl.vx*=.82;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
       const castState=companionCastRef.current;
@@ -3560,7 +3562,7 @@ export default function AshfallGame() {
             else{
               ally.recallStarted=0;
               const summonX=creatureEdgeAt(map,pl.x+pl.facing*COMPANION_DEPLOY_DISTANCE);
-              const summonFloor=plantedFloorAt(map,summonX); // Tab/1–5/Q deploy still plants off leftover stones after portal reseat; Q-during-recall leftover after #63 still clears thin stones
+              const summonFloor=plantedFloorAt(map,summonX); // Tab/1–5/Q deploy still plants off leftover stones after portal reseat; Q-during-recall leftover after #63 still clears thin stones; leftover still clears close leftover stones after #72 road-step
               const summonGround=companionSurfaceAt(summonFloor.x,pl.y+PH,map)??surfaceYAt(map,summonFloor.x,pl.y+PH)??summonFloor.groundY;
               ally.x=creatureEdgeAt(map,summonFloor.x);ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;
               keepCreatureOnRoad(ally,map);
@@ -3569,7 +3571,7 @@ export default function AshfallGame() {
             }
           }else{
             const summonX=creatureEdgeAt(map,pl.x+pl.facing*COMPANION_DEPLOY_DISTANCE);
-            const summonFloor=plantedFloorAt(map,summonX); // Tab/1–5/Q deploy still plants off leftover stones after portal reseat; leftover 1–5/Q after #63 still clears thin stones
+            const summonFloor=plantedFloorAt(map,summonX); // Tab/1–5/Q deploy still plants off leftover stones after portal reseat; leftover 1–5/Q after #63 still clears thin stones; leftover still clears close leftover stones after #72 road-step
             const summonGround=companionSurfaceAt(summonFloor.x,pl.y+PH,map)??surfaceYAt(map,summonFloor.x,pl.y+PH)??summonFloor.groundY;
             ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=creatureEdgeAt(map,summonFloor.x);ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.prevMode="idle";ally.modeBlendAt=now;ally.gait=0;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.recallStarted=0;ally.teleportAt=0;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;
             keepCreatureOnRoad(ally,map);
