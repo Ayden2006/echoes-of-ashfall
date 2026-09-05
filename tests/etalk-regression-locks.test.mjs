@@ -512,6 +512,57 @@ test("Sera, Vess, Tamsin, Maer, Perrin, and Isk kiln afterCapture walk out as pe
   }
 });
 
+test("every map 5–6 afterCaptureTalk walks out as people", () => {
+  const late = npcs.filter((npc) => npc.map === 5 || npc.map === 6);
+  const roster = late.map((npc) => `${npc.id}:${npc.map}`).sort();
+  assert.deepEqual(roster, [
+    "bram:6", "dell:6", "edan:6", "hale:5", "holt:6", "isk:5",
+    "kest:6", "maer:5", "nia:6", "perrin:5", "reed:5", "rowan:6",
+    "ryn:5", "sera:5", "tamsin:5", "vess:5",
+  ], "maps 5–6 should keep the present afterCapture walk-out roster and no new travelers");
+
+  const dating = /bondMeter|dating|affection|romance|love you|stay with me|walk out together/;
+  const campaignDump = /spark, dusk|Castle rain, shore dusk, cairn/;
+  const WALK_OUT = /we walk out as people/i;
+  const AGAIN_WALK = new Set(["reed:5", "kest:6", "edan:6", "hale:5"]);
+  const closings = {
+    "reed:5": /When that kiln can rest, we walk out as people/,
+    "sera:5": /Then we walk out as people\. I'll keep counting till this kiln can rest/,
+    "vess:5": /Then we walk out as people\. The ash I read can stay banked/,
+    "tamsin:5": /Then we walk out as people\. The merlon I left can stay quiet/,
+    "maer:5": /Then we walk out as people\. The leftover rain can stay quiet/,
+    "perrin:5": /Then we walk out as people\. The late coals can go dark/,
+    "isk:5": /Then we walk out as people\. This kiln heat can stay honest/,
+    "ryn:5": /Then we walk out as people\. I'll keep this last gate/,
+    "hale:5": /Then we walk out as people\. This stretch can stay quiet/,
+    "kest:6": /Come on\. We walk out as people/,
+    "bram:6": /Then we walk out as people\./,
+    "nia:6": /Then we walk out as people\./,
+    "holt:6": /Then we walk out as people\./,
+    "dell:6": /Then we walk out as people\. The shore can go dark without taking us/,
+    "rowan:6": /Then we walk out as people\. The leftover road can go quiet/,
+    "edan:6": /Then we walk out as people\. The last stone can stay empty/,
+  };
+
+  for (const npc of late) {
+    const key = `${npc.id}:${npc.map}`;
+    const lines = talkLinesFrom(npc.afterCaptureTalk);
+    assert.match(npc.afterCaptureTalk, WALK_OUT, `${key} afterCapture should walk out as people`);
+    assert.match(npc.afterCaptureTalk, closings[key], `${key} afterCapture should keep its walk-out closing`);
+    assert.doesNotMatch(npc.afterCaptureTalk, /walk out together/);
+    assert.doesNotMatch(npc.afterCaptureTalk, dating, `${key} afterCapture should stay off dating/bond`);
+    assert.doesNotMatch(npc.afterCaptureTalk, SOFTLOCK, `${key} afterCapture should not softlock a skipped bind`);
+    assert.doesNotMatch(npc.afterCaptureTalk, campaignDump, `${key} afterCapture should not dump the whole road`);
+    assert.deepEqual(lines.filter((line) => line.text.length > 110), [], `${key} afterCapture lines should stay at or under 110 characters`);
+    assert.ok(lines.every((line) => line.speaker === "Moon Night" || line.speaker === npc.name));
+    if (AGAIN_WALK.has(key)) {
+      assert.match(npc.againTalk, WALK_OUT, `${key} againTalk already walks out as people`);
+    } else {
+      assert.doesNotMatch(npc.againTalk, WALK_OUT, `${key} againTalk should stay last-crossing without walk-out`);
+    }
+  }
+});
+
 test("Map 1 buildings/radio stay cut and no new travelers or dating engine appear", () => {
   assert.match(game, /1:\{name:"The Signal in the Rain"/);
   assert.doesNotMatch(game, /radio encounter|The radio |tune the radio|listen to the radio/i);

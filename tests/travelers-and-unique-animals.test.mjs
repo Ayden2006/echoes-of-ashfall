@@ -912,6 +912,63 @@ test("Sera, Vess, Tamsin, Maer, Perrin, and Isk kiln afterCapture walk out as pe
   }
 });
 
+test("every map 5–6 afterCaptureTalk walks out as people", () => {
+  const afterOf = (id, map) => {
+    const block = npcBlock(id, map);
+    return block.slice(block.indexOf("afterCaptureTalk:["), block.indexOf("palette:"));
+  };
+  const againOf = (id, map) => {
+    const block = npcBlock(id, map);
+    return block.slice(block.indexOf("againTalk:["), block.indexOf("afterCaptureTalk:["));
+  };
+  const talkLinesFrom = (src) => [...src.matchAll(/\{speaker:"([^"]+)",text:"((?:\\.|[^"\\])*)"\}/g)].map((m) => ({
+    speaker: m[1],
+    text: m[2],
+  }));
+  const dating = /bondMeter|dating|affection|romance|love you|stay with me|walk out together/;
+  const campaignDump = /spark, dusk|Castle rain, shore dusk, cairn/;
+  const softlock = /road goes dark|must capture|have to bind|Don't go in cold|Don't go into the heart cold|the echo dies|\bstuck\b/;
+  const roster = [
+    ["reed", 5, /When that kiln can rest, we walk out as people/],
+    ["sera", 5, /Then we walk out as people\. I'll keep counting till this kiln can rest/],
+    ["vess", 5, /Then we walk out as people\. The ash I read can stay banked/],
+    ["tamsin", 5, /Then we walk out as people\. The merlon I left can stay quiet/],
+    ["maer", 5, /Then we walk out as people\. The leftover rain can stay quiet/],
+    ["perrin", 5, /Then we walk out as people\. The late coals can go dark/],
+    ["isk", 5, /Then we walk out as people\. This kiln heat can stay honest/],
+    ["ryn", 5, /Then we walk out as people\. I'll keep this last gate/],
+    ["hale", 5, /Then we walk out as people\. This stretch can stay quiet/],
+    ["kest", 6, /Come on\. We walk out as people/],
+    ["bram", 6, /Then we walk out as people\./],
+    ["nia", 6, /Then we walk out as people\./],
+    ["holt", 6, /Then we walk out as people\./],
+    ["dell", 6, /Then we walk out as people\. The shore can go dark without taking us/],
+    ["rowan", 6, /Then we walk out as people\. The leftover road can go quiet/],
+    ["edan", 6, /Then we walk out as people\. The last stone can stay empty/],
+  ];
+  const AGAIN_WALK = new Set(["reed:5", "kest:6", "edan:6", "hale:5"]);
+  const present = [...game.matchAll(/\{id:"([^"]+)",name:"[^"]+",map:([56]),/g)].map((m) => `${m[1]}:${m[2]}`).sort();
+  assert.deepEqual(present, roster.map(([id, map]) => `${id}:${map}`).sort(), "maps 5–6 should keep the present afterCapture walk-out roster and no new travelers");
+
+  for (const [id, map, closing] of roster) {
+    const after = afterOf(id, map);
+    const again = againOf(id, map);
+    const key = `${id}:${map}`;
+    assert.match(after, /we walk out as people/i, `${key} afterCapture should walk out as people`);
+    assert.match(after, closing, `${key} afterCapture should keep its walk-out closing`);
+    assert.doesNotMatch(after, /walk out together/);
+    assert.doesNotMatch(after, dating, `${key} afterCapture should stay off dating/bond`);
+    assert.doesNotMatch(after, campaignDump, `${key} afterCapture should not dump the whole road`);
+    assert.doesNotMatch(after, softlock, `${key} afterCapture should not softlock a skipped bind`);
+    assert.deepEqual(talkLinesFrom(after).filter((line) => line.text.length > 110), [], `${key} afterCapture lines should stay at or under 110 characters`);
+    if (AGAIN_WALK.has(key)) {
+      assert.match(again, /we walk out as people/i, `${key} againTalk already walks out as people`);
+    } else {
+      assert.doesNotMatch(again, /we walk out as people/i, `${key} againTalk should stay last-crossing without walk-out`);
+    }
+  }
+});
+
 test("firstTalk openings keep one distinct tell per traveler", () => {
   const openingOf = (id, map) => {
     const block = npcBlock(id, map);
