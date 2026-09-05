@@ -610,6 +610,8 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
     ["isk", 3, /foxfire hollow/, /Press E there/],
     ["orrin", 4, /cliff notch/, /Press E there/],
     ["calen", 4, /moonwell/, /Press E there if the pool feels thin/],
+    ["hale", 4, /pale lichen/, /Press E there if the wind feels thin/],
+    ["ryn", 4, /pale lichen/, /Press E there if the pool feels thin/],
     ["reed", 5, /quiet kiln/, /Press E there/],
     ["isk", 5, /banked coal-bed/, /Press E there/],
     ["vess", 5, /Quiet bellows/, /Press E there/],
@@ -618,6 +620,7 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
     ["tamsin", 5, /quiet kiln/, /Press E there if the fire feels thin/],
     ["maer", 5, /Quiet bellows/, /Press E there if the leftover fire feels thin/],
     ["perrin", 5, /Quiet bellows/, /Press E there if the heat feels thin/],
+    ["ryn", 5, /Quiet bellows/, /Press E there if the coals feel thin/],
     ["edan", 6, /echo-stone/, /Press E there/],
     ["kest", 6, /first-step stone/, /Press E there if the pulse feels thin/],
     ["kest", 6, /heart altar/, /Press E at the heart altar/],
@@ -634,7 +637,7 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
     assert.match(again, press, `${id}:${map} againTalk should say to press E`);
     const named = [
       /rain-cut groove/i, /plaque/i, /merlon/i, /dusk-shell/i, /drowned post/i, /tide-cut step/i,
-      /foxfire hollow/i, /split cairn|the cairn/i, /cliff notch/i, /moonwell/i,
+      /foxfire hollow/i, /split cairn|the cairn/i, /cliff notch/i, /moonwell/i, /pale lichen/i,
       /quiet kiln/i, /coal-bed/i, /bellows/i, /echo-stone/i, /cooled vein/i, /first-step stone/i,
     ].filter((re) => re.test(again));
     assert.ok(named.length <= 2, `${id}:${map} againTalk should not dump every secret at once`);
@@ -669,6 +672,9 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
   assert.match(againOf("nia", 2), /Press E there if the gold feels thin/);
   assert.match(againOf("isk", 3), /Press E there if the ash feels thin/);
   assert.match(againOf("orrin", 4), /Press E there if the wind feels thin/);
+  assert.match(againOf("hale", 4), /Pale lichen sits west of this quiet stretch\. Press E there if the wind feels thin/);
+  assert.match(againOf("ryn", 4), /Pale lichen sits west of this last gate\. Press E there if the pool feels thin/);
+  assert.match(againOf("ryn", 5), /Quiet bellows sit west of this last gate\. Press E there if the coals feel thin/);
   assert.doesNotMatch(againOf("bram", 3), /Press E on it/);
   assert.doesNotMatch(againOf("calen", 4), /ends the campaign|Bind the (stag|wyrm)|The east gate heals you/);
   assert.doesNotMatch(againOf("orrin", 4), /ends the campaign|Bind the (stag|wyrm)|The east gate heals you/);
@@ -694,12 +700,14 @@ test("full-road studyable-pointing againTalk on maps 1–6 still says Press E", 
   const pointers = [
     [/rain-cut groove/i, "groove"],
     [/plaque/i, "plaque"],
+    [/\bmerlon\b/i, "merlon"],
     [/dusk-shell/i, "shell"],
     [/drowned post/i, "post"],
     [/\bsplit cairn\b|\bthe cairn\b/i, "cairn"],
     [/foxfire hollow/i, "foxfire"],
     [/cliff notch/i, "notch"],
     [/moonwell/i, "moonwell"],
+    [/pale lichen/i, "lichen"],
     [/quiet kiln/i, "kiln"],
     [/banked coal-bed|coal-bed/i, "coal"],
     [/bellows/i, "bellows"],
@@ -725,7 +733,7 @@ test("full-road studyable-pointing againTalk on maps 1–6 still says Press E", 
     for (const [, name] of pointed) found.add(name);
   }
   assert.deepEqual(misses, [], "every studyable-pointing againTalk should say Press E");
-  const needed = ["groove", "plaque", "shell", "post", "cairn", "foxfire", "notch", "moonwell", "kiln", "coal", "bellows", "step", "vein", "echo", "altar"];
+  const needed = ["groove", "plaque", "merlon", "shell", "post", "cairn", "foxfire", "notch", "moonwell", "lichen", "kiln", "coal", "bellows", "step", "vein", "echo", "altar"];
   assert.deepEqual(needed.filter((name) => !found.has(name)), [], "maps 1–6 againTalk should still cover every studyable pointer");
 });
 

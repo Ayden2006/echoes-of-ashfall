@@ -761,7 +761,7 @@ const NPCS:Npc[] = [
       {speaker:"Ryn",text:"The east gate heals you."},
       {speaker:"Ryn",text:"Kiln heat is next. Reed is through this gate."}
     ],
-    againTalk:[{speaker:"Ryn",text:"Still on the last cliff, Moon Night. Bind the stag if you still need the pool, then go east."},{speaker:"Ryn",text:"The east gate heals you."},{speaker:"Ryn",text:"Reed is through it."}],
+    againTalk:[{speaker:"Ryn",text:"Still on the last cliff, Moon Night. Bind the stag if you still need the pool, then go east."},{speaker:"Ryn",text:"The east gate heals you."},{speaker:"Ryn",text:"Reed is through it."},{speaker:"Ryn",text:"Pale lichen sits west of this last gate. Press E there if the pool feels thin."}],
     afterCaptureTalk:[
       {speaker:"Ryn",text:"You bound the pool shard. The well can dim. The kiln still needs that heat."},
       {speaker:"Ryn",text:"The east gate heals you. Talk to Reed. Kiln heat is through this gate."}
@@ -776,7 +776,7 @@ const NPCS:Npc[] = [
       {speaker:"Ryn",text:"The animals are the echo. Bind a lynx if you still need the heat."},
       {speaker:"Ryn",text:"The east gate heals you. Press E at the heart altar. That ends the campaign."}
     ],
-    againTalk:[{speaker:"Ryn",text:"We meet again. Cliff wind, then kiln gate. Same watch, later heat."}],
+    againTalk:[{speaker:"Ryn",text:"We meet again. Cliff wind, then kiln gate. Same watch, later heat."},{speaker:"Ryn",text:"Quiet bellows sit west of this last gate. Press E there if the coals feel thin."}],
     afterCaptureTalk:[
       {speaker:"Ryn",text:"You bound the coal shard. The heart can take that heat now."},
       {speaker:"Ryn",text:"The east gate heals you."},
@@ -808,7 +808,7 @@ const NPCS:Npc[] = [
       {speaker:"Hale",text:"Bind the stag if you still need the pool, then go east."},
       {speaker:"Hale",text:"The east gate heals you. Calen watches west. Lira counts east."}
     ],
-    againTalk:[{speaker:"Hale",text:"Still on the quiet stretch, Moon Night. Bind the stag if you haven't, then go east."},{speaker:"Hale",text:"The east gate heals you."},{speaker:"Hale",text:"The wind still forgets you if nobody speaks."}],
+    againTalk:[{speaker:"Hale",text:"Still on the quiet stretch, Moon Night. Bind the stag if you haven't, then go east."},{speaker:"Hale",text:"The east gate heals you."},{speaker:"Hale",text:"The wind still forgets you if nobody speaks."},{speaker:"Hale",text:"Pale lichen sits west of this quiet stretch. Press E there if the wind feels thin."}],
     afterCaptureTalk:[
       {speaker:"Hale",text:"You bound the pool shard. That's why this quiet wind went still."},
       {speaker:"Hale",text:"The east gate heals you. Reed's kiln is through it."},
