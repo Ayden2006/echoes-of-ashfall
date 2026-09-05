@@ -22,6 +22,7 @@ const WORLD_H = 720;
 const PW = 46;
 const PH = 92;
 const STEP_HEIGHT = 32;
+const ROAD_STEP_HEIGHT = 56; // leftover maps 1/3 road seams still hold walk/slide; leftover stones keep STEP_HEIGHT
 const MAP1_PORTAL_X = 7070;
 const MAP2_PORTAL_X = 105;
 const MAP2_EXIT_X = 5270;
@@ -944,7 +945,8 @@ const map6Platforms: Platform[] = [
 ];
 const clamp = (n:number,a:number,b:number) => Math.max(a,Math.min(b,n));
 const cameraXFor=(playerX:number,worldW:number,viewW:number)=>clamp(playerX-viewW*.38,-CAM_EDGE_PAD,Math.max(0,worldW-viewW)+CAM_EDGE_PAD);
-const finishInCameraAt=(landmarkX:number,playerX:number,worldW:number,viewW:number,inset=36)=>{const cam=cameraXFor(playerX,worldW,viewW);return landmarkX>=cam+inset&&landmarkX<=cam+viewW-inset;};
+const finishInCameraAt=(landmarkX:number,playerX:number,worldW:number,viewW:number,inset=36)=>{const cam=cameraXFor(playerX,worldW,viewW);return landmarkX>=cam+inset&&landmarkX<=cam+viewW-inset;}; // heart/altar stay readable from finish stands after #66 6460 vein skip
+const roadStepHold=(grounded:boolean,oldBottom:number,ground:number)=>grounded&&Number.isFinite(ground)&&Math.abs(ground-oldBottom)<=ROAD_STEP_HEIGHT;
 const nextUsableLoadout=(equipped:(string|null)[],itemId:string,selected:number)=>{
   const next=equipped.slice() as (string|null)[];
   const already=next.indexOf(itemId);
@@ -986,7 +988,7 @@ const groundBeastHop = (beast:{id:string;mode:DragonMode;leapStarted:number;leap
   if(beast.mode!=="walk"&&beast.mode!=="run"&&beast.mode!=="idle")return 0;
   const span=beast.leapUntil-beast.leapStarted;
   const hopT=span>0?clamp((now-beast.leapStarted)/span,0,1):0;
-  return hopArc(hopT,52);
+  return hopArc(hopT,52); // fox/stag/lynx hop leftover still holds after #61/#66; wyrm keeps roost/fly
 };
 const flyLandAmt = (animal:{mode:DragonMode;prevMode:DragonMode;modeBlendAt:number}, now:number)=>
   animal.prevMode==="fly"&&(animal.mode==="idle"||animal.mode==="walk"||animal.mode==="run")?(1-gaitBlendAmt(animal.modeBlendAt,now))*28:0;
@@ -1072,14 +1074,14 @@ const keepCreatureOnRoad=(creature:{x:number;y:number;groundY:number},map:MapId)
   if(ground!==null){
     creature.groundY=ground;
     if(creature.y>ground+28)creature.y=ground;
-    if(creature.y>ground)creature.y=ground;
+    if(creature.y>ground)creature.y=ground; // hop/gait leftover still holds after #61/#66; do not flatten fox/stag/lynx air
     return ground;
   }
   const floor=plantedFloorAt(map,creature.x);
   creature.x=creatureEdgeAt(map,floor.x);
   creature.groundY=floor.groundY;
   if(creature.y>floor.groundY+28)creature.y=floor.groundY;
-  if(creature.y>floor.groundY)creature.y=floor.groundY;
+  if(creature.y>floor.groundY)creature.y=floor.groundY; // hop/gait leftover still holds after #61/#66; do not flatten fox/stag/lynx air
   return floor.groundY;
 };
 const atHeartAltar=(x:number)=>Math.abs(x-MAP6_HEART_X)<ALTAR_INTERACT_RANGE;
@@ -1453,11 +1455,13 @@ export default function AshfallGame() {
     };
     resize(); window.addEventListener("resize",resize);
 
-    const groundAt=(x:number,bottom:number)=>{
+    const groundAt=(x:number,bottom:number,fromGrounded=false)=>{
       let best=Infinity;
+      const climb=fromGrounded?ROAD_STEP_HEIGHT:STEP_HEIGHT;
       for (const p of platformsFor(mapRef.current)) {
         const overlaps=x+PW*.5>p.x&&x-PW*.5<p.x+p.w;
-        const reachable=p.y>=bottom-STEP_HEIGHT&&bottom<=p.y+STEP_HEIGHT;
+        const allow=p.h>80?climb:STEP_HEIGHT;
+        const reachable=p.y>=bottom-allow&&bottom<=p.y+allow;
         if (overlaps&&reachable&&p.y<best) best=p.y;
       }
       return best;
@@ -3515,7 +3519,7 @@ export default function AshfallGame() {
         const wasGrounded=pl.grounded;
         const wantsSlide=slideQueued.current;slideQueued.current=false;
         if(target&&actionUntil.current<=now)pl.facing=target>0?1:-1;
-        if(wantsSlide&&pl.grounded&&Math.abs(pl.vx)>55){
+        if(wantsSlide&&pl.grounded&&Math.abs(pl.vx)>55){ // S crouch/slide leftover still readable after road-seam hold
           const entrySpeed=Math.abs(pl.vx);
           const slideSpeed=clamp(entrySpeed*1.04,58,365);
           const slideDuration=clamp(260+entrySpeed*1.05,320,650);
@@ -3533,11 +3537,11 @@ export default function AshfallGame() {
         const jump=jumpQueued.current;let didJump=false;jumpQueued.current=false;
         if(jump&&pl.jumpsLeft>0){
           const secondJump=pl.jumpsLeft===1;
-          pl.vy=secondJump?-465:-500;pl.grounded=false;pl.jumpsLeft-=1;pl.crouched=false;pl.sliding=false;slideUntil.current=0;didJump=true;
+          pl.vy=secondJump?-465:-500;pl.grounded=false;pl.jumpsLeft-=1;pl.crouched=false;pl.sliding=false;slideUntil.current=0;didJump=true; // Space jump/double jump leftover still readable after road-seam hold
           tone(secondJump?285:190,secondJump ? .2 : .16,secondJump ? .026 : .02);
         }
-        pl.vy+=1180*dt;const oldBottom=pl.y+PH;const nextX=clamp(pl.x+pl.vx*dt,PLAYER_EDGE_MARGIN,activeWorldW-PLAYER_EDGE_MARGIN);if(!pl.grounded||groundAt(nextX,oldBottom)<Infinity)pl.x=nextX;pl.y+=pl.vy*dt;const newBottom=pl.y+PH,ground=groundAt(pl.x,oldBottom);
-        if(pl.vy>=0&&ground<Infinity&&oldBottom<=ground+STEP_HEIGHT&&newBottom>=ground){pl.y=ground-PH;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;}else{pl.grounded=false;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
+        pl.vy+=1180*dt;const oldBottom=pl.y+PH;const nextX=clamp(pl.x+pl.vx*dt,PLAYER_EDGE_MARGIN,activeWorldW-PLAYER_EDGE_MARGIN);if(!pl.grounded||groundAt(nextX,oldBottom,pl.grounded)<Infinity)pl.x=nextX;pl.y+=pl.vy*dt;const newBottom=pl.y+PH,ground=groundAt(pl.x,oldBottom,wasGrounded);
+        if(pl.vy>=0&&ground<Infinity&&(oldBottom<=ground+STEP_HEIGHT&&newBottom>=ground||roadStepHold(wasGrounded&&!didJump,oldBottom,ground))){pl.y=ground-PH;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;}else{pl.grounded=false;pl.crouched=false;pl.sliding=false;slideUntil.current=0;} // leftover maps 1/3 road seams still hold walk/slide; Space jump/double jump + S crouch/slide stay
         if(wasGrounded&&!didJump&&!pl.grounded)pl.jumpsLeft=Math.min(pl.jumpsLeft,1);
         if(pl.y>WORLD_H+80){const floor=plantedFloorAt(map,Math.max(120,pl.x-180));pl.x=floor.x;pl.y=plantedYAt(map,floor.x);pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;} // void recover still plants after #60/#61 companionIdleLeftover; maps 1–6 leftover still fire after #66 6460 vein skip
         pl.step+=Math.abs(pl.vx)*dt*.048;
