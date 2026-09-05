@@ -273,6 +273,31 @@ test("reunion againTalk remembers the last crossing without the finish dump", ()
   }
 });
 
+test("map 3 cairn-road againTalk keeps exactly one same-map Press E cue", () => {
+  const cairnRoad = npcs.filter((npc) => npc.map === 3);
+  const laterOnMap3 = cairnRoad.filter((npc) => npcs.some((other) => other.id === npc.id && other.map < npc.map));
+  assert.deepEqual(laterOnMap3.map((npc) => npc.id), [], "map 3 should stay first-meet cairn-road, not a later reunion");
+  const cairnPress = {
+    bram: /The cairn is the part nobody wants to hear\. Press E there if the stones feel thin/,
+    isk: /A foxfire hollow sits on a stepped ledge west\. Press E there if the ash feels thin/,
+    holt: /If you skipped the split cairn, walk west\. Press E there if the stones feel thin/,
+    vess: /If you skipped the cairn, walk back\. Press E there if the stones feel thin/,
+  };
+  assert.deepEqual(cairnRoad.map((npc) => npc.id).sort(), Object.keys(cairnPress).sort(), "map 3 should stay the Bram/Isk/Holt/Vess cairn-road Press E set");
+  for (const [id, cue] of Object.entries(cairnPress)) {
+    const npc = cairnRoad.find((person) => person.id === id);
+    assert.ok(npc, `${id}:3 should stay on the cairn road`);
+    assert.match(npc.againTalk, cue, `${id}:3 againTalk should point to a same-map studyable with Press E`);
+    assert.equal([...npc.againTalk.matchAll(/[Pp]ress E/g)].length, 1, `${id}:3 againTalk should have exactly one Press E cue`);
+    assert.equal(STUDYABLES[3].filter(([re]) => re.test(npc.againTalk)).length, 1, `${id}:3 againTalk should name exactly one same-map studyable`);
+    assert.doesNotMatch(npc.againTalk, FINISH_DUMP, `${id}:3 againTalk should not repeat the finish dump`);
+    assert.doesNotMatch(npc.againTalk, /we walk out as people/i, `${id}:3 againTalk should stay off walk-out`);
+    const lines = talkLinesFrom(npc.againTalk);
+    assert.deepEqual(lines.filter((line) => line.text.length > 110), [], `${id}:3 againTalk lines should stay at or under 110 characters`);
+    assert.ok(lines.every((line) => line.speaker === "Moon Night" || line.speaker === npc.name));
+  }
+});
+
 test("Hale stays on the map 4–5 roster with first/again/afterCapture", () => {
   const haleCliffs = npcs.find((npc) => npc.id === "hale" && npc.map === 4);
   const haleKiln = npcs.find((npc) => npc.id === "hale" && npc.map === 5);
