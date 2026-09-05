@@ -273,6 +273,32 @@ test("reunion againTalk remembers the last crossing without the finish dump", ()
   }
 });
 
+test("map 2 shore againTalk keeps exactly one same-map Press E cue", () => {
+  const shore = npcs.filter((npc) => npc.map === 2);
+  const laterOnMap2 = shore.filter((npc) => npcs.some((other) => other.id === npc.id && other.map < npc.map));
+  assert.deepEqual(laterOnMap2.map((npc) => npc.id), [], "map 2 should stay first-meet shore, not a later reunion");
+  const shorePress = {
+    sera: /A dusk-shell sits on a mid-beach ledge\. Press E there if the gold feels thin/,
+    lira: /The drowned post mid-beach keeps the same count\. Press E there if the light feels thin/,
+    dell: /A tide-cut step sits east of this later gold\. Press E there if the gold feels thin/,
+    perrin: /A tide-cut step sits farther east\. Press E there if the shore feels thin/,
+    nia: /A tide-cut step sits on this last stretch\. Press E there if the gold feels thin/,
+  };
+  assert.deepEqual(shore.map((npc) => npc.id).sort(), Object.keys(shorePress).sort(), "map 2 should stay the Sera/Lira/Dell/Perrin/Nia shore Press E set");
+  for (const [id, cue] of Object.entries(shorePress)) {
+    const npc = shore.find((person) => person.id === id);
+    assert.ok(npc, `${id}:2 should stay on the shore`);
+    assert.match(npc.againTalk, cue, `${id}:2 againTalk should point to a same-map studyable with Press E`);
+    assert.equal([...npc.againTalk.matchAll(/[Pp]ress E/g)].length, 1, `${id}:2 againTalk should have exactly one Press E cue`);
+    assert.equal(STUDYABLES[2].filter(([re]) => re.test(npc.againTalk)).length, 1, `${id}:2 againTalk should name exactly one same-map studyable`);
+    assert.doesNotMatch(npc.againTalk, FINISH_DUMP, `${id}:2 againTalk should not repeat the finish dump`);
+    assert.doesNotMatch(npc.againTalk, /we walk out as people/i, `${id}:2 againTalk should stay off walk-out`);
+    const lines = talkLinesFrom(npc.againTalk);
+    assert.deepEqual(lines.filter((line) => line.text.length > 110), [], `${id}:2 againTalk lines should stay at or under 110 characters`);
+    assert.ok(lines.every((line) => line.speaker === "Moon Night" || line.speaker === npc.name));
+  }
+});
+
 test("map 3 cairn-road againTalk keeps exactly one same-map Press E cue", () => {
   const cairnRoad = npcs.filter((npc) => npc.map === 3);
   const laterOnMap3 = cairnRoad.filter((npc) => npcs.some((other) => other.id === npc.id && other.map < npc.map));
