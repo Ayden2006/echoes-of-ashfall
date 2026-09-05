@@ -1102,9 +1102,7 @@ test("afterCaptureTalk gives each map bind a distinct echo-shard flavor", () => 
       assert.match(after, flavor, `${id}:${map} afterCapture should keep this bind's flavor`);
       assert.match(after, shard, `${id}:${map} afterCapture should name this bind's shard`);
       assert.doesNotMatch(after, otherShards[map], `${id}:${map} afterCapture should not borrow other binds' shards`);
-      if (map <= 4) {
-        assert.doesNotMatch(after, endingDump, `${id}:${map} afterCapture should not dump the heart-altar ending`);
-      }
+      assert.doesNotMatch(after, endingDump, `${id}:${map} afterCapture should not dump the heart-altar ending`);
     }
   }
 });
@@ -1138,7 +1136,8 @@ test("Reed, Kest, and Hale afterCapture keep kiln heat and heart pulse on one ro
 
   assert.match(haleKiln, /You bound the coal shard\. That's kiln heat the heart can take/);
   assert.match(haleKiln, /The wind can forget the cliff now\. The kiln heat remembers/);
-  assert.match(haleKiln, /The east gate heals you\. Talk to Kest\. Press E at the heart altar/);
+  assert.match(haleKiln, /The east gate heals you\. Talk to Kest/);
+  assert.doesNotMatch(haleKiln, /ends the campaign|Press E at the (heart )?altar/);
   assert.doesNotMatch(haleKiln, /last pulse|quit the fire/);
 
   assert.match(haleCliff, /You bound the pool shard/);

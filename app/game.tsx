@@ -240,7 +240,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Reed",text:"That lynx was the last heat the echo could keep without going out."},
       {speaker:"Reed",text:"You are carrying kiln heat. The heart can take that warmth."},
-      {speaker:"Reed",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Reed",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Reed",text:"If you reach the wyrm, tell Kest I didn't quit the kiln."},
       {speaker:"Reed",text:"When that kiln can rest, we walk out as people."},
       {speaker:"Moon Night",text:"I will."}
@@ -260,7 +260,7 @@ const NPCS:Npc[] = [
       {speaker:"Kest",text:"The wyrm is the last pulse. Rest it at the altar so Reed's kiln can rest."},
       {speaker:"Kest",text:"The cards you carry are the echo's memory. Lay them down as a road, not a cage."},
       {speaker:"Kest",text:"You named the whole road in shards. The pulse is the last name."},
-      {speaker:"Kest",text:"Walk east. The gate behind you still heals. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Kest",text:"Walk east. The gate behind you still heals."},
       {speaker:"Kest",text:"The road remembers us now, Moon Night."},
       {speaker:"Kest",text:"Come on. We walk out as people."},
       {speaker:"Moon Night",text:"Then we walk it together."}
@@ -337,7 +337,7 @@ const NPCS:Npc[] = [
     ],
     afterCaptureTalk:[
       {speaker:"Sera",text:"Coal pelt, not dusk fur. You bound the last heat the shore could not keep."},
-      {speaker:"Sera",text:"The east gate heals you. Talk to Kest. Press E at the altar to end the campaign."},
+      {speaker:"Sera",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Sera",text:"If Bram is still walking, tell him the signal isn't quarry. We're carrying it."},
       {speaker:"Sera",text:"Then we walk out as people. I'll keep counting till this kiln can rest."}
     ],
@@ -370,7 +370,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Bram",text:"We meet at the last echo. Cairn twist, then this heart."},{speaker:"Bram",text:"I'm not leaving until the leftover fire can rest."},{speaker:"Bram",text:"An echo-stone sits farther east. Press E there if the leftover fire feels thin."}],
     afterCaptureTalk:[
       {speaker:"Bram",text:"You bound the last pulse. That's the leftover fire I tracked, still at last."},
-      {speaker:"Bram",text:"Walk east. The gate behind you still heals. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Bram",text:"Walk east. The gate behind you still heals."},
       {speaker:"Bram",text:"Then we walk out as people."}
     ],
     palette:{skin:"#c09070",cloak:"#3a1c12",trim:"#ff7a3a",accent:"#ffc08a"}
@@ -433,7 +433,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Nia",text:"We keep meeting at the edge of the light. Shore dusk, then this heart."},{speaker:"Nia",text:"The last gold I followed ends here."},{speaker:"Nia",text:"An echo-stone still sits east. Press E there if the last light feels thin."}],
     afterCaptureTalk:[
       {speaker:"Nia",text:"You bound the last pulse. That's the dusk I followed, finished."},
-      {speaker:"Nia",text:"Walk east. The gate behind you still heals. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Nia",text:"Walk east. The gate behind you still heals."},
       {speaker:"Nia",text:"Then we walk out as people."}
     ],
     palette:{skin:"#d8b090",cloak:"#4a2848",trim:"#e8a060",accent:"#ffd8a0"}
@@ -463,7 +463,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Vess",text:"We meet where the ash learned to wait. Cairn twist, then kiln."},{speaker:"Vess",text:"Quiet bellows sit west of the kiln road. Press E there if the breath feels thin."}],
     afterCaptureTalk:[
       {speaker:"Vess",text:"Coal pelt, not foxfire. You bound the last heat the cairn promised."},
-      {speaker:"Vess",text:"The east gate heals you. Talk to Kest. Press E at the altar to end the campaign."},
+      {speaker:"Vess",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Vess",text:"If Nia is still walking dusk, tell her the light didn't fail. It banked."},
       {speaker:"Vess",text:"Then we walk out as people. The ash I read can stay banked."}
     ],
@@ -495,7 +495,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Tamsin",text:"We meet again. Castle merlon, then kiln road. Same watch, later fire."},{speaker:"Tamsin",text:"The quiet kiln sits west. Press E there if the fire feels thin."}],
     afterCaptureTalk:[
       {speaker:"Tamsin",text:"You bound the last heat. The merlon I left behind can finally stop watching."},
-      {speaker:"Tamsin",text:"The east gate heals you. Talk to Kest. Press E at the altar. That ends the campaign."},
+      {speaker:"Tamsin",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Tamsin",text:"If Orrin is still copying rain, tell him the wall already knew the line."},
       {speaker:"Tamsin",text:"Then we walk out as people. The merlon I left can stay quiet."}
     ],
@@ -556,7 +556,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Holt",text:"We meet again. Cairn twist, then heart. Same road, last page."},{speaker:"Holt",text:"An echo-stone sits east. Press E there if the last stones feel thin."}],
     afterCaptureTalk:[
       {speaker:"Holt",text:"You bound the last pulse. That's the cairn road, honest at last."},
-      {speaker:"Holt",text:"Walk east. The gate behind you still heals. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Holt",text:"Walk east. The gate behind you still heals."},
       {speaker:"Holt",text:"Then we walk out as people."}
     ],
     palette:{skin:"#c89878",cloak:"#2c1a14",trim:"#d86838",accent:"#f0b888"}
@@ -588,7 +588,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Maer",text:"We meet again. Castle rain, then kiln road. Same leftover walk, later fire."},{speaker:"Maer",text:"Quiet bellows sit west. Press E there if the leftover fire feels thin."}],
     afterCaptureTalk:[
       {speaker:"Maer",text:"You bound the last heat. The leftover rain I followed can finally rest."},
-      {speaker:"Maer",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Maer",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Maer",text:"If Lira is still counting light, tell her the gold banked here."},
       {speaker:"Maer",text:"Then we walk out as people. The leftover rain can stay quiet."}
     ],
@@ -620,7 +620,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Perrin",text:"We meet again. Late shore, then kiln road. Same watch, later heat."},{speaker:"Perrin",text:"Quiet bellows sit west. Press E there if the heat feels thin."}],
     afterCaptureTalk:[
       {speaker:"Perrin",text:"You bound the coal shard. The dusk I watched on the late sand is finished here."},
-      {speaker:"Perrin",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Perrin",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Perrin",text:"If Holt is still on the cairn road, tell him the ash banked."},
       {speaker:"Perrin",text:"Then we walk out as people. The late coals can go dark."}
     ],
@@ -683,7 +683,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Dell",text:"We meet again. Shore dusk, then heart. Same road, last gold."},{speaker:"Dell",text:"An echo-stone sits east. Press E there if the gold feels thin."}],
     afterCaptureTalk:[
       {speaker:"Dell",text:"You bound the last pulse. That's the dusk I followed, finished at the heart altar."},
-      {speaker:"Dell",text:"Walk east. The gate behind you still heals. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Dell",text:"Walk east. The gate behind you still heals."},
       {speaker:"Dell",text:"Then we walk out as people. The shore can go dark without taking us."}
     ],
     palette:{skin:"#d8a870",cloak:"#4a2018",trim:"#e07030",accent:"#ffc070"}
@@ -714,7 +714,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Isk",text:"We meet again. Cairn twist, then kiln heat. Same leftover walk, later fire."},{speaker:"Isk",text:"A banked coal-bed sits west. Press E there if the heat feels thin."}],
     afterCaptureTalk:[
       {speaker:"Isk",text:"You bound the coal shard. The leftover fire I walked in the hollow banked here."},
-      {speaker:"Isk",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Isk",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Isk",text:"If Wren is still listening on the cliffs, tell her the rain banked."},
       {speaker:"Isk",text:"Then we walk out as people. This kiln heat can stay honest."}
     ],
@@ -747,7 +747,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Rowan",text:"We meet again. Castle rain, then heart. Same leftover walk, last pulse."},{speaker:"Rowan",text:"An echo-stone still sits east. Press E there if the leftover road feels thin."}],
     afterCaptureTalk:[
       {speaker:"Rowan",text:"You bound the last pulse. That's every leftover step I walked, still in one place."},
-      {speaker:"Rowan",text:"Walk east. The gate behind you still heals. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Rowan",text:"Walk east. The gate behind you still heals."},
       {speaker:"Rowan",text:"Then we walk out as people. The leftover road can go quiet."}
     ],
     palette:{skin:"#c8b080",cloak:"#1a2830",trim:"#5a8898",accent:"#a8d0d8"}
@@ -778,7 +778,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Ryn",text:"We meet again. Cliff wind, then kiln gate. Same watch, later heat."}],
     afterCaptureTalk:[
       {speaker:"Ryn",text:"You bound the coal shard. The heart can take that heat now."},
-      {speaker:"Ryn",text:"The east gate heals you. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Ryn",text:"The east gate heals you."},
       {speaker:"Ryn",text:"Then we walk out as people. I'll keep this last gate."}
     ],
     palette:{skin:"#c8a888",cloak:"#2a3038",trim:"#8aa8b8",accent:"#d0e8f0"}
@@ -794,7 +794,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Edan",text:"Still by the last stone, Moon Night. Bind the wyrm if you still need the pulse. Walk east."},{speaker:"Edan",text:"Press E at the altar. The campaign ends when the signal rests."},{speaker:"Edan",text:"Press E at the cooled vein. An echo-stone sits past it. Press E there if the pulse feels loud."},{speaker:"Edan",text:"When the signal rests, we walk out as people. This last stone can stay."}],
     afterCaptureTalk:[
       {speaker:"Edan",text:"You bound the last pulse. That's every shard, still in one place."},
-      {speaker:"Edan",text:"Walk east. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Edan",text:"Walk east. The gate behind you still heals."},
       {speaker:"Edan",text:"Then we walk out as people. The last stone can stay empty."}
     ],
     palette:{skin:"#c09080",cloak:"#2c1828",trim:"#c86878",accent:"#f0c0b0"}
@@ -826,7 +826,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Hale",text:"We meet again. Cliff quiet, then this kiln."},{speaker:"Hale",text:"The kiln can forget the cliff, Moon Night. I still keep this stretch."},{speaker:"Hale",text:"The quiet kiln still sits west. Press E there if the coals feel thin."},{speaker:"Hale",text:"When this kiln can rest, we walk out as people. I'll keep this stretch."}],
     afterCaptureTalk:[
       {speaker:"Hale",text:"You bound the coal shard. That's kiln heat the heart can take."},
-      {speaker:"Hale",text:"The east gate heals you. Talk to Kest. Press E at the heart altar. That ends the campaign."},
+      {speaker:"Hale",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Hale",text:"The wind can forget the cliff now. The kiln heat remembers."},
       {speaker:"Hale",text:"Then we walk out as people. This stretch can stay quiet."}
     ],
