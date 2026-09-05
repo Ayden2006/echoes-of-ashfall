@@ -675,6 +675,18 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
   assert.match(againOf("hale", 4), /Pale lichen sits west of this quiet stretch\. Press E there if the wind feels thin/);
   assert.match(againOf("ryn", 4), /Pale lichen sits west of this last gate\. Press E there if the pool feels thin/);
   assert.match(againOf("ryn", 5), /Quiet bellows sit west of this last gate\. Press E there if the coals feel thin/);
+  const firstOf = (id, map) => {
+    const block = npcBlock(id, map);
+    return block.slice(block.indexOf("firstTalk:["), block.indexOf("againTalk:["));
+  };
+  assert.match(firstOf("calen", 1), /A rain-worn plaque sits east\. Press E there if the rain feels thin/);
+  assert.match(firstOf("sera", 2), /A dusk-shell sits east on a ledge\. Press E there if the gold feels thin/);
+  assert.match(firstOf("bram", 3), /Read the split cairn mid-hollow\. Press E there if the stones feel thin/);
+  assert.match(firstOf("hale", 4), /Pale lichen sits west of this first watch\. Press E there if the wind feels thin/);
+  assert.match(firstOf("reed", 5), /A banked coal-bed sits east\. Press E there if the coals feel thin/);
+  assert.match(firstOf("edan", 6), /The cooled vein is east\. Press E there if the pulse feels thin/);
+  assert.doesNotMatch(firstOf("calen", 1), /ends the campaign|heart altar|we walk out as people/i);
+  assert.doesNotMatch(firstOf("hale", 4), /ends the campaign|Press E at the (heart )?altar|we walk out as people/i);
   assert.doesNotMatch(againOf("bram", 3), /Press E on it/);
   assert.doesNotMatch(againOf("calen", 4), /ends the campaign|Bind the (stag|wyrm)|The east gate heals you/);
   assert.doesNotMatch(againOf("orrin", 4), /ends the campaign|Bind the (stag|wyrm)|The east gate heals you/);
@@ -735,6 +747,46 @@ test("full-road studyable-pointing againTalk on maps 1–6 still says Press E", 
   assert.deepEqual(misses, [], "every studyable-pointing againTalk should say Press E");
   const needed = ["groove", "plaque", "merlon", "shell", "post", "cairn", "foxfire", "notch", "moonwell", "lichen", "kiln", "coal", "bellows", "step", "vein", "echo", "altar"];
   assert.deepEqual(needed.filter((name) => !found.has(name)), [], "maps 1–6 againTalk should still cover every studyable pointer");
+});
+
+test("full-road studyable-pointing firstTalk on maps 1–6 still says Press E", () => {
+  const firstOf = (id, map) => {
+    const block = npcBlock(id, map);
+    return block.slice(block.indexOf("firstTalk:["), block.indexOf("againTalk:["));
+  };
+  const pointers = [
+    [/rain-worn plaque|\bplaque\b/i, "plaque"],
+    [/\bmerlon\b/i, "merlon"],
+    [/dusk-shell/i, "shell"],
+    [/drowned post/i, "post"],
+    [/tide-cut step/i, "tide"],
+    [/\bsplit cairn\b|\bthe cairn\b/i, "cairn"],
+    [/cliff notch/i, "notch"],
+    [/pale lichen/i, "lichen"],
+    [/banked coal-bed|coal-bed/i, "coal"],
+    [/bellows/i, "bellows"],
+    [/first-step stone/i, "step"],
+    [/cooled vein/i, "vein"],
+  ];
+  const npcStart = game.indexOf("const NPCS:Npc[] = [");
+  const npcEnd = game.indexOf("];\nconst talkTargetAt=");
+  assert.ok(npcStart >= 0 && npcEnd > npcStart, "NPC talk table should stay in game.tsx");
+  const hits = [...game.slice(npcStart, npcEnd).matchAll(/\{id:"([^"]+)",name:"[^"]+",map:(\d+),/g)];
+  assert.equal(hits.length, 37, "should still have 37 traveler talk tables");
+  const found = new Set();
+  const misses = [];
+  for (const [, id, mapStr] of hits) {
+    const map = Number(mapStr);
+    assert.ok(map >= 1 && map <= 6, `${id}:${map} should stay on maps 1–6`);
+    const first = firstOf(id, map);
+    const pointed = pointers.filter(([re]) => re.test(first));
+    if (!pointed.length) misses.push(`${id}:${map}`);
+    else if (!/[Pp]ress E/.test(first)) misses.push(`${id}:${map}`);
+    for (const [, name] of pointed) found.add(name);
+  }
+  assert.deepEqual(misses, [], "every firstTalk should point to one same-map studyable with Press E");
+  const needed = ["plaque", "merlon", "shell", "post", "tide", "cairn", "notch", "lichen", "coal", "bellows", "step", "vein"];
+  assert.deepEqual(needed.filter((name) => !found.has(name)), [], "maps 1–6 firstTalk should still cover the nearest-studyable Press E set");
 });
 
 test("maps 4–6 reunion againTalk remembers the last crossing without the finish dump", () => {
