@@ -22,7 +22,7 @@ const WORLD_H = 720;
 const PW = 46;
 const PH = 92;
 const STEP_HEIGHT = 32;
-const ROAD_STEP_HEIGHT = 56; // leftover maps 1/3 road seams still hold walk/slide; leftover stones keep STEP_HEIGHT; leftover maps 2/4/5/6 walk/slide still hold after #70 road-step
+const ROAD_STEP_HEIGHT = 56; // leftover maps 1/3 road seams still hold walk/slide; leftover stones keep STEP_HEIGHT; leftover maps 2/4/5/6 walk/slide still hold after #70 road-step; leftover still holds after hunt teleport
 const MAP1_PORTAL_X = 7070;
 const MAP2_PORTAL_X = 105;
 const MAP2_EXIT_X = 5270;
@@ -1099,6 +1099,30 @@ const plantedFloorAt=(map:MapId,x:number)=>{
   if(fallback!==null)return {x:px,groundY:fallback};
   return {x:px,groundY:590};
 };
+const plantedHuntHoldAt=(map:MapId,rawHoldX:number,huntedX:number)=>{
+  const worldW=worldWidthFor(map);
+  const hit=(nx:number)=>surfaceYAt(map,nx,590);
+  const clear=(nx:number)=>{
+    const g=hit(nx);
+    if(g===null||cardBlockedAt(map,nx))return null;
+    const head=g-PH;
+    if(platformsFor(map).some(p=>p.h<=24&&nx+PW*.5>p.x&&nx-PW*.5<p.x+p.w&&p.y<g-2&&p.y+p.h>head+2))return null;
+    return g;
+  };
+  const first=clear(clamp(rawHoldX,48,worldW-48));
+  if(first!==null)return {x:clamp(rawHoldX,48,worldW-48),groundY:first};
+  let best:{x:number;groundY:number}|null=null,bestDist=Infinity,bestInRange:{x:number;groundY:number}|null=null,bestInRangeDist=Infinity;
+  const consider=(nx:number)=>{
+    if(nx<48||nx>worldW-48)return;
+    const g=clear(nx);
+    if(g===null)return;
+    const dist=Math.abs(nx-rawHoldX),huntDist=Math.abs(nx-huntedX);
+    if(dist<bestDist){best={x:nx,groundY:g};bestDist=dist;}
+    if(huntDist<COMPANION_STRIKE_RANGE&&dist<bestInRangeDist){bestInRange={x:nx,groundY:g};bestInRangeDist=dist;}
+  };
+  for(let d=8;d<=420;d+=8){consider(rawHoldX-d);consider(rawHoldX+d);}
+  return bestInRange??best??plantedFloorAt(map,rawHoldX); // leftover hunt hold still plants after hunt teleport; strike range still holds; leftover stones stay STEP-only
+};
 const seatDeadBeast=(beast:{x:number;groundY:number;vx:number},map:MapId)=>{
   const floor=plantedFloorAt(map,beast.x);
   beast.x=floor.x;beast.groundY=floor.groundY;beast.vx=0;
@@ -1280,7 +1304,7 @@ export default function AshfallGame() {
       dialogueRef.current=null;setDialogue(null);
     }
     pl.vx=0;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;
-    pl.health=pl.maxHealth;staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;setHealth(pl.maxHealth);setStamina(MAX_STAMINA); // portal heal still fires after companion reseat; leftover still fires after #70 groundAt signature; leftover still fires after #72 road-step
+    pl.health=pl.maxHealth;staminaRef.current=MAX_STAMINA;staminaUsedAt.current=-Infinity;setHealth(pl.maxHealth);setStamina(MAX_STAMINA); // portal heal still fires after companion reseat; leftover still fires after #70 groundAt signature; leftover still fires after #72 road-step; leftover still fires after hunt teleport
     const ally=companionRef.current;
     if(ally.active&&ally.itemId){
       const now=performance.now();
@@ -1288,7 +1312,7 @@ export default function AshfallGame() {
       ally.map=map;
       const seat=plantedFloorAt(map,pl.x-pl.facing*96);
       ally.x=creatureEdgeAt(map,seat.x);
-      const arrivalGround=seat.groundY; // companion portal reseat still plants after #38 floors; leftover still plants after #70 groundAt signature; leftover still plants after #72 road-step
+      const arrivalGround=seat.groundY; // companion portal reseat still plants after #38 floors; leftover still plants after #70 groundAt signature; leftover still plants after #72 road-step; leftover still plants after hunt teleport
       rememberModeChange(ally,groundAlly?"run":"fly",now);
       ally.groundY=arrivalGround;
       ally.y=groundAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.facing=pl.facing;
@@ -1297,8 +1321,8 @@ export default function AshfallGame() {
       keepCreatureOnRoad(ally,map);
     }
     slideUntil.current=0;actionUntil.current=0;cameraReset.current=true;
-    portalFlashUntil.current=performance.now()+430; // portal flash still fires after companion reseat; leftover still fires after #70 groundAt signature; leftover still fires after #72 road-step
-    tone(610,.25,.028);window.setTimeout(()=>tone(360,.2,.02),100); // portal enter tone still fires after companion reseat; leftover still fires after #70 groundAt signature; leftover still fires after #72 road-step
+    portalFlashUntil.current=performance.now()+430; // portal flash still fires after companion reseat; leftover still fires after #70 groundAt signature; leftover still fires after #72 road-step; leftover still fires after hunt teleport
+    tone(610,.25,.028);window.setTimeout(()=>tone(360,.2,.02),100); // portal enter tone still fires after companion reseat; leftover still fires after #70 groundAt signature; leftover still fires after #72 road-step; leftover still fires after hunt teleport
   },[showDialogue,tone]);
 
   const startGame = useCallback(() => {
@@ -1334,7 +1358,7 @@ export default function AshfallGame() {
     else if(map===5&&nearPortalAt(x,MAP5_ENTRY_X)) enterMap(4,5);
     else if(map===5&&nearPortalAt(x,MAP5_EXIT_X)) enterMap(6,5);
     else if(map===6&&nearPortalAt(x,MAP6_ENTRY_X)) enterMap(5,6);
-    else if(map===6&&atHeartAltar(x)){ // altar E still wins after #56 Dell/Rowan walk-out and #64 afterCapture trim; no nearby talk radius covers this window; leftover still fires after #66 scenery vein move
+    else if(map===6&&atHeartAltar(x)){ // altar E still wins after #56 Dell/Rowan walk-out and #64 afterCapture trim; no nearby talk radius covers this window; leftover still fires after #66 scenery vein move; leftover still fires after hunt teleport
       if(!campaignEndedRef.current){campaignEndedRef.current=true;setCampaignEnded(true);}
       setObjective(hudLockFor(6,inventoryRef.current.map(item=>item.id),true).objective);
       showDialogue(ENDING_LINES);
@@ -1688,7 +1712,7 @@ export default function AshfallGame() {
       const anchorLocalY=actionDrawY+(ATTACK_WEAPON.anchorY-actionFrame.y)*weaponScale;
       const late=lateMapContactShade(mapRef.current);
       ctx.save();ctx.translate(pl.x+pl.facing*anchorLocalX,pl.y+anchorLocalY);ctx.rotate(swordAngle);ctx.scale(1,pl.facing);
-      ctx.imageSmoothingEnabled=false;ctx.shadowColor=late?"rgba(255,246,210,.88)":"rgba(135,62,198,.3)";ctx.shadowBlur=late?12:7; // LMB sword rim stays readable on maps 5–6 after #48/#50 late stroke; leftover still readable after #70 road-step
+      ctx.imageSmoothingEnabled=false;ctx.shadowColor=late?"rgba(255,246,210,.88)":"rgba(135,62,198,.3)";ctx.shadowBlur=late?12:7; // LMB sword rim stays readable on maps 5–6 after #48/#50 late stroke; leftover still readable after #70 road-step; leftover still readable after hunt teleport
       ctx.drawImage(attackWeaponLayer,ATTACK_WEAPON.x,ATTACK_WEAPON.y,ATTACK_WEAPON.w,ATTACK_WEAPON.h,-(ATTACK_WEAPON.anchorX-ATTACK_WEAPON.x)*weaponScale,-(ATTACK_WEAPON.anchorY-ATTACK_WEAPON.y)*weaponScale,ATTACK_WEAPON.w*weaponScale,ATTACK_WEAPON.h*weaponScale);
       ctx.shadowBlur=0;ctx.imageSmoothingEnabled=true;ctx.restore();
     };
@@ -2235,7 +2259,7 @@ export default function AshfallGame() {
         ally.map=map;
         const seat=plantedFloorAt(map,pl.x-pl.facing*96);
         ally.x=creatureEdgeAt(map,seat.x);
-        const reseatGround=seat.groundY; // companion portal reseat still plants after #38 floors; leftover still plants after #70 groundAt signature; leftover still plants after #72 road-step
+        const reseatGround=seat.groundY; // companion portal reseat still plants after #38 floors; leftover still plants after #70 groundAt signature; leftover still plants after #72 road-step; leftover still plants after hunt teleport
         ally.groundY=reseatGround;ally.y=groundAlly?reseatGround:reseatGround-52;ally.vx=0;
         setCompanionMode(groundAlly?"run":"fly",now);ally.teleportAt=now;
       }
@@ -2246,19 +2270,21 @@ export default function AshfallGame() {
       const hunting=Boolean(hunted);
       if(hunting&&hunted){ally.targetX=hunted.x;ally.attackUntil=now+1600;}
       const followX=creatureEdgeAt(map,pl.x-pl.facing*104);
-      const followHold=!hunting?plantedFloorAt(map,followX):null; // leftover follow still plants after #72 road-step; close leftover stones stay off allies; leftover still plants after followHold; hunt path still uses hunted.x
+      const followHold=!hunting?plantedFloorAt(map,followX):null; // leftover follow still plants after #72 road-step; close leftover stones stay off allies; leftover still plants after followHold; hunt path still uses hunted.x; leftover still plants after hunt teleport
       const holdFollowX=followHold?creatureEdgeAt(map,followHold.x):followX;
       const playerGround=pl.y+PH;
       const stayForHunt=hunted&&Math.abs(pl.x-hunted.x)<COMPANION_HUNT_RANGE+140&&Math.abs(ally.x-hunted.x)<COMPANION_TELEPORT_DISTANCE;
       if(Math.abs(pl.x-ally.x)>COMPANION_TELEPORT_DISTANCE&&!stayForHunt){
-        const seat=followHold??plantedFloorAt(map,followX); // leftover teleport still plants after followHold; hunt path still uses hunted.x
+        const seat=followHold??plantedFloorAt(map,followX); // leftover teleport still plants after followHold; hunt path still uses hunted.x; leftover still plants after hunt teleport
         const arrivalX=creatureEdgeAt(map,seat.x);
         const arrivalGround=seat.groundY;
         ally.x=arrivalX;ally.groundY=arrivalGround;ally.y=groundAlly?arrivalGround:arrivalGround-58;ally.vx=0;ally.attackUntil=0;ally.teleportAt=now;ally.facing=pl.facing;setCompanionMode(groundAlly?"run":"fly",now);
         keepCreatureOnRoad(ally,map);
       }
       const targetX=hunting?hunted!.x:holdFollowX; // hunt path still uses hunted.x; leftover follow uses holdFollowX
-      const holdX=hunting?targetX-(targetX>=ally.x?1:-1)*96:targetX;
+      const rawHoldX=hunting?targetX-(targetX>=ally.x?1:-1)*96:targetX;
+      const huntHold=hunting?plantedHuntHoldAt(map,rawHoldX,targetX):null; // leftover hunt hold still plants after hunt teleport; strike range still holds; leftover stones stay STEP-only
+      const holdX=huntHold?creatureEdgeAt(map,huntHold.x):rawHoldX;
       const delta=holdX-ally.x,distance=Math.abs(delta);
       const strikeDistance=hunted?Math.abs(hunted.x-ally.x):distance;
       if(distance>18)ally.facing=delta>=0?1:-1;
@@ -2341,7 +2367,7 @@ export default function AshfallGame() {
       const late=lateMapContactShade(mapRef.current);
       ctx.save();ctx.translate(x,y);ctx.textAlign="center";ctx.textBaseline="bottom";
       ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";
-      ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(4,10,6,.9)";ctx.strokeText("HUNT",0,-10); // leftover HUNT still readable after #70 road-step; leftover still readable after followHold
+      ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(4,10,6,.9)";ctx.strokeText("HUNT",0,-10); // leftover HUNT still readable after #70 road-step; leftover still readable after followHold; leftover still readable after hunt teleport
       ctx.fillStyle=(late?"rgba(220,255,140,":"rgba(185,255,99,")+pulse+")";ctx.fillText("HUNT",0,-10);
       ctx.fillStyle=(late?"rgba(220,255,140,":"rgba(185,255,99,")+(.35+pulse*.35)+")";ctx.strokeStyle=late?"rgba(220,255,140,.9)":"rgba(185,255,99,.85)";ctx.lineWidth=2;
       ctx.beginPath();ctx.moveTo(0,-6);ctx.lineTo(7,2);ctx.lineTo(0,7);ctx.lineTo(-7,2);ctx.closePath();ctx.fill();ctx.stroke();
@@ -2669,7 +2695,7 @@ export default function AshfallGame() {
         const healthRatio=clamp(ally.health/ally.maxHealth,0,1),barY=ally.y-112;
         const huntTag=currentHuntTarget()?" · HUNT":"";
         const late=lateMapContactShade(mapRef.current);
-        ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(2,6,8,.92)";ctx.strokeText(`ALLY · ${companionName}${huntTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle=isJackal?"#ffe1b0":wyrmTint?"#ffc8d8":"#d9ffb0";ctx.fillText(`ALLY · ${companionName}${huntTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5); // ALLY · HUNT leftover still keeps #58 late stroke with sword rim / lynx / wyrm health; leftover still readable after #70 road-step; leftover still readable after followHold
+        ctx.save();ctx.globalAlpha=visibility;ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(2,6,8,.92)";ctx.strokeText(`ALLY · ${companionName}${huntTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5);ctx.fillStyle=isJackal?"#ffe1b0":wyrmTint?"#ffc8d8":"#d9ffb0";ctx.fillText(`ALLY · ${companionName}${huntTag}  ${Math.ceil(ally.health)} / ${ally.maxHealth}`,ally.x,barY-5); // ALLY · HUNT leftover still keeps #58 late stroke with sword rim / lynx / wyrm health; leftover still readable after #70 road-step; leftover still readable after followHold; leftover still readable after hunt teleport
         ctx.fillStyle="rgba(2,7,8,.84)";ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.fill();
         const healthGradient=ctx.createLinearGradient(ally.x-46,0,ally.x+46,0);healthGradient.addColorStop(0,"#5ed52d");healthGradient.addColorStop(1,"#b7ff57");ctx.fillStyle=healthGradient;ctx.beginPath();ctx.roundRect(ally.x-46,barY+2,92*healthRatio,3,1.5);ctx.fill();ctx.strokeStyle="rgba(190,255,132,.72)";ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(ally.x-48,barY,96,7,3.5);ctx.stroke();ctx.restore();
       }
@@ -2945,7 +2971,7 @@ export default function AshfallGame() {
       const healthLabel=(wyrm.angry?"ANGRY  ":"")+"HEART WYRM  "+wyrm.health+" / "+wyrm.maxHealth;
       const late=lateMapContactShade(mapRef.current);
       ctx.save();ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="700 10px ui-monospace, SFMono-Regular, Menlo, monospace";
-      ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(10,2,10,.9)";ctx.strokeText(healthLabel,wyrm.x+recoilX,barY-3); // heart wyrm health keeps late stroke with HUNT; leftover still readable after #70 road-step; leftover still readable after followHold
+      ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(10,2,10,.9)";ctx.strokeText(healthLabel,wyrm.x+recoilX,barY-3); // heart wyrm health keeps late stroke with HUNT; leftover still readable after #70 road-step; leftover still readable after followHold; leftover still readable after hunt teleport
       ctx.fillStyle=wyrm.angry?"#ffb3c4":"#ffd8e4";ctx.fillText(healthLabel,wyrm.x+recoilX,barY-3);
       ctx.fillStyle="rgba(10,2,10,.9)";ctx.fillRect(barX-2,barY-2,barW+4,barH+4);
       ctx.fillStyle="#3a1424";ctx.fillRect(barX,barY,barW,barH);
@@ -3059,7 +3085,7 @@ export default function AshfallGame() {
         const late=lateMapContactShade(map);
         ctx.save();
         ctx.textAlign="center";ctx.textBaseline="bottom";ctx.font="700 8px ui-monospace, SFMono-Regular, Menlo, monospace";
-        ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(20,8,4,.9)";ctx.strokeText(healthLabel,beast.x+recoilX,barY-3); // kiln lynx health keeps late stroke with HUNT; leftover still readable after #70 road-step; leftover still readable after followHold
+        ctx.lineWidth=late?4:3;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(20,8,4,.9)";ctx.strokeText(healthLabel,beast.x+recoilX,barY-3); // kiln lynx health keeps late stroke with HUNT; leftover still readable after #70 road-step; leftover still readable after followHold; leftover still readable after hunt teleport
         ctx.fillStyle=beast.angry?"#ffb19d":"#ffe7c2";ctx.fillText(healthLabel,beast.x+recoilX,barY-3);
         ctx.fillStyle="rgba(20,8,4,.9)";ctx.fillRect(barX-2,barY-2,barW+4,barH+4);
         ctx.fillStyle="#4a1c14";ctx.fillRect(barX,barY,barW,barH);
@@ -3579,9 +3605,9 @@ export default function AshfallGame() {
           tone(secondJump?285:190,secondJump ? .2 : .16,secondJump ? .026 : .02);
         }
         pl.vy+=1180*dt;const oldBottom=pl.y+PH;const nextX=clamp(pl.x+pl.vx*dt,PLAYER_EDGE_MARGIN,activeWorldW-PLAYER_EDGE_MARGIN);if(!pl.grounded||groundAt(nextX,oldBottom,pl.grounded)<Infinity)pl.x=nextX;pl.y+=pl.vy*dt;const newBottom=pl.y+PH,ground=groundAt(pl.x,oldBottom,wasGrounded);
-        if(pl.vy>=0&&ground<Infinity&&(oldBottom<=ground+STEP_HEIGHT&&newBottom>=ground||roadStepHold(wasGrounded&&!didJump,oldBottom,ground))){pl.y=ground-PH;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;}else{pl.grounded=false;pl.crouched=false;pl.sliding=false;slideUntil.current=0;} // leftover maps 1/3 road seams still hold walk/slide; Space jump/double jump + S crouch/slide stay; leftover maps 2/4/5/6 walk/slide still hold after #70 road-step
+        if(pl.vy>=0&&ground<Infinity&&(oldBottom<=ground+STEP_HEIGHT&&newBottom>=ground||roadStepHold(wasGrounded&&!didJump,oldBottom,ground))){pl.y=ground-PH;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;}else{pl.grounded=false;pl.crouched=false;pl.sliding=false;slideUntil.current=0;} // leftover maps 1/3 road seams still hold walk/slide; Space jump/double jump + S crouch/slide stay; leftover maps 2/4/5/6 walk/slide still hold after #70 road-step; leftover still holds after hunt teleport
         if(wasGrounded&&!didJump&&!pl.grounded)pl.jumpsLeft=Math.min(pl.jumpsLeft,1);
-        if(pl.y>WORLD_H+80){const floor=plantedFloorAt(map,Math.max(120,pl.x-180));pl.x=floor.x;pl.y=plantedYAt(map,floor.x);pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;} // void recover still plants after #60/#61 companionIdleLeftover; maps 1–6 leftover still fire after #66 6460 vein skip; leftover still fires after #72 road-step
+        if(pl.y>WORLD_H+80){const floor=plantedFloorAt(map,Math.max(120,pl.x-180));pl.x=floor.x;pl.y=plantedYAt(map,floor.x);pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;} // void recover still plants after #60/#61 companionIdleLeftover; maps 1–6 leftover still fire after #66 6460 vein skip; leftover still fires after #72 road-step; leftover still fires after hunt teleport
         pl.step+=Math.abs(pl.vx)*dt*.048;
       }else{pl.vx*=.82;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
       const castState=companionCastRef.current;
@@ -3680,7 +3706,7 @@ export default function AshfallGame() {
         else if(map===5&&nearPortalAt(pl.x,MAP5_ENTRY_X))action="Return to Moonwell Cliffs";
         else if(map===5&&nearPortalAt(pl.x,MAP5_EXIT_X))action="Enter Ashfall's Heart";
         else if(map===6&&nearPortalAt(pl.x,MAP6_ENTRY_X))action="Return to The Quiet Ember";
-        else if(map===6&&atHeartAltar(pl.x))action=campaignEndedRef.current?"Rest at Ashfall's Heart":"Press E at Ashfall's Heart"; // altar prompt still wins after #56 Dell/Rowan walk-out and #64 afterCapture trim; leftover still fires after #66 scenery vein move
+        else if(map===6&&atHeartAltar(pl.x))action=campaignEndedRef.current?"Rest at Ashfall's Heart":"Press E at Ashfall's Heart"; // altar prompt still wins after #56 Dell/Rowan walk-out and #64 afterCapture trim; leftover still fires after #66 scenery vein move; leftover still fires after hunt teleport
       }
       if(action!==lastAction){lastAction=action;setNearAction(action||null);}
       const nextAnchor=promptAt?{left:Math.round(clamp((promptAt.x-cameraX)*scale,78,w-78)),bottom:Math.round(clamp(h-(promptAt.y-88)*scale,96,h*.58))}:null;
