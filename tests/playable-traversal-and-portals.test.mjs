@@ -102,7 +102,7 @@ test("no softlock markers: companion reseat, underground snap, edge recovery, PR
   assert.match(game, /if\(jackal\.y>jackal\.groundY\+28\)jackal\.y=jackal\.groundY/);
   assert.match(game, /if\(pl\.y>WORLD_H\+80\)\{const floor=plantedFloorAt\(map,Math\.max\(120,pl\.x-180\)\);pl\.x=floor\.x;pl\.y=plantedYAt\(map,floor\.x\)/);
   assert.match(game, /const nextX=clamp\(pl\.x\+pl\.vx\*dt,PLAYER_EDGE_MARGIN,activeWorldW-PLAYER_EDGE_MARGIN\)/);
-  assert.match(game, /if\(!pl\.grounded\|\|groundAt\(nextX,oldBottom\)<Infinity\)pl\.x=nextX/);
+  assert.match(game, /if\(!pl\.grounded\|\|groundAt\(nextX,oldBottom,pl\.grounded\)<Infinity\)pl\.x=nextX/);
   assert.match(game, /const COMPANION_HUNT_RANGE = 520/);
   assert.match(game, /const COMPANION_STRIKE_RANGE = 132/);
   assert.match(game, /const COMPANION_STRIKE_DAMAGE = 5/);
