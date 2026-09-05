@@ -1296,7 +1296,7 @@ export default function AshfallGame() {
     else if(map===5&&nearPortalAt(x,MAP5_ENTRY_X)) enterMap(4,5);
     else if(map===5&&nearPortalAt(x,MAP5_EXIT_X)) enterMap(6,5);
     else if(map===6&&nearPortalAt(x,MAP6_ENTRY_X)) enterMap(5,6);
-    else if(map===6&&atHeartAltar(x)){ // altar E still wins after #56 Dell/Rowan walk-out and #64 afterCapture trim; no nearby talk radius covers this window
+    else if(map===6&&atHeartAltar(x)){ // altar E still wins after #56 Dell/Rowan walk-out and #64 afterCapture trim; no nearby talk radius covers this window; leftover still fires after #66 scenery vein move
       if(!campaignEndedRef.current){campaignEndedRef.current=true;setCampaignEnded(true);}
       setObjective(hudLockFor(6,inventoryRef.current.map(item=>item.id),true).objective);
       showDialogue(ENDING_LINES);
@@ -1333,7 +1333,7 @@ export default function AshfallGame() {
       if (["arrowleft","arrowright","arrowup","arrowdown"," ","tab"].includes(k)) e.preventDefault();
       if(k==="tab"&&!e.repeat){toggleInventory();return;}
       if(k==="m"&&!e.repeat){toggleWorldMap();return;}
-      if(startedRef.current&&/^[1-5]$/.test(k)&&!e.repeat){selectUsableSlot(Number(k)-1);return;}
+      if(startedRef.current&&/^[1-5]$/.test(k)&&!e.repeat){selectUsableSlot(Number(k)-1);return;} // leftover 1–5 still selects during recall after #63
       if(startedRef.current&&k==="q"&&!e.repeat){
         if(inventoryOpenRef.current){inventoryOpenRef.current=false;setInventoryOpen(false);}
         if(!worldMapOpenRef.current)deployQueued.current=true;
@@ -3282,10 +3282,10 @@ export default function AshfallGame() {
         ctx.save();ctx.textAlign="center";ctx.textBaseline="bottom";
         ctx.font="900 11px ui-monospace, SFMono-Regular, Menlo, monospace";
         ctx.lineWidth=late?5:4;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(6,8,10,.88)";ctx.strokeText(label,cx,groundY-188);
-        ctx.fillStyle="#fff6d2";ctx.fillText(label,cx,groundY-188); // early-map west/east tags keep cream fill after #48/#50 late stroke
+        ctx.fillStyle="#fff6d2";ctx.fillText(label,cx,groundY-188); // early-map west/east tags keep cream fill after #48/#50 late stroke; maps 2–4 leftover cream still matches #52/#61/#66 late portal tags
         ctx.font="900 8px ui-monospace, SFMono-Regular, Menlo, monospace";
         ctx.lineWidth=late?5:4;ctx.strokeStyle=late?"rgba(6,2,4,.96)":"rgba(6,8,10,.88)";
-        ctx.strokeText("PRESS E",cx,groundY-174); // maps 5–6 entry/exit keep #52 cream fill + late stroke with nearPortalAt
+        ctx.strokeText("PRESS E",cx,groundY-174); // maps 5–6 entry/exit keep #52 cream fill + late stroke with nearPortalAt; maps 2–4 leftover PRESS E keeps the same cream
         ctx.fillStyle="#fff6d2";ctx.fillText("PRESS E",cx,groundY-174);
         ctx.restore();
       }
@@ -3539,7 +3539,7 @@ export default function AshfallGame() {
         pl.vy+=1180*dt;const oldBottom=pl.y+PH;const nextX=clamp(pl.x+pl.vx*dt,PLAYER_EDGE_MARGIN,activeWorldW-PLAYER_EDGE_MARGIN);if(!pl.grounded||groundAt(nextX,oldBottom)<Infinity)pl.x=nextX;pl.y+=pl.vy*dt;const newBottom=pl.y+PH,ground=groundAt(pl.x,oldBottom);
         if(pl.vy>=0&&ground<Infinity&&oldBottom<=ground+STEP_HEIGHT&&newBottom>=ground){pl.y=ground-PH;pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;}else{pl.grounded=false;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
         if(wasGrounded&&!didJump&&!pl.grounded)pl.jumpsLeft=Math.min(pl.jumpsLeft,1);
-        if(pl.y>WORLD_H+80){const floor=plantedFloorAt(map,Math.max(120,pl.x-180));pl.x=floor.x;pl.y=plantedYAt(map,floor.x);pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;} // void recover still plants after #60/#61 companionIdleLeftover
+        if(pl.y>WORLD_H+80){const floor=plantedFloorAt(map,Math.max(120,pl.x-180));pl.x=floor.x;pl.y=plantedYAt(map,floor.x);pl.vy=0;pl.grounded=true;pl.jumpsLeft=2;pl.crouched=false;pl.sliding=false;slideUntil.current=0;} // void recover still plants after #60/#61 companionIdleLeftover; maps 1–6 leftover still fire after #66 6460 vein skip
         pl.step+=Math.abs(pl.vx)*dt*.048;
       }else{pl.vx*=.82;pl.crouched=false;pl.sliding=false;slideUntil.current=0;}
       const castState=companionCastRef.current;
@@ -3556,7 +3556,7 @@ export default function AshfallGame() {
             else{
               ally.recallStarted=0;
               const summonX=creatureEdgeAt(map,pl.x+pl.facing*COMPANION_DEPLOY_DISTANCE);
-              const summonFloor=plantedFloorAt(map,summonX); // Tab/1–5/Q deploy still plants off leftover stones after portal reseat
+              const summonFloor=plantedFloorAt(map,summonX); // Tab/1–5/Q deploy still plants off leftover stones after portal reseat; Q-during-recall leftover after #63 still clears thin stones
               const summonGround=companionSurfaceAt(summonFloor.x,pl.y+PH,map)??surfaceYAt(map,summonFloor.x,pl.y+PH)??summonFloor.groundY;
               ally.x=creatureEdgeAt(map,summonFloor.x);ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;
               keepCreatureOnRoad(ally,map);
@@ -3565,7 +3565,7 @@ export default function AshfallGame() {
             }
           }else{
             const summonX=creatureEdgeAt(map,pl.x+pl.facing*COMPANION_DEPLOY_DISTANCE);
-            const summonFloor=plantedFloorAt(map,summonX); // Tab/1–5/Q deploy still plants off leftover stones after portal reseat
+            const summonFloor=plantedFloorAt(map,summonX); // Tab/1–5/Q deploy still plants off leftover stones after portal reseat; leftover 1–5/Q after #63 still clears thin stones
             const summonGround=companionSurfaceAt(summonFloor.x,pl.y+PH,map)??surfaceYAt(map,summonFloor.x,pl.y+PH)??summonFloor.groundY;
             ally.active=true;ally.itemId=item.id;ally.map=map;ally.x=creatureEdgeAt(map,summonFloor.x);ally.groundY=summonGround;ally.y=summonGround;ally.vx=0;ally.facing=pl.facing;ally.prevMode="idle";ally.modeBlendAt=now;ally.gait=0;ally.mode="idle";ally.modeStarted=now;ally.summonedAt=now;ally.recallStarted=0;ally.teleportAt=0;ally.attackUntil=0;ally.attackLanded=false;ally.lastPlayerAttack=actionStartedAt.current;
             keepCreatureOnRoad(ally,map);
@@ -3638,7 +3638,7 @@ export default function AshfallGame() {
         else if(map===5&&nearPortalAt(pl.x,MAP5_ENTRY_X))action="Return to Moonwell Cliffs";
         else if(map===5&&nearPortalAt(pl.x,MAP5_EXIT_X))action="Enter Ashfall's Heart";
         else if(map===6&&nearPortalAt(pl.x,MAP6_ENTRY_X))action="Return to The Quiet Ember";
-        else if(map===6&&atHeartAltar(pl.x))action=campaignEndedRef.current?"Rest at Ashfall's Heart":"Press E at Ashfall's Heart"; // altar prompt still wins after #56 Dell/Rowan walk-out and #64 afterCapture trim
+        else if(map===6&&atHeartAltar(pl.x))action=campaignEndedRef.current?"Rest at Ashfall's Heart":"Press E at Ashfall's Heart"; // altar prompt still wins after #56 Dell/Rowan walk-out and #64 afterCapture trim; leftover still fires after #66 scenery vein move
       }
       if(action!==lastAction){lastAction=action;setNearAction(action||null);}
       const nextAnchor=promptAt?{left:Math.round(clamp((promptAt.x-cameraX)*scale,78,w-78)),bottom:Math.round(clamp(h-(promptAt.y-88)*scale,96,h*.58))}:null;
