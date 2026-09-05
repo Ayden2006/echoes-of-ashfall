@@ -244,6 +244,7 @@ const NPCS:Npc[] = [
       {speaker:"Reed",text:"You are carrying kiln heat. The heart can take that warmth."},
       {speaker:"Reed",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Reed",text:"If you reach the wyrm, tell Kest I didn't quit the kiln."},
+      {speaker:"Reed",text:"A banked coal-bed still sits east. Press E there if the coals feel thin."},
       {speaker:"Reed",text:"When that kiln can rest, we walk out as people."},
       {speaker:"Moon Night",text:"I will."}
     ],
@@ -265,6 +266,7 @@ const NPCS:Npc[] = [
       {speaker:"Kest",text:"You named the whole road in shards. The pulse is the last name."},
       {speaker:"Kest",text:"Walk east. The gate behind you still heals."},
       {speaker:"Kest",text:"The road remembers us now, Moon Night."},
+      {speaker:"Kest",text:"A first-step stone still sits east. Press E there if the pulse feels thin."},
       {speaker:"Kest",text:"Come on. We walk out as people."},
       {speaker:"Moon Night",text:"Then we walk it together."}
     ],
@@ -285,6 +287,7 @@ const NPCS:Npc[] = [
       {speaker:"Calen",text:"That dragon wasn't quarry. It was the first spark of the signal."},
       {speaker:"Calen",text:"Carry it if you want the spark walking with you. The east portal heals you."},
       {speaker:"Calen",text:"The rain I watched since dusk is quieter now. That is the first shard."},
+      {speaker:"Calen",text:"The plaque still sits east. Press E there if the rain feels thin."},
       {speaker:"Calen",text:"Go east. If we meet again, I'll know you kept the echo walking."}
     ],
     palette:{skin:"#c9b08a",cloak:"#2a3348",trim:"#8aa4c8",accent:"#c8e4ff"}
@@ -306,6 +309,7 @@ const NPCS:Npc[] = [
       {speaker:"Calen",text:"Pale antlers. The moonwell poured the signal into that stag."},
       {speaker:"Calen",text:"You bound the pool, not just a beast. That's why the well looks dimmer now."},
       {speaker:"Calen",text:"The rain I watched is pooled here. This stag is the moonwell walking."},
+      {speaker:"Calen",text:"The moonwell still sits west. Press E there if the pool feels thin."},
       {speaker:"Calen",text:"The east gate heals you. Reed's kiln is through it."},
       {speaker:"Calen",text:"Tell him a castle watcher still stands."}
     ],
@@ -323,6 +327,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Sera",text:"You took a jackal card. That's the dusk of the signal walking with you."},
       {speaker:"Sera",text:"Leave the extra scout to the sand. One dusk shard is enough to carry."},
+      {speaker:"Sera",text:"A dusk-shell still sits east. Press E there if the gold feels thin."},
       {speaker:"Sera",text:"The east portal heals you. Push on before the last gold dies."},
       {speaker:"Sera",text:"Ash Hollow smolders past that gate. I walk when the light fails."}
     ],
@@ -346,6 +351,7 @@ const NPCS:Npc[] = [
       {speaker:"Sera",text:"Coal pelt, not dusk fur. You bound the last heat the shore could not keep."},
       {speaker:"Sera",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Sera",text:"If Bram is still walking, tell him the signal isn't quarry. We're carrying it."},
+      {speaker:"Sera",text:"Quiet bellows still sit west. Press E there if the heat feels thin."},
       {speaker:"Sera",text:"Then we walk out as people. I'll keep counting till this kiln can rest."}
     ],
     palette:{skin:"#d4a07a",cloak:"#6a3418",trim:"#f08a3a",accent:"#ffd27a"}
@@ -363,6 +369,7 @@ const NPCS:Npc[] = [
       {speaker:"Bram",text:"You took the leftover fire. That's foxfire — the echo shedding heat."},
       {speaker:"Bram",text:"Don't think the cliffs will be quieter. The stag will try to hold what you just carried."},
       {speaker:"Bram",text:"The cairn twist is leftover fire in the foxes, not the next gate."},
+      {speaker:"Bram",text:"The cairn still sits east. Press E there if the stones feel thin."},
       {speaker:"Bram",text:"The east portal heals you. I'll take the long way around."}
     ],
     palette:{skin:"#c09070",cloak:"#3a1c12",trim:"#ff7a3a",accent:"#ffc08a"}
@@ -379,6 +386,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Bram",text:"We meet at the last echo. Cairn twist, then this heart."},{speaker:"Bram",text:"I'm not leaving until the leftover fire can rest."},{speaker:"Bram",text:"An echo-stone sits farther east. Press E there if the leftover fire feels thin."}],
     afterCaptureTalk:[
       {speaker:"Bram",text:"You bound the last pulse. That's the leftover fire I tracked, still at last."},
+      {speaker:"Bram",text:"A first-step stone still sits east. Press E there if the leftover fire feels thin."},
       {speaker:"Bram",text:"Walk east. The gate behind you still heals."},
       {speaker:"Bram",text:"Then we walk out as people."}
     ],
@@ -396,6 +404,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Orrin",text:"Still copying, Moon Night. Bind the dragon if you haven't, then go east. The east portal heals you."},{speaker:"Orrin",text:"The plaque higher up says the same thing in older stone. Press E there if the rain feels thin."}],
     afterCaptureTalk:[
       {speaker:"Orrin",text:"You took the first spark. The rain I copy is quieter now."},
+      {speaker:"Orrin",text:"The plaque higher up still copies. Press E there if the line feels thin."},
       {speaker:"Orrin",text:"The east portal heals you. If the well still pools light, I'll meet you there."},
       {speaker:"Orrin",text:"I want the same line in moonwater."}
     ],
@@ -413,6 +422,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Orrin",text:"We meet again. Castle rain, then cliff wind. Same road."},{speaker:"Orrin",text:"A cliff notch sits east, cut to listen. Press E there if the wind feels thin."}],
     afterCaptureTalk:[
       {speaker:"Orrin",text:"You bound the pool I came to copy. The well looks dimmer, and the rain I wrote is finally still."},
+      {speaker:"Orrin",text:"A cliff notch still sits east. Press E there if the wind feels thin."},
       {speaker:"Orrin",text:"The east gate heals you. Reed's kiln is through it."},
       {speaker:"Orrin",text:"Tell him a scribe still walks."}
     ],
@@ -430,6 +440,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Nia",text:"Still here, Moon Night. Bind a dusk shard if you haven't, then go east. The east portal heals you."},{speaker:"Nia",text:"The hollow waits when the light fails. The gold is already thinning on this last stretch."},{speaker:"Nia",text:"A tide-cut step sits on this last stretch. Press E there if the gold feels thin."}],
     afterCaptureTalk:[
       {speaker:"Nia",text:"You took the dusk. That's why the shore looks thinner."},
+      {speaker:"Nia",text:"A tide-cut step still sits east. Press E there if the gold feels thin."},
       {speaker:"Nia",text:"The east portal heals you. I walk when the light dies."}
     ],
     palette:{skin:"#d8b090",cloak:"#4a2848",trim:"#e8a060",accent:"#ffd8a0"}
@@ -446,6 +457,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Nia",text:"We keep meeting at the edge of the light. Shore dusk, then this heart."},{speaker:"Nia",text:"The last gold I followed ends here."},{speaker:"Nia",text:"An echo-stone still sits east. Press E there if the last light feels thin."}],
     afterCaptureTalk:[
       {speaker:"Nia",text:"You bound the last pulse. That's the dusk I followed, finished."},
+      {speaker:"Nia",text:"A first-step stone still sits west. Press E there if the last light feels thin."},
       {speaker:"Nia",text:"Walk east. The gate behind you still heals."},
       {speaker:"Nia",text:"Then we walk out as people."}
     ],
@@ -462,6 +474,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Vess",text:"Still reading, Moon Night. Bind leftover heat if you haven't, then go east. The east portal heals you."},{speaker:"Vess",text:"If you skipped the cairn, walk back. Press E there if the stones feel thin."}],
     afterCaptureTalk:[
       {speaker:"Vess",text:"You took the leftover fire. The cairn was right."},
+      {speaker:"Vess",text:"The cairn I read still sits west of this ash. Press E there if the stones feel thin."},
       {speaker:"Vess",text:"The east portal heals you. I'll walk the kiln road. If Reed still tends heat, tell him the ash already knew."}
     ],
     palette:{skin:"#c4a888",cloak:"#2a2824",trim:"#8a7060",accent:"#e8c8a0"}
@@ -480,6 +493,7 @@ const NPCS:Npc[] = [
       {speaker:"Vess",text:"Coal pelt, not foxfire. You bound the last heat the cairn promised."},
       {speaker:"Vess",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Vess",text:"If Nia is still walking dusk, tell her the light didn't fail. It banked."},
+      {speaker:"Vess",text:"Quiet bellows still sit west. Press E there if the breath feels thin."},
       {speaker:"Vess",text:"Then we walk out as people. The ash I read can stay banked."}
     ],
     palette:{skin:"#c4a888",cloak:"#2a2824",trim:"#8a7060",accent:"#e8c8a0"}
@@ -496,6 +510,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Tamsin",text:"Still on the wall, Moon Night. Bind the spark if you haven't, then go east. The east portal heals you."},{speaker:"Tamsin",text:"The merlon is farther east. Press E there if the rain feels thin."}],
     afterCaptureTalk:[
       {speaker:"Tamsin",text:"You took the first spark. The rain on this wall is quieter now."},
+      {speaker:"Tamsin",text:"The merlon I kept still watches east. Press E there if the rain feels thin."},
       {speaker:"Tamsin",text:"The east portal heals you. I'll take the long road to the kiln. Tell Reed a merlon-watcher still stands."}
     ],
     palette:{skin:"#c8b49a",cloak:"#243040",trim:"#7a9ab0",accent:"#d0e8f0"}
@@ -514,6 +529,7 @@ const NPCS:Npc[] = [
       {speaker:"Tamsin",text:"You bound the last heat. The merlon I left behind can finally stop watching."},
       {speaker:"Tamsin",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Tamsin",text:"If Orrin is still copying rain, tell him the wall already knew the line."},
+      {speaker:"Tamsin",text:"Quiet bellows still sit west. Press E there if the fire feels thin."},
       {speaker:"Tamsin",text:"Then we walk out as people. The merlon I left can stay quiet."}
     ],
     palette:{skin:"#c8b49a",cloak:"#243040",trim:"#7a9ab0",accent:"#d0e8f0"}
@@ -529,6 +545,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Lira",text:"Still counting, Moon Night. Bind one dusk shard if you haven't, then go east. The east portal heals you."},{speaker:"Lira",text:"The drowned post mid-beach keeps the same count. Press E there if the light feels thin."}],
     afterCaptureTalk:[
       {speaker:"Lira",text:"You took the dusk shard. That's why the shore looks thinner."},
+      {speaker:"Lira",text:"The drowned post mid-beach still keeps count. Press E there if the light feels thin."},
       {speaker:"Lira",text:"The east portal heals you. I walk the cliffs later if the well still pools light."}
     ],
     palette:{skin:"#e0b888",cloak:"#5a3020",trim:"#f0a050",accent:"#ffe0a8"}
@@ -544,6 +561,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Lira",text:"We meet again. Shore dusk, then cliff wind. Same count, later light."},{speaker:"Lira",text:"The gold I counted on the sand is pooled in this moonwell. Press E there if the light feels thin."}],
     afterCaptureTalk:[
       {speaker:"Lira",text:"You bound the pool shard. The dusk I counted on the shore is quieter now."},
+      {speaker:"Lira",text:"Pale lichen still sits west. Press E there if the light feels thin."},
       {speaker:"Lira",text:"The east gate heals you. Reed's kiln is through it."},
       {speaker:"Lira",text:"Tell him a dusk-counter still walks."}
     ],
@@ -561,6 +579,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Holt",text:"You took the leftover-fire shard. That's foxfire — the echo shedding what the shore dropped."},
       {speaker:"Holt",text:"The cairn stayed honest. Leftover fire lives in the animals, not the next gate."},
+      {speaker:"Holt",text:"The cairn stayed honest west. Press E there if the stones feel thin."},
       {speaker:"Holt",text:"I'll take the long way. If the ash stays honest, we'll speak again."}
     ],
     palette:{skin:"#c89878",cloak:"#2c1a14",trim:"#d86838",accent:"#f0b888"}
@@ -577,6 +596,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Holt",text:"We meet again. Cairn twist, then heart. Same road, last page."},{speaker:"Holt",text:"An echo-stone sits east. Press E there if the last stones feel thin."}],
     afterCaptureTalk:[
       {speaker:"Holt",text:"You bound the last pulse. That's the cairn road, honest at last."},
+      {speaker:"Holt",text:"A first-step stone still sits west. Press E there if the last stones feel thin."},
       {speaker:"Holt",text:"Walk east. The gate behind you still heals."},
       {speaker:"Holt",text:"Then we walk out as people."}
     ],
@@ -594,6 +614,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Maer",text:"Still on the leftover road, Moon Night. Bind the spark if you haven't, then go east."},{speaker:"Maer",text:"The east portal heals you."},{speaker:"Maer",text:"The merlon is west. Press E there if the rain feels thin."}],
     afterCaptureTalk:[
       {speaker:"Maer",text:"You took the first spark. The leftover road I walk is quieter now."},
+      {speaker:"Maer",text:"The merlon still sits east of this leftover rain. Press E there if the rain feels thin."},
       {speaker:"Maer",text:"The east portal heals you. I'll keep the leftover rain walking."},
       {speaker:"Maer",text:"Tell Reed a rain-walker still stands."}
     ],
@@ -613,6 +634,7 @@ const NPCS:Npc[] = [
       {speaker:"Maer",text:"You bound the last heat. The leftover rain I followed can finally rest."},
       {speaker:"Maer",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Maer",text:"If Lira is still counting light, tell her the gold banked here."},
+      {speaker:"Maer",text:"Quiet bellows still sit west. Press E there if the leftover fire feels thin."},
       {speaker:"Maer",text:"Then we walk out as people. The leftover rain can stay quiet."}
     ],
     palette:{skin:"#c4a888",cloak:"#1c2834",trim:"#6a88a0",accent:"#c0d8e8"}
@@ -628,6 +650,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Perrin",text:"Still on the late sand, Moon Night. Bind a dusk shard if you haven't, then go east. The east portal heals you."},{speaker:"Perrin",text:"A tide-cut step sits farther east. Press E there if the shore feels thin."}],
     afterCaptureTalk:[
       {speaker:"Perrin",text:"You took the dusk shard. The late sand can go dark without taking you."},
+      {speaker:"Perrin",text:"A tide-cut step still sits east. Press E there if the shore feels thin."},
       {speaker:"Perrin",text:"The east portal heals you. The hollow is through that gate."},
       {speaker:"Perrin",text:"I'll walk when the late sand dies. Tell Reed a late-shore walker still stands."}
     ],
@@ -647,6 +670,7 @@ const NPCS:Npc[] = [
       {speaker:"Perrin",text:"You bound the coal shard. The dusk I watched on the late sand is finished here."},
       {speaker:"Perrin",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Perrin",text:"If Holt is still on the cairn road, tell him the ash banked."},
+      {speaker:"Perrin",text:"Quiet bellows still sit west. Press E there if the heat feels thin."},
       {speaker:"Perrin",text:"Then we walk out as people. The late coals can go dark."}
     ],
     palette:{skin:"#d4a878",cloak:"#3a2418",trim:"#e88840",accent:"#ffd090"}
@@ -663,6 +687,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Wren",text:"You took the first spark. That's why the rain I listen to is quieter."},
       {speaker:"Wren",text:"Each bound animal is a shard. This one is the first spark in the rain."},
+      {speaker:"Wren",text:"The plaque still writes east. Press E there if the signal feels thin."},
       {speaker:"Wren",text:"The east portal heals you. I walk the cliffs later if the well still pools light."}
     ],
     palette:{skin:"#d0b898",cloak:"#243848",trim:"#7ab0c8",accent:"#b8e8f0"}
@@ -678,6 +703,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Wren",text:"We meet again. Castle rain, then this cliff. Same listen, later wind."},{speaker:"Wren",text:"The rain I listened to is still in this moonwell. Press E there if the pool feels thin."}],
     afterCaptureTalk:[
       {speaker:"Wren",text:"You bound the pool shard. The rain I listened to in the castle is finally still."},
+      {speaker:"Wren",text:"Pale lichen still sits west. Press E there if the pool feels thin."},
       {speaker:"Wren",text:"The east gate heals you. Reed's kiln is through it."},
       {speaker:"Wren",text:"Tell him a rain-listener still walks."}
     ],
@@ -695,6 +721,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Dell",text:"Still on the later gold, Moon Night. Bind a dusk shard if you haven't, then go east."},{speaker:"Dell",text:"The east portal heals you."},{speaker:"Dell",text:"One dusk shard is enough to carry. The extra scout can keep the sand."},{speaker:"Dell",text:"A tide-cut step sits east of this later gold. Press E there if the gold feels thin."}],
     afterCaptureTalk:[
       {speaker:"Dell",text:"You took the dusk shard. That's why this gold looks thinner."},
+      {speaker:"Dell",text:"A tide-cut step still sits east. Press E there if the gold feels thin."},
       {speaker:"Dell",text:"The east portal heals you. The hollow is through that gate."},
       {speaker:"Dell",text:"I walk when the gold fails. If the dusk still holds, we may share that road."}
     ],
@@ -712,6 +739,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Dell",text:"We meet again. Shore dusk, then heart. Same road, last gold."},{speaker:"Dell",text:"An echo-stone sits east. Press E there if the gold feels thin."}],
     afterCaptureTalk:[
       {speaker:"Dell",text:"You bound the last pulse. That's the dusk I followed, finished at the heart altar."},
+      {speaker:"Dell",text:"A cooled vein still sits east. Press E there if the gold feels thin."},
       {speaker:"Dell",text:"Walk east. The gate behind you still heals."},
       {speaker:"Dell",text:"Then we walk out as people. The shore can go dark without taking us."}
     ],
@@ -729,6 +757,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Isk",text:"You took the leftover-fire shard. That's foxfire — the echo shedding what the shore dropped."},
       {speaker:"Isk",text:"The cairn twist was leftover fire in the foxes, not the next gate."},
+      {speaker:"Isk",text:"The cairn I walked still sits east. Press E there if the ash feels thin."},
       {speaker:"Isk",text:"The east portal heals you. The well will try to hold this leftover fire."}
     ],
     palette:{skin:"#c08868",cloak:"#2a1810",trim:"#c05028",accent:"#e8a070"}
@@ -747,6 +776,7 @@ const NPCS:Npc[] = [
       {speaker:"Isk",text:"You bound the coal shard. The leftover fire I walked in the hollow banked here."},
       {speaker:"Isk",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Isk",text:"If Wren is still listening on the cliffs, tell her the rain banked."},
+      {speaker:"Isk",text:"A banked coal-bed still sits west. Press E there if the heat feels thin."},
       {speaker:"Isk",text:"Then we walk out as people. This kiln heat can stay honest."}
     ],
     palette:{skin:"#c08868",cloak:"#2a1810",trim:"#c05028",accent:"#e8a070"}
@@ -763,6 +793,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Rowan",text:"You took the first spark. The leftover road I walk is quieter now."},
       {speaker:"Rowan",text:"Shards, not quarry. This one is rain-spark, not the whole road."},
+      {speaker:"Rowan",text:"A rain-cut groove sits west. Press E there if the leftover road feels thin."},
       {speaker:"Rowan",text:"The east portal heals you. I'll take the leftover road east."},
       {speaker:"Rowan",text:"If Kest is still ahead, tell him a leftover-walker still stands."}
     ],
@@ -780,6 +811,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Rowan",text:"We meet again. Castle rain, then heart. Same leftover walk, last pulse."},{speaker:"Rowan",text:"An echo-stone still sits east. Press E there if the leftover road feels thin."}],
     afterCaptureTalk:[
       {speaker:"Rowan",text:"You bound the last pulse. That's every leftover step I walked, still in one place."},
+      {speaker:"Rowan",text:"A cooled vein still sits east. Press E there if the leftover road feels thin."},
       {speaker:"Rowan",text:"Walk east. The gate behind you still heals."},
       {speaker:"Rowan",text:"Then we walk out as people. The leftover road can go quiet."}
     ],
@@ -797,6 +829,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Ryn",text:"Still on the last cliff, Moon Night. Bind the stag if you still need the pool, then go east."},{speaker:"Ryn",text:"The east gate heals you."},{speaker:"Ryn",text:"Reed is through it."},{speaker:"Ryn",text:"Pale lichen sits west of this last gate. Press E there if the pool feels thin."}],
     afterCaptureTalk:[
       {speaker:"Ryn",text:"You bound the pool shard. The well can dim. The kiln still needs that heat."},
+      {speaker:"Ryn",text:"Pale lichen still sits west of this gate. Press E there if the pool feels thin."},
       {speaker:"Ryn",text:"The east gate heals you. Talk to Reed. Kiln heat is through this gate."}
     ],
     palette:{skin:"#c8a888",cloak:"#2a3038",trim:"#8aa8b8",accent:"#d0e8f0"}
@@ -814,6 +847,7 @@ const NPCS:Npc[] = [
     afterCaptureTalk:[
       {speaker:"Ryn",text:"You bound the coal shard. The heart can take that heat now."},
       {speaker:"Ryn",text:"The east gate heals you."},
+      {speaker:"Ryn",text:"Quiet bellows still sit west of this last gate. Press E there if the coals feel thin."},
       {speaker:"Ryn",text:"Then we walk out as people. I'll keep this last gate."}
     ],
     palette:{skin:"#c8a888",cloak:"#2a3038",trim:"#8aa8b8",accent:"#d0e8f0"}
@@ -829,6 +863,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Edan",text:"Still by the last stone, Moon Night. Bind the wyrm if you still need the pulse. Walk east."},{speaker:"Edan",text:"Press E at the altar. The campaign ends when the signal rests."},{speaker:"Edan",text:"Press E at the cooled vein. An echo-stone sits past it. Press E there if the pulse feels loud."},{speaker:"Edan",text:"When the signal rests, we walk out as people. This last stone can stay."}],
     afterCaptureTalk:[
       {speaker:"Edan",text:"You bound the last pulse. That's every shard, still in one place."},
+      {speaker:"Edan",text:"The cooled vein still sits east. Press E there if the pulse feels thin."},
       {speaker:"Edan",text:"Walk east. The gate behind you still heals."},
       {speaker:"Edan",text:"Then we walk out as people. The last stone can stay empty."}
     ],
@@ -846,6 +881,7 @@ const NPCS:Npc[] = [
     againTalk:[{speaker:"Hale",text:"Still on the quiet stretch, Moon Night. Bind the stag if you haven't, then go east."},{speaker:"Hale",text:"The east gate heals you."},{speaker:"Hale",text:"The wind still forgets you if nobody speaks."},{speaker:"Hale",text:"Pale lichen sits west of this quiet stretch. Press E there if the wind feels thin."}],
     afterCaptureTalk:[
       {speaker:"Hale",text:"You bound the pool shard. That's why this quiet wind went still."},
+      {speaker:"Hale",text:"Pale lichen still sits west. Press E there if the wind feels thin."},
       {speaker:"Hale",text:"The east gate heals you. Reed's kiln is through it."},
       {speaker:"Hale",text:"I keep the stretch the wind forgets. The pool can rest now."}
     ],
@@ -865,6 +901,7 @@ const NPCS:Npc[] = [
       {speaker:"Hale",text:"You bound the coal shard. That's kiln heat the heart can take."},
       {speaker:"Hale",text:"The east gate heals you. Talk to Kest."},
       {speaker:"Hale",text:"The wind can forget the cliff now. The kiln heat remembers."},
+      {speaker:"Hale",text:"Quiet bellows still sit west. Press E there if the coals feel thin."},
       {speaker:"Hale",text:"Then we walk out as people. This stretch can stay quiet."}
     ],
     palette:{skin:"#d2a890",cloak:"#3a2432",trim:"#c87888",accent:"#f0c8d0"}
