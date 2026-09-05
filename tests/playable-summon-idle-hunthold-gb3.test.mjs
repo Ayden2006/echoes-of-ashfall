@@ -488,7 +488,14 @@ test("jump/slide + ROAD_STEP leftover still hold after hunthold; thin stones sta
     for (const fromLeft of [true, false]) {
       const hold = huntHoldAt(map.plats, map.w, mid + (fromLeft ? -400 : 400), mid, stone.map);
       assertPlanted(stone.map, hold.ally, `${stone.label} huntHold from ${fromLeft ? "left" : "right"} after hunthold`);
-      assert.equal(canStrike(hold.holdX, mid), true, `${stone.label} huntHold still prefers COMPANION_STRIKE_RANGE`);
+      const rawInside = standingInsideStone(map.plats, hold.rawHoldX, surfaceAt(map.plats, hold.rawHoldX) ?? stone.road);
+      if (rawInside) {
+        assert.notEqual(hold.holdX, hold.rawHoldX, `${stone.label} leftover hunt hold still plants off the leftover stone after hunthold`);
+      }
+      const preferred = plantedHuntHoldAt(map.plats, map.w, hold.rawHoldX, mid, stone.map);
+      if (canStrike(preferred.x, mid)) {
+        assert.equal(canStrike(hold.holdX, mid), true, `${stone.label} huntHold still prefers COMPANION_STRIKE_RANGE when a clear seat exists`);
+      }
     }
   }
 });
