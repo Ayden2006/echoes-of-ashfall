@@ -611,6 +611,10 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
     ["isk", 5, /banked coal-bed/, /Press E there/],
     ["vess", 5, /Quiet bellows/, /Press E there/],
     ["hale", 5, /quiet kiln/, /Press E there/],
+    ["sera", 5, /quiet kiln/, /Press E there if the heat feels thin/],
+    ["tamsin", 5, /quiet kiln/, /Press E there if the fire feels thin/],
+    ["maer", 5, /Quiet bellows/, /Press E there if the leftover fire feels thin/],
+    ["perrin", 5, /Quiet bellows/, /Press E there if the heat feels thin/],
     ["edan", 6, /echo-stone/, /Press E there/],
     ["kest", 6, /first-step stone/, /Press E there if the pulse feels thin/],
     ["kest", 6, /heart altar/, /Press E at the heart altar/],
@@ -635,6 +639,10 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
   assert.match(againOf("edan", 6), /Bind the wyrm if you still need the pulse/);
   assert.match(againOf("edan", 6), /Press E at the cooled vein/);
   assert.match(againOf("hale", 5), /The quiet kiln still sits west\. Press E there if the coals feel thin/);
+  assert.match(againOf("sera", 5), /The quiet kiln still sits west\. Press E there if the heat feels thin/);
+  assert.match(againOf("tamsin", 5), /The quiet kiln sits west\. Press E there if the fire feels thin/);
+  assert.match(againOf("maer", 5), /Quiet bellows sit west\. Press E there if the leftover fire feels thin/);
+  assert.match(againOf("perrin", 5), /Quiet bellows sit west\. Press E there if the heat feels thin/);
   assert.match(againOf("calen", 1), /Press E there if the road feels thin/);
   assert.match(againOf("wren", 1), /Press E there if the signal feels thin/);
   assert.match(againOf("tamsin", 1), /Press E there if the rain feels thin/);
@@ -651,6 +659,10 @@ test("each map's againTalk quietly points to a nearby studyable with press E", (
   assert.doesNotMatch(againOf("isk", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
   assert.doesNotMatch(againOf("vess", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
   assert.doesNotMatch(againOf("hale", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
+  assert.doesNotMatch(againOf("sera", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
+  assert.doesNotMatch(againOf("tamsin", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
+  assert.doesNotMatch(againOf("maer", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
+  assert.doesNotMatch(againOf("perrin", 5), /ends the campaign|Press E at the (heart )?altar|The east gate heals you/);
 });
 
 test("full-road studyable-pointing againTalk on maps 1–6 still says Press E", () => {
@@ -761,7 +773,7 @@ test("ending-stretch Kest, Edan, and Hale map5 talks keep one last-crossing and 
   }
 });
 
-test("Reed, Kest, Edan, Hale, and Ryn again/afterCapture walk out as people without dating or dump", () => {
+test("Reed, Kest, Edan, Hale, Ryn, Dell, and Rowan again/afterCapture walk out as people without dating or dump", () => {
   const againOf = (id, map) => {
     const block = npcBlock(id, map);
     return block.slice(block.indexOf("againTalk:["), block.indexOf("afterCaptureTalk:["));
@@ -794,6 +806,14 @@ test("Reed, Kest, Edan, Hale, and Ryn again/afterCapture walk out as people with
   assert.match(afterOf("ryn", 5), /Then we walk out as people\. I'll keep this last gate/);
   assert.match(afterOf("ryn", 5), /You bound the coal shard/);
   assert.doesNotMatch(againOf("ryn", 5), /we walk out as people/i);
+  assert.match(afterOf("dell", 6), /Then we walk out as people\. The shore can go dark without taking us/);
+  assert.match(afterOf("dell", 6), /You bound the last pulse/);
+  assert.doesNotMatch(againOf("dell", 6), /we walk out as people/i);
+  assert.doesNotMatch(againOf("dell", 6), finishDump);
+  assert.match(afterOf("rowan", 6), /Then we walk out as people\. The leftover road can go quiet/);
+  assert.match(afterOf("rowan", 6), /You bound the last pulse/);
+  assert.doesNotMatch(againOf("rowan", 6), /we walk out as people/i);
+  assert.doesNotMatch(againOf("rowan", 6), finishDump);
 
   for (const [id, map] of [["reed", 5], ["kest", 6], ["edan", 6], ["hale", 5]]) {
     for (const [label, talk] of [["again", againOf(id, map)], ["after", afterOf(id, map)]]) {
@@ -806,12 +826,14 @@ test("Reed, Kest, Edan, Hale, and Ryn again/afterCapture walk out as people with
     }
     assert.match(npcBlock(id, map), /Moon Night/);
   }
-  const rynAfter = afterOf("ryn", 5);
-  assert.match(rynAfter, /we walk out as people/i);
-  assert.doesNotMatch(rynAfter, dating);
-  assert.doesNotMatch(rynAfter, campaignDump);
-  assert.doesNotMatch(rynAfter, softlock);
-  assert.deepEqual(talkLinesFrom(rynAfter).filter((line) => line.text.length > 110), []);
+  for (const [id, map, talk] of [["ryn", 5, afterOf("ryn", 5)], ["dell", 6, afterOf("dell", 6)], ["rowan", 6, afterOf("rowan", 6)]]) {
+    assert.match(talk, /we walk out as people/i, `${id}:${map} afterTalk should walk out as people`);
+    assert.doesNotMatch(talk, dating, `${id}:${map} afterTalk should stay off dating/bond`);
+    assert.doesNotMatch(talk, campaignDump, `${id}:${map} afterTalk should not dump the whole road`);
+    assert.doesNotMatch(talk, softlock, `${id}:${map} afterTalk should not softlock a skipped bind`);
+    assert.doesNotMatch(talk, /walk out together/);
+    assert.deepEqual(talkLinesFrom(talk).filter((line) => line.text.length > 110), [], `${id}:${map} afterTalk lines should stay at or under 110 characters`);
+  }
 });
 
 test("firstTalk openings keep one distinct tell per traveler", () => {
